@@ -12,7 +12,9 @@
       "Bash(php artisan test:*)",
       "Bash(php artisan:*)",
       "mcp__laravel-boost__search-docs",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__laravel-boost__list-routes",
+      "Bash(npx shadcn-vue@latest add:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

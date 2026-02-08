@@ -375,6 +375,14 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 
 ---
 
+## Plans détaillés par phase
+
+| Phase | Fichier |
+|-------|---------|
+| Phase 5 - Budget | [`PHASE5_BUDGET.md`](PHASE5_BUDGET.md) |
+
+---
+
 ## Ordre d'implémentation
 
 | Étape | Contenu | Dépendance |

@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::resource('expenses', ExpenseController::class)->only(['index', 'create']);
+    Route::post('expenses/settle', [ExpenseController::class, 'settle'])->name('expenses.settle');
+    Route::get('expenses/history', [ExpenseController::class, 'history'])->name('expenses.history');
+    Route::resource('expenses', ExpenseController::class)->except(['show']);
     Route::resource('shopping-lists', ShoppingListController::class)->only(['index']);
     Route::resource('todos', TodoController::class)->only(['index']);
     Route::resource('meal-plans', MealPlanController::class)->only(['index']);

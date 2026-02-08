@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import InputError from '@/components/InputError.vue';
 import CategoryPicker from '@/components/budget/CategoryPicker.vue';
@@ -9,32 +10,53 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { ExpenseCategory } from '@/types/budget';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
+} from '@/components/ui/dialog';
+import type { Expense, ExpenseCategory } from '@/types/budget';
 import type { User } from '@/types/auth';
-import { store } from '@/actions/App/Http/Controllers/ExpenseController';
+import { update, destroy } from '@/actions/App/Http/Controllers/ExpenseController';
 
 const props = defineProps<{
+    expense: Expense;
     categories: ExpenseCategory[];
     users: User[];
 }>();
 
-const page = usePage();
-const currentUserId = page.props.auth.user.id;
-
 const form = useForm({
-    amount: '',
-    description: '',
-    category_id: null as number | null,
-    paid_by: currentUserId,
-    split_type: 'equal',
-    split_value: '',
-    date: new Date().toISOString().split('T')[0],
-    is_recurring: false,
-    recurrence_type: null as string | null,
+    amount: props.expense.amount,
+    description: props.expense.description,
+    category_id: props.expense.category_id as number | null,
+    paid_by: props.expense.paid_by,
+    split_type: props.expense.split_type,
+    split_value: props.expense.split_value ?? '',
+    date: props.expense.date.split('T')[0],
+    is_recurring: props.expense.is_recurring,
+    recurrence_type: props.expense.recurrence_type,
 });
 
 function submit(): void {
-    form.post(store.url());
+    form.put(update.url({ expense: props.expense.id }));
+}
+
+const deleteOpen = ref(false);
+const deleting = ref(false);
+
+function confirmDelete(): void {
+    deleting.value = true;
+    router.delete(destroy.url({ expense: props.expense.id }), {
+        onFinish: () => {
+            deleting.value = false;
+            deleteOpen.value = false;
+        },
+    });
 }
 
 const splitOptions = [
@@ -53,8 +75,8 @@ const recurrenceOptions = [
 </script>
 
 <template>
-    <AppLayout title="Nouvelle dépense">
-        <Head title="Nouvelle dépense" />
+    <AppLayout title="Modifier la dépense">
+        <Head title="Modifier la dépense" />
 
         <form @submit.prevent="submit" class="space-y-6 p-4">
             <!-- Montant -->
@@ -70,7 +92,6 @@ const recurrenceOptions = [
                     placeholder="0.00"
                     class="text-2xl font-bold text-center h-14"
                     required
-                    autofocus
                 />
                 <InputError :message="form.errors.amount" />
             </div>
@@ -197,8 +218,37 @@ const recurrenceOptions = [
                 size="lg"
                 :disabled="form.processing"
             >
-                Ajouter la dépense
+                Enregistrer les modifications
             </Button>
+
+            <!-- Delete -->
+            <Dialog v-model:open="deleteOpen">
+                <DialogTrigger as-child>
+                    <Button type="button" variant="destructive" class="w-full">
+                        Supprimer la dépense
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Supprimer la dépense</DialogTitle>
+                        <DialogDescription>
+                            Cette action est irréversible. La dépense "{{ expense.description }}" sera définitivement supprimée.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter class="gap-2">
+                        <DialogClose as-child>
+                            <Button variant="ghost">Annuler</Button>
+                        </DialogClose>
+                        <Button
+                            variant="destructive"
+                            @click="confirmDelete"
+                            :disabled="deleting"
+                        >
+                            Supprimer
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </form>
     </AppLayout>
 </template>
