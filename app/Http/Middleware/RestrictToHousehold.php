@@ -17,7 +17,9 @@ class RestrictToHousehold
     {
         $user = $request->user();
 
-        if (! $user || ! in_array($user->email, config('cocon.allowed_emails', []), true)) {
+        $allowedEmails = array_column(config('cocon.allowed_users', []), 'email');
+
+        if (! $user || ! in_array($user->email, $allowedEmails, true)) {
             abort(403, 'Accès non autorisé.');
         }
 

@@ -379,6 +379,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 
 | Phase | Fichier |
 |-------|---------|
+| Phase 3.2 - Écran de setup | [`SETUP_SCREEN.md`](SETUP_SCREEN.md) |
 | Phase 5 - Budget | [`PHASE5_BUDGET.md`](PHASE5_BUDGET.md) |
 
 ---

@@ -4,17 +4,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Allowed Emails
+    | Allowed Users
     |--------------------------------------------------------------------------
     |
     | Only users with these email addresses can access the application.
-    | This is used by the RestrictToHousehold middleware.
+    | Used by the RestrictToHousehold middleware and setup screen.
     |
     */
 
-    'allowed_emails' => [
-        'kevininc155@gmail.com',
-        'lolavivant@hotmail.fr',
+    'allowed_users' => [
+        ['name' => 'Kevin', 'email' => 'kevininc155@gmail.com'],
+        ['name' => 'Lola', 'email' => 'lolavivant@hotmail.fr'],
     ],
 
 ];

@@ -24,7 +24,9 @@ class ApiLoginController extends Controller
             ]);
         }
 
-        if (! in_array($user->email, config('cocon.allowed_emails', []), true)) {
+        $allowedEmails = array_column(config('cocon.allowed_users', []), 'email');
+
+        if (! in_array($user->email, $allowedEmails, true)) {
             throw ValidationException::withMessages([
                 'email' => ['Ce compte n\'est pas autorisé.'],
             ]);

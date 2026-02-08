@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
@@ -9,6 +10,11 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ShoppingListController;
 use App\Http\Controllers\TodoController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware('guest')->group(function () {
+    Route::get('setup', [SetupController::class, 'create'])->name('setup');
+    Route::post('setup', [SetupController::class, 'store']);
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');

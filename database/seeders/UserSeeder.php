@@ -12,14 +12,11 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Kevin',
-            'email' => 'kevininc155@gmail.com',
-        ]);
-
-        User::factory()->create([
-            'name' => 'Lola',
-            'email' => 'lolavivant@hotmail.fr',
-        ]);
+        foreach (config('cocon.allowed_users', []) as $userData) {
+            User::factory()->create([
+                'name' => $userData['name'],
+                'email' => $userData['email'],
+            ]);
+        }
     }
 }
