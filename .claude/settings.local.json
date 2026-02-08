@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__laravel-boost__application-info",
+      "mcp__laravel-boost__database-schema",
+      "Bash(php artisan make:enum:*)",
+      "Bash(php artisan make:migration:*)",
+      "Bash(php artisan make:model:*)",
+      "Bash(php artisan make:seeder:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(vendor/bin/pint:*)",
+      "Bash(php artisan test:*)",
+      "Bash(php artisan:*)",
+      "mcp__laravel-boost__search-docs",
+      "Bash(npm run build:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
+}

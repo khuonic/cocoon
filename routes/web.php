@@ -1,17 +1,24 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\MealPlanController;
+use App\Http\Controllers\MoreController;
+use App\Http\Controllers\NoteController;
+use App\Http\Controllers\ShoppingListController;
+use App\Http\Controllers\TodoController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use Laravel\Fortify\Features;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
-
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', DashboardController::class)->name('dashboard');
+    Route::resource('expenses', ExpenseController::class)->only(['index', 'create']);
+    Route::resource('shopping-lists', ShoppingListController::class)->only(['index']);
+    Route::resource('todos', TodoController::class)->only(['index']);
+    Route::resource('meal-plans', MealPlanController::class)->only(['index']);
+    Route::resource('notes', NoteController::class)->only(['index']);
+    Route::resource('bookmarks', BookmarkController::class)->only(['index']);
+    Route::get('more', MoreController::class)->name('more');
+});
 
 require __DIR__.'/settings.php';

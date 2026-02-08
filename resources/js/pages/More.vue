@@ -1,0 +1,44 @@
+<script setup lang="ts">
+import { Head, Link } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';
+import {
+    UtensilsCrossed,
+    StickyNote,
+    Bookmark,
+    Settings,
+    ChevronRight,
+} from 'lucide-vue-next';
+
+const menuItems = [
+    { label: 'Repas', href: '/meal-plans', icon: UtensilsCrossed, description: 'Planifier vos repas' },
+    { label: 'Notes', href: '/notes', icon: StickyNote, description: 'Notes partagées' },
+    { label: 'Leboncoin', href: '/bookmarks', icon: Bookmark, description: 'Annonces sauvegardées' },
+    { label: 'Paramètres', href: '/settings/profile', icon: Settings, description: 'Profil et préférences' },
+];
+</script>
+
+<template>
+    <Head title="Plus" />
+
+    <AppLayout title="Plus">
+        <div class="p-4">
+            <div class="space-y-2">
+                <Link
+                    v-for="item in menuItems"
+                    :key="item.href"
+                    :href="item.href"
+                    class="flex items-center gap-4 rounded-xl bg-card p-4 shadow-sm transition-colors active:bg-accent"
+                >
+                    <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                        <component :is="item.icon" :size="20" class="text-primary" />
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-foreground">{{ item.label }}</p>
+                        <p class="text-sm text-muted-foreground">{{ item.description }}</p>
+                    </div>
+                    <ChevronRight :size="18" class="text-muted-foreground" />
+                </Link>
+            </div>
+        </div>
+    </AppLayout>
+</template>

@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     /**
@@ -48,5 +50,45 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'paid_by');
+    }
+
+    public function assignedTodos(): HasMany
+    {
+        return $this->hasMany(Todo::class, 'assigned_to');
+    }
+
+    public function createdTodos(): HasMany
+    {
+        return $this->hasMany(Todo::class, 'created_by');
+    }
+
+    public function mealPlans(): HasMany
+    {
+        return $this->hasMany(MealPlan::class, 'cooked_by');
+    }
+
+    public function mealIdeas(): HasMany
+    {
+        return $this->hasMany(MealIdea::class, 'created_by');
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class, 'created_by');
+    }
+
+    public function shoppingItems(): HasMany
+    {
+        return $this->hasMany(ShoppingItem::class, 'added_by');
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class, 'added_by');
     }
 }
