@@ -145,7 +145,7 @@ return [
 
     'features' => [
         // Registration disabled — only whitelisted users can access the app.
-        Features::resetPasswords(),
+        // Password reset disabled — local app, no mail server.
         Features::emailVerification(),
         Features::twoFactorAuthentication([
             'confirm' => true,

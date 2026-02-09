@@ -34,6 +34,6 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .safe-area-top {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--inset-top, env(safe-area-inset-top, 0px));
 }
 </style>

@@ -14,7 +14,8 @@
       "mcp__laravel-boost__search-docs",
       "Bash(npm run build:*)",
       "mcp__laravel-boost__list-routes",
-      "Bash(npx shadcn-vue@latest add:*)"
+      "Bash(npx shadcn-vue@latest add:*)",
+      "WebFetch(domain:nativephp.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

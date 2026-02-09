@@ -48,6 +48,6 @@ function isActive(href: string): boolean {
 
 <style scoped>
 .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--inset-bottom, env(safe-area-inset-bottom, 0px));
 }
 </style>
