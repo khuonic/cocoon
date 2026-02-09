@@ -11,4 +11,17 @@ enum ShoppingItemCategory: string
     case Hygiene = 'hygiene';
     case Maison = 'maison';
     case Autre = 'autre';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::FruitsLegumes => 'Fruits & Légumes',
+            self::Frais => 'Frais',
+            self::Epicerie => 'Épicerie',
+            self::Boissons => 'Boissons',
+            self::Hygiene => 'Hygiène',
+            self::Maison => 'Maison',
+            self::Autre => 'Autre',
+        };
+    }
 }

@@ -64,7 +64,9 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 - `DashboardController` : page d'accueil `/`
 - `ExpenseController` : CRUD dépenses + settle + history
-- `ShoppingListController`, `TodoController`, `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
+- `ShoppingListController` : CRUD + duplicate (complet)
+- `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
+- `TodoController`, `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
 - `MoreController` : page "Plus"
 - `Settings/ProfileController`, `Settings/PasswordController`, `Settings/TwoFactorAuthenticationController`
 - `Auth/SetupController` : premier lancement
@@ -75,7 +77,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `GET /` : Dashboard (auth, verified)
 - `GET|POST /setup` : Setup premier lancement (guest)
 - `/expenses` : resource (sauf show) + `POST settle` + `GET history`
-- `/shopping-lists`, `/todos`, `/meal-plans`, `/notes`, `/bookmarks` : index seulement
+- `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
+- `/todos`, `/meal-plans`, `/notes`, `/bookmarks` : index seulement
 - `/more` : page "Plus"
 - Settings dans `routes/settings.php` : profil, mot de passe, 2FA, apparence
 
@@ -95,6 +98,13 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - Historique des règlements
 - 83 tests Pest passants (Feature + Unit)
 
+### Phase 6 : Module Courses (complet)
+- CRUD listes de courses avec templates et duplication
+- Articles par liste : ajout, check/uncheck, favoris, suppression
+- Groupement par catégorie (enum ShoppingItemCategory avec labels FR)
+- Vue Show avec formulaire inline sticky, groupes par catégorie, section cochés pliable
+- 20 tests Pest (ShoppingListTest + ShoppingItemTest)
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -104,7 +114,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 | Phase | Module | Statut |
 |-------|--------|--------|
-| 6 | Courses (shopping lists) | Stub index |
+| 6 | Courses (shopping lists) | **Complet** |
 | 7 | Tâches (todos) | Stub index |
 | 8 | Repas (meal plans + ideas) | Stub index |
 | 9 | Notes | Stub index |

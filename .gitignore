@@ -3,6 +3,9 @@
 /node_modules
 /public/build
 /public/hot
+/public/ios-hot
+/public/android-hot
+/nativephp
 /public/storage
 /storage/*.key
 /storage/pail
