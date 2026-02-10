@@ -34,7 +34,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('shopping-items.toggle-favorite');
     Route::delete('shopping-items/{shopping_item}', [ShoppingItemController::class, 'destroy'])
         ->name('shopping-items.destroy');
-    Route::resource('todos', TodoController::class)->only(['index']);
+    Route::patch('todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
+    Route::resource('todos', TodoController::class)->except(['create', 'show', 'edit']);
     Route::resource('meal-plans', MealPlanController::class)->only(['index']);
     Route::resource('notes', NoteController::class)->only(['index']);
     Route::resource('bookmarks', BookmarkController::class)->only(['index']);

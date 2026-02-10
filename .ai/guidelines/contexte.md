@@ -10,7 +10,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 - **Backend** : Laravel 12, PHP 8.4, SQLite (local, offline-first)
 - **Frontend** : Vue 3 + Inertia v2 + Tailwind CSS v4
-- **Mobile** : NativePHP Mobile v2 (runtime PHP natif sur le device)
+- **Mobile** : NativePHP Mobile v3 (runtime PHP natif sur le device)
 - **Auth** : Laravel Fortify (login, 2FA, pas de registration publique, pas de reset password)
 - **Tests** : Pest 4
 - **Routes TS** : Wayfinder
@@ -66,7 +66,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `ExpenseController` : CRUD dépenses + settle + history
 - `ShoppingListController` : CRUD + duplicate (complet)
 - `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
-- `TodoController`, `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
+- `TodoController` : CRUD complet (index, store, update, toggle, destroy) — modal sur index
+- `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
 - `MoreController` : page "Plus"
 - `Settings/ProfileController`, `Settings/PasswordController`, `Settings/TwoFactorAuthenticationController`
 - `Auth/SetupController` : premier lancement
@@ -78,7 +79,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `GET|POST /setup` : Setup premier lancement (guest)
 - `/expenses` : resource (sauf show) + `POST settle` + `GET history`
 - `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
-- `/todos`, `/meal-plans`, `/notes`, `/bookmarks` : index seulement
+- `/todos` : resource (sauf create, show, edit) + `PATCH {id}/toggle`
+- `/meal-plans`, `/notes`, `/bookmarks` : index seulement
 - `/more` : page "Plus"
 - Settings dans `routes/settings.php` : profil, mot de passe, 2FA, apparence
 
@@ -105,6 +107,13 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - Vue Show avec formulaire inline sticky, groupes par catégorie, section cochés pliable
 - 20 tests Pest (ShoppingListTest + ShoppingItemTest)
 
+### Phase 7 : Module Tâches (complet)
+- CRUD complet via modal (store, update, toggle, destroy)
+- Groupement : tâches partagées, tâches personnelles, tâches terminées (collapsible)
+- Assignation à un utilisateur, date d'échéance optionnelle
+- Toggle done/undone avec completed_at
+- 15 tests Pest (TodoTest)
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -115,7 +124,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Phase | Module | Statut |
 |-------|--------|--------|
 | 6 | Courses (shopping lists) | **Complet** |
-| 7 | Tâches (todos) | Stub index |
+| 7 | Tâches (todos) | **Complet** |
 | 8 | Repas (meal plans + ideas) | Stub index |
 | 9 | Notes | Stub index |
 | 10 | Bookmarks | Stub index |
@@ -136,6 +145,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 - `COCON_PLAN.md` : plan global du projet
 - `PHASE5_BUDGET.md` : plan détaillé phase 5
+- `PHASE7_TODOS.md` : plan détaillé phase 7
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)

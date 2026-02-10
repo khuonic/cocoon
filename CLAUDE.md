@@ -1,4 +1,152 @@
 <laravel-boost-guidelines>
+=== .ai/contexte rules ===
+
+# Contexte Cocoon
+
+> **IMPORTANT : Ce fichier doit être mis à jour à chaque fois qu'une phase ou fonctionnalité majeure est terminée.**
+
+## Qu'est-ce que Cocoon ?
+
+App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne. Remplace Tricount et regroupe budget, courses, tâches, repas, notes et bookmarks. Interface 100% français, Android uniquement, distribuée par APK direct (pas de Play Store).
+
+## Stack technique
+
+- **Backend** : Laravel 12, PHP 8.4, SQLite (local, offline-first)
+- **Frontend** : Vue 3 + Inertia v2 + Tailwind CSS v4
+- **Mobile** : NativePHP Mobile v3 (runtime PHP natif sur le device)
+- **Auth** : Laravel Fortify (login, 2FA, pas de registration publique, pas de reset password)
+- **Tests** : Pest 4
+- **Routes TS** : Wayfinder
+- **Sync future** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
+
+## Contraintes clés
+
+- **2 utilisateurs seulement** : Kevin et Lola, whitelist d'emails dans `config/cocon.php`
+- **Registration désactivée** : un écran de setup (`/setup`) permet de créer un compte au premier lancement si l'email est dans la whitelist
+- **Pas de reset password** : app locale sans serveur mail
+- **Offline-first** : SQLite local, sync cloud prévue mais pas encore implémentée
+- **Dashboard sur `/`** : pas de redirect, Fortify home = `'/'`
+- **Safe areas NativePHP** : `viewport-fit=cover` + classe `nativephp-safe-area` sur `<body>`, CSS variables `--inset-top/--inset-bottom` avec fallback `env(safe-area-inset-*)`
+
+## Architecture
+
+### Modèles (app/Models/)
+
+| Modèle | Rôle |
+|--------|------|
+| User | Utilisateur (2 max) |
+| Expense | Dépense avec split type |
+| ExpenseCategory | Catégorie de dépense (seeder) |
+| ShoppingList | Liste de courses |
+| ShoppingItem | Article dans une liste |
+| Todo | Tâche |
+| MealPlan | Planning repas |
+| MealIdea | Idée de repas |
+| Note | Note libre |
+| Bookmark | Marque-page |
+| SyncLog | Journal de sync (futur) |
+
+### Enums (app/Enums/)
+
+- `SplitType` : Equal, FullPayer, FullOther, Custom
+- `RecurrenceType` : types de récurrence
+- `ShoppingItemCategory` : catégories d'articles
+- `MealType` : types de repas
+- `SyncAction` : actions de sync
+
+### Services (app/Services/)
+
+- `BalanceCalculator` : calcul de balance budget entre les 2 utilisateurs
+
+### Middleware custom
+
+- `RestrictToHousehold` : vérifie que l'email est dans la whitelist
+- `HandleAppearance` : gestion du dark mode
+
+### Controllers (app/Http/Controllers/)
+
+- `DashboardController` : page d'accueil `/`
+- `ExpenseController` : CRUD dépenses + settle + history
+- `ShoppingListController` : CRUD + duplicate (complet)
+- `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
+- `TodoController`, `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
+- `MoreController` : page "Plus"
+- `Settings/ProfileController`, `Settings/PasswordController`, `Settings/TwoFactorAuthenticationController`
+- `Auth/SetupController` : premier lancement
+- `Auth/ApiLoginController` : login API (futur sync)
+
+### Routes principales (routes/web.php)
+
+- `GET /` : Dashboard (auth, verified)
+- `GET|POST /setup` : Setup premier lancement (guest)
+- `/expenses` : resource (sauf show) + `POST settle` + `GET history`
+- `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
+- `/todos`, `/meal-plans`, `/notes`, `/bookmarks` : index seulement
+- `/more` : page "Plus"
+- Settings dans `routes/settings.php` : profil, mot de passe, 2FA, apparence
+
+## Phases terminées
+
+### Phase 1-4 : Fondations
+
+- Setup projet Laravel 12 + NativePHP + Tailwind v4
+- Modèles, migrations, factories, seeders pour tous les modules
+- Auth Fortify : login, setup premier lancement, middleware household, 2FA
+- Layout mobile avec AppLayout + BottomNav (5 onglets)
+- Pages settings : profil, mot de passe, 2FA, apparence
+
+### Phase 5 : Module Budget (complet)
+
+- CRUD dépenses avec catégories et split types
+- `BalanceCalculator` : calcul de qui doit quoi
+- Settle (règlement) : archive les dépenses non réglées
+- Historique des règlements
+- 83 tests Pest passants (Feature + Unit)
+
+### Phase 6 : Module Courses (complet)
+
+- CRUD listes de courses avec templates et duplication
+- Articles par liste : ajout, check/uncheck, favoris, suppression
+- Groupement par catégorie (enum ShoppingItemCategory avec labels FR)
+- Vue Show avec formulaire inline sticky, groupes par catégorie, section cochés pliable
+- 20 tests Pest (ShoppingListTest + ShoppingItemTest)
+
+### Traduction FR + NativePHP safe areas
+
+- Toutes les pages settings et auth traduites en français
+- Safe areas NativePHP configurées (viewport-fit, CSS variables)
+- Suppression de "mot de passe oublié" (inutile en local)
+
+## Phases à venir
+
+| Phase | Module | Statut |
+|-------|--------|--------|
+| 6 | Courses (shopping lists) | **Complet** |
+| 7 | Tâches (todos) | Stub index |
+| 8 | Repas (meal plans + ideas) | Stub index |
+| 9 | Notes | Stub index |
+| 10 | Bookmarks | Stub index |
+| 11 | Dashboard (widgets agrégés) | Page vide |
+| 12 | Sync offline-first | Non commencé |
+| 13 | Push notifications | Non commencé |
+| 14 | Auto-update APK | Non commencé |
+
+## Conventions de code
+
+- **Tests** : `tests/Unit` sans Laravel, `tests/Feature` avec TestCase + RefreshDatabase
+- **Routes custom AVANT les resource routes** pour éviter les conflits `{param}`
+- **Plans** : fichiers `.md` à la racine, référencés dans `COCON_PLAN.md`
+- **Pint** : `vendor/bin/pint --dirty --format agent` avant chaque finalisation
+- **Wayfinder** : `php artisan wayfinder:generate` après modification de routes/controllers
+
+## Fichiers de référence
+
+- `COCON_PLAN.md` : plan global du projet
+- `PHASE5_BUDGET.md` : plan détaillé phase 5
+- `SETUP_SCREEN.md` : plan écran de setup
+- `config/cocon.php` : whitelist emails autorisés
+- `config/fortify.php` : features auth (pas de registration, pas de reset password)
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -401,61 +549,61 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 
 ## Getting Started
 
-- [https://nativephp.com/docs/mobile/2/getting-started/introduction] Use these docs for comprehensive introduction to NativePHP Mobile, overview of how PHP runs natively on device, the embedded runtime architecture, and core philosophy behind the package
-- [https://nativephp.com/docs/mobile/2/getting-started/quick-start] Use these docs for rapid setup guide to get your first mobile app running in minutes
-- [https://nativephp.com/docs/mobile/2/getting-started/environment-setup] Use these docs for setting up your development environment including Xcode, Android Studio, simulators, and required dependencies
-- [https://nativephp.com/docs/mobile/2/getting-started/installation] Use these docs for step-by-step installation via Composer, running `php artisan native:install`, platform-specific setup, and ICU support options
-- [https://nativephp.com/docs/mobile/2/getting-started/configuration] Use these docs for detailed configuration guide including NATIVEPHP_APP_ID, NATIVEPHP_APP_VERSION, permissions setup, and config/nativephp.php options
-- [https://nativephp.com/docs/mobile/2/getting-started/development] Use these docs for development workflow including `php artisan native:run`, `native:watch` for hot reload, `native:tail` for logs, and debugging techniques
-- [https://nativephp.com/docs/mobile/2/getting-started/deployment] Use these docs for packaging and deploying apps to App Store and Play Store using `php artisan native:package`
-- [https://nativephp.com/docs/mobile/2/getting-started/versioning] Use these docs for version management, semantic versioning, and `php artisan native:release` command
-- [https://nativephp.com/docs/mobile/2/getting-started/changelog] Use these docs for version history and release notes
-- [https://nativephp.com/docs/mobile/2/getting-started/roadmap] Use these docs for upcoming features and planned improvements
-- [https://nativephp.com/docs/mobile/2/getting-started/support-policy] Use these docs for support policy and compatibility information
+- [https://nativephp.com/docs/mobile/3/getting-started/introduction] Use these docs for comprehensive introduction to NativePHP Mobile, overview of how PHP runs natively on device, the embedded runtime architecture, and core philosophy behind the package
+- [https://nativephp.com/docs/mobile/3/getting-started/quick-start] Use these docs for rapid setup guide to get your first mobile app running in minutes
+- [https://nativephp.com/docs/mobile/3/getting-started/environment-setup] Use these docs for setting up your development environment including Xcode, Android Studio, simulators, and required dependencies
+- [https://nativephp.com/docs/mobile/3/getting-started/installation] Use these docs for step-by-step installation via Composer, running `php artisan native:install`, platform-specific setup, and ICU support options
+- [https://nativephp.com/docs/mobile/3/getting-started/configuration] Use these docs for detailed configuration guide including NATIVEPHP_APP_ID, NATIVEPHP_APP_VERSION, permissions setup, and config/nativephp.php options
+- [https://nativephp.com/docs/mobile/3/getting-started/development] Use these docs for development workflow including `php artisan native:run`, `native:watch` for hot reload, `native:tail` for logs, and debugging techniques
+- [https://nativephp.com/docs/mobile/3/getting-started/deployment] Use these docs for packaging and deploying apps to App Store and Play Store using `php artisan native:package`
+- [https://nativephp.com/docs/mobile/3/getting-started/versioning] Use these docs for version management, semantic versioning, and `php artisan native:release` command
+- [https://nativephp.com/docs/mobile/3/getting-started/changelog] Use these docs for version history and release notes
+- [https://nativephp.com/docs/mobile/3/getting-started/roadmap] Use these docs for upcoming features and planned improvements
+- [https://nativephp.com/docs/mobile/3/getting-started/support-policy] Use these docs for support policy and compatibility information
 
 ## The Basics
 
-- [https://nativephp.com/docs/mobile/2/the-basics/overview] Use these docs for understanding how NativePHP Mobile works, the bridge between PHP and native code, and the overall architecture
-- [https://nativephp.com/docs/mobile/2/the-basics/events] Use these docs for the complete event system guide including async vs sync operations, event handling in Livewire with `#[OnNative()]`, JavaScript event handling with `Native.on()`, custom events, and the dual dispatch pattern
-- [https://nativephp.com/docs/mobile/2/the-basics/native-functions] Use these docs for understanding the `nativephp_call()` function, the bridge function registry, and how to extend native functionality
-- [https://nativephp.com/docs/mobile/2/the-basics/native-components] Use these docs for overview of native UI components and how they integrate with your app
-- [https://nativephp.com/docs/mobile/2/the-basics/web-view] Use these docs for understanding the web view rendering, JavaScript bridge, and how PHP content is displayed
-- [https://nativephp.com/docs/mobile/2/the-basics/splash-screens] Use these docs for configuring splash screens on iOS and Android
-- [https://nativephp.com/docs/mobile/2/the-basics/app-icon] Use these docs for setting up app icons for both platforms
-- [https://nativephp.com/docs/mobile/2/the-basics/assets] Use these docs for managing static assets, images, and files in your mobile app
+- [https://nativephp.com/docs/mobile/3/the-basics/overview] Use these docs for understanding how NativePHP Mobile works, the bridge between PHP and native code, and the overall architecture
+- [https://nativephp.com/docs/mobile/3/the-basics/events] Use these docs for the complete event system guide including async vs sync operations, event handling in Livewire with `#[OnNative()]`, JavaScript event handling with `Native.on()`, custom events, and the dual dispatch pattern
+- [https://nativephp.com/docs/mobile/3/the-basics/native-functions] Use these docs for understanding the `nativephp_call()` function, the bridge function registry, and how to extend native functionality
+- [https://nativephp.com/docs/mobile/3/the-basics/native-components] Use these docs for overview of native UI components and how they integrate with your app
+- [https://nativephp.com/docs/mobile/3/the-basics/web-view] Use these docs for understanding the web view rendering, JavaScript bridge, and how PHP content is displayed
+- [https://nativephp.com/docs/mobile/3/the-basics/splash-screens] Use these docs for configuring splash screens on iOS and Android
+- [https://nativephp.com/docs/mobile/3/the-basics/app-icon] Use these docs for setting up app icons for both platforms
+- [https://nativephp.com/docs/mobile/3/the-basics/assets] Use these docs for managing static assets, images, and files in your mobile app
 
 ## EDGE Components (Native UI)
 
-- [https://nativephp.com/docs/mobile/2/edge-components/introduction] Use these docs for understanding EDGE (Element Definition and Generation Engine), how Blade components become native UI, server-driven UI approach, and the JSON compilation process
-- [https://nativephp.com/docs/mobile/2/edge-components/bottom-nav] Use these docs for implementing bottom navigation bars with `native:bottom-nav` and `native:bottom-nav-item`, including icons, labels, URLs, and styling
-- [https://nativephp.com/docs/mobile/2/edge-components/top-bar] Use these docs for implementing top app bars with `native:top-bar` and `native:top-bar-action`, including titles, navigation icons, and action buttons
-- [https://nativephp.com/docs/mobile/2/edge-components/side-nav] Use these docs for implementing slide-out navigation drawers with `native:side-nav`, `native:side-nav-item`, `native:side-nav-header`, and `native:side-nav-group`
-- [https://nativephp.com/docs/mobile/2/edge-components/icons] Use these docs for available icon names and how to use icons in EDGE components
+- [https://nativephp.com/docs/mobile/3/edge-components/introduction] Use these docs for understanding EDGE (Element Definition and Generation Engine), how Blade components become native UI, server-driven UI approach, and the JSON compilation process
+- [https://nativephp.com/docs/mobile/3/edge-components/bottom-nav] Use these docs for implementing bottom navigation bars with `native:bottom-nav` and `native:bottom-nav-item`, including icons, labels, URLs, and styling
+- [https://nativephp.com/docs/mobile/3/edge-components/top-bar] Use these docs for implementing top app bars with `native:top-bar` and `native:top-bar-action`, including titles, navigation icons, and action buttons
+- [https://nativephp.com/docs/mobile/3/edge-components/side-nav] Use these docs for implementing slide-out navigation drawers with `native:side-nav`, `native:side-nav-item`, `native:side-nav-header`, and `native:side-nav-group`
+- [https://nativephp.com/docs/mobile/3/edge-components/icons] Use these docs for available icon names and how to use icons in EDGE components
 
 ## APIs (Device Features)
 
-- [https://nativephp.com/docs/mobile/2/apis/camera] Use these docs for camera operations including `Camera::getPhoto()`, `Camera::recordVideo()`, `Camera::pickImages()`, PhotoTaken and VideoRecorded events
-- [https://nativephp.com/docs/mobile/2/apis/microphone] Use these docs for audio recording with `Microphone::record()`, `->start()`, `->stop()`, `->pause()`, `->resume()`, `->getStatus()`, and MicrophoneRecorded events
-- [https://nativephp.com/docs/mobile/2/apis/scanner] Use these docs for QR code and barcode scanning with `Scanner::scan()`, fluent configuration, CodeScanned events, and supported formats
-- [https://nativephp.com/docs/mobile/2/apis/dialog] Use these docs for native dialogs with `Dialog::alert()`, `Dialog::toast()`, button configuration, and ButtonPressed events
-- [https://nativephp.com/docs/mobile/2/apis/biometrics] Use these docs for Face ID/Touch ID authentication with `Biometrics::prompt()`, fluent API, and Completed events
-- [https://nativephp.com/docs/mobile/2/apis/push-notifications] Use these docs for push notification enrollment with `PushNotifications::enroll()`, `->getToken()`, and TokenGenerated events (requires nativephp/mobile-firebase plugin)
-- [https://nativephp.com/docs/mobile/2/apis/geolocation] Use these docs for location services with `Geolocation::getCurrentPosition()`, `->checkPermissions()`, `->requestPermissions()`, and LocationReceived events
-- [https://nativephp.com/docs/mobile/2/apis/browser] Use these docs for opening URLs with `Browser::open()`, `Browser::inApp()`, `Browser::auth()` for OAuth flows (requires nativephp/browser plugin)
-- [https://nativephp.com/docs/mobile/2/apis/secure-storage] Use these docs for secure credential storage with `SecureStorage::get()`, `->set()`, `->delete()` using device Keychain/KeyStore
-- [https://nativephp.com/docs/mobile/2/apis/share] Use these docs for native share sheet with `Share::url()` and `Share::file()`
-- [https://nativephp.com/docs/mobile/2/apis/file] Use these docs for file operations with `File::move()` and `File::copy()`
-- [https://nativephp.com/docs/mobile/2/apis/network] Use these docs for network status checking with `Network::status()`
-- [https://nativephp.com/docs/mobile/2/apis/haptics] Use these docs for haptic feedback with `Haptics::vibrate()` (prefer `Device::vibrate()`)
-- [https://nativephp.com/docs/mobile/2/apis/device] Use these docs for device information with `Device::getId()`, `->getInfo()`, `->getBatteryInfo()`, `->vibrate()`, `->toggleFlashlight()`
-- [https://nativephp.com/docs/mobile/2/apis/system] Use these docs for platform detection with `System::isIos()`, `System::isAndroid()`, `System::isMobile()`, `System::flashlight()`
+- [https://nativephp.com/docs/mobile/3/apis/camera] Use these docs for camera operations including `Camera::getPhoto()`, `Camera::recordVideo()`, `Camera::pickImages()`, PhotoTaken and VideoRecorded events
+- [https://nativephp.com/docs/mobile/3/apis/microphone] Use these docs for audio recording with `Microphone::record()`, `->start()`, `->stop()`, `->pause()`, `->resume()`, `->getStatus()`, and MicrophoneRecorded events
+- [https://nativephp.com/docs/mobile/3/apis/scanner] Use these docs for QR code and barcode scanning with `Scanner::scan()`, fluent configuration, CodeScanned events, and supported formats
+- [https://nativephp.com/docs/mobile/3/apis/dialog] Use these docs for native dialogs with `Dialog::alert()`, `Dialog::toast()`, button configuration, and ButtonPressed events
+- [https://nativephp.com/docs/mobile/3/apis/biometrics] Use these docs for Face ID/Touch ID authentication with `Biometrics::prompt()`, fluent API, and Completed events
+- [https://nativephp.com/docs/mobile/3/apis/push-notifications] Use these docs for push notification enrollment with `PushNotifications::enroll()`, `->getToken()`, and TokenGenerated events (requires nativephp/mobile-firebase plugin)
+- [https://nativephp.com/docs/mobile/3/apis/geolocation] Use these docs for location services with `Geolocation::getCurrentPosition()`, `->checkPermissions()`, `->requestPermissions()`, and LocationReceived events
+- [https://nativephp.com/docs/mobile/3/apis/browser] Use these docs for opening URLs with `Browser::open()`, `Browser::inApp()`, `Browser::auth()` for OAuth flows (requires nativephp/browser plugin)
+- [https://nativephp.com/docs/mobile/3/apis/secure-storage] Use these docs for secure credential storage with `SecureStorage::get()`, `->set()`, `->delete()` using device Keychain/KeyStore
+- [https://nativephp.com/docs/mobile/3/apis/share] Use these docs for native share sheet with `Share::url()` and `Share::file()`
+- [https://nativephp.com/docs/mobile/3/apis/file] Use these docs for file operations with `File::move()` and `File::copy()`
+- [https://nativephp.com/docs/mobile/3/apis/network] Use these docs for network status checking with `Network::status()`
+- [https://nativephp.com/docs/mobile/3/apis/haptics] Use these docs for haptic feedback with `Haptics::vibrate()` (prefer `Device::vibrate()`)
+- [https://nativephp.com/docs/mobile/3/apis/device] Use these docs for device information with `Device::getId()`, `->getInfo()`, `->getBatteryInfo()`, `->vibrate()`, `->toggleFlashlight()`
+- [https://nativephp.com/docs/mobile/3/apis/system] Use these docs for platform detection with `System::isIos()`, `System::isAndroid()`, `System::isMobile()`, `System::flashlight()`
 
 ## Concepts
 
-- [https://nativephp.com/docs/mobile/2/concepts/databases] Use these docs for SQLite database usage, local data storage, and when to use local vs API storage
-- [https://nativephp.com/docs/mobile/2/concepts/deep-links] Use these docs for configuring deep links, URL schemes, and universal links
-- [https://nativephp.com/docs/mobile/2/concepts/push-notifications] Use these docs for comprehensive push notification setup including Firebase, APNs, and server-side integration
-- [https://nativephp.com/docs/mobile/2/concepts/security] Use these docs for security best practices, secure storage, and protecting sensitive data
-- [https://nativephp.com/docs/mobile/2/concepts/ci-cd] Use these docs for continuous integration and deployment pipelines for mobile apps
+- [https://nativephp.com/docs/mobile/3/concepts/databases] Use these docs for SQLite database usage, local data storage, and when to use local vs API storage
+- [https://nativephp.com/docs/mobile/3/concepts/deep-links] Use these docs for configuring deep links, URL schemes, and universal links
+- [https://nativephp.com/docs/mobile/3/concepts/push-notifications] Use these docs for comprehensive push notification setup including Firebase, APNs, and server-side integration
+- [https://nativephp.com/docs/mobile/3/concepts/security] Use these docs for security best practices, secure storage, and protecting sensitive data
+- [https://nativephp.com/docs/mobile/3/concepts/ci-cd] Use these docs for continuous integration and deployment pipelines for mobile apps
 </available-docs>
 </laravel-boost-guidelines>
