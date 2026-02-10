@@ -37,8 +37,10 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | ShoppingList | Liste de courses |
 | ShoppingItem | Article dans une liste |
 | Todo | Tâche |
-| MealPlan | Planning repas |
-| MealIdea | Idée de repas |
+| MealIdea | Idée de repas (nom, description, url, tags) |
+| Recipe | Recette complète (titre, description, url, temps, portions, tags) |
+| RecipeIngredient | Ingrédient d'une recette (nom, quantité, unité, ordre) |
+| RecipeStep | Étape d'une recette (instruction, ordre) |
 | Note | Note libre |
 | Bookmark | Marque-page |
 | SyncLog | Journal de sync (futur) |
@@ -48,7 +50,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `SplitType` : Equal, FullPayer, FullOther, Custom
 - `RecurrenceType` : types de récurrence
 - `ShoppingItemCategory` : catégories d'articles
-- `MealType` : types de repas
+- `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand (tags repas)
 - `SyncAction` : actions de sync
 
 ### Services (app/Services/)
@@ -67,7 +69,10 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `ShoppingListController` : CRUD + duplicate (complet)
 - `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
 - `TodoController` : CRUD complet (index, store, update, toggle, destroy) — modal sur index
-- `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
+- `MealPlanController` : index (passe ideas, recipes, availableTags)
+- `MealIdeaController` : store, update, destroy — CRUD via modal
+- `RecipeController` : create, store, show, edit, update, destroy — pages dédiées
+- `NoteController`, `BookmarkController` : index seulement (stubs)
 - `MoreController` : page "Plus"
 - `Settings/ProfileController`, `Settings/PasswordController`, `Settings/TwoFactorAuthenticationController`
 - `Auth/SetupController` : premier lancement
@@ -80,7 +85,10 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `/expenses` : resource (sauf show) + `POST settle` + `GET history`
 - `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
 - `/todos` : resource (sauf create, show, edit) + `PATCH {id}/toggle`
-- `/meal-plans`, `/notes`, `/bookmarks` : index seulement
+- `/meal-plans` : index (idées + recettes)
+- `/meal-ideas` : store, update, destroy
+- `/recipes` : resource (sauf index)
+- `/notes`, `/bookmarks` : index seulement
 - `/more` : page "Plus"
 - Settings dans `routes/settings.php` : profil, mot de passe, 2FA, apparence
 
@@ -114,6 +122,15 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - Toggle done/undone avec completed_at
 - 15 tests Pest (TodoTest)
 
+### Phase 8 : Module Repas (complet)
+- Banque d'idées repas : CRUD via modal (nom, description, url, tags)
+- Recettes complètes : pages dédiées create/show/edit (titre, description, url, temps prépa/cuisson, portions, tags, ingrédients, étapes)
+- 2 onglets sur /meal-plans : Idées + Recettes
+- Filtrage par tags côté client
+- Enum MealTag (Rapide, Végé, Comfort, Léger, Gourmand)
+- 22 tests Pest (MealIdeaTest + RecipeTest)
+- Nettoyage : suppression MealPlan, MealType
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -125,7 +142,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 |-------|--------|--------|
 | 6 | Courses (shopping lists) | **Complet** |
 | 7 | Tâches (todos) | **Complet** |
-| 8 | Repas (meal plans + ideas) | Stub index |
+| 8 | Repas (idées + recettes) | **Complet** |
 | 9 | Notes | Stub index |
 | 10 | Bookmarks | Stub index |
 | 11 | Dashboard (widgets agrégés) | Page vide |
@@ -146,6 +163,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `COCON_PLAN.md` : plan global du projet
 - `PHASE5_BUDGET.md` : plan détaillé phase 5
 - `PHASE7_TODOS.md` : plan détaillé phase 7
+- `PHASE8_MEALS.md` : plan détaillé phase 8
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)

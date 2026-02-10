@@ -13,6 +13,8 @@ class MealIdea extends Model
 
     protected $fillable = [
         'name',
+        'description',
+        'url',
         'tags',
         'created_by',
         'uuid',

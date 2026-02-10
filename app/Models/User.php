@@ -67,14 +67,14 @@ class User extends Authenticatable
         return $this->hasMany(Todo::class, 'created_by');
     }
 
-    public function mealPlans(): HasMany
-    {
-        return $this->hasMany(MealPlan::class, 'cooked_by');
-    }
-
     public function mealIdeas(): HasMany
     {
         return $this->hasMany(MealIdea::class, 'created_by');
+    }
+
+    public function recipes(): HasMany
+    {
+        return $this->hasMany(Recipe::class, 'created_by');
     }
 
     public function notes(): HasMany

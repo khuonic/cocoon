@@ -3,6 +3,7 @@ export * from './budget';
 export * from './navigation';
 export * from './shopping';
 export * from './todo';
+export * from './meal';
 export * from './ui';
 
 import type { Auth } from './auth';
