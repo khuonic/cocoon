@@ -11,9 +11,9 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-    <div class="flex min-h-dvh flex-col bg-background">
+    <div class="flex h-dvh flex-col overflow-hidden bg-background">
         <!-- Header -->
-        <header v-if="title" class="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm safe-area-top">
+        <header v-if="title" class="shrink-0 border-b border-border bg-card safe-area-top">
             <div class="flex h-14 items-center px-4">
                 <h1 class="text-lg font-semibold text-foreground">{{ title }}</h1>
                 <div class="ml-auto">
@@ -23,7 +23,7 @@ withDefaults(defineProps<Props>(), {
         </header>
 
         <!-- Main content -->
-        <main class="flex-1 pb-20">
+        <main class="flex-1 overflow-y-auto pb-20">
             <slot />
         </main>
 

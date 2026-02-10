@@ -11,7 +11,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - **Backend** : Laravel 12, PHP 8.4, SQLite (local, offline-first)
 - **Frontend** : Vue 3 + Inertia v2 + Tailwind CSS v4
 - **Mobile** : NativePHP Mobile v3 (runtime PHP natif sur le device)
-- **Auth** : Laravel Fortify (login, 2FA, pas de registration publique, pas de reset password)
+- **Auth** : Laravel Fortify (login uniquement, pas de 2FA, pas de registration publique, pas de reset password)
 - **Tests** : Pest 4
 - **Routes TS** : Wayfinder
 - **Sync future** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
@@ -60,7 +60,6 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 ### Middleware custom
 
 - `RestrictToHousehold` : vérifie que l'email est dans la whitelist
-- `HandleAppearance` : gestion du dark mode
 
 ### Controllers (app/Http/Controllers/)
 
@@ -74,7 +73,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `RecipeController` : create, store, show, edit, update, destroy — pages dédiées
 - `NoteController`, `BookmarkController` : index seulement (stubs)
 - `MoreController` : page "Plus"
-- `Settings/ProfileController`, `Settings/PasswordController`, `Settings/TwoFactorAuthenticationController`
+- `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
 - `Auth/ApiLoginController` : login API (futur sync)
 
@@ -90,16 +89,18 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `/recipes` : resource (sauf index)
 - `/notes`, `/bookmarks` : index seulement
 - `/more` : page "Plus"
-- Settings dans `routes/settings.php` : profil, mot de passe, 2FA, apparence
+- Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
 
 ## Phases terminées
 
 ### Phase 1-4 : Fondations
 - Setup projet Laravel 12 + NativePHP + Tailwind v4
 - Modèles, migrations, factories, seeders pour tous les modules
-- Auth Fortify : login, setup premier lancement, middleware household, 2FA
-- Layout mobile avec AppLayout + BottomNav (5 onglets)
-- Pages settings : profil, mot de passe, 2FA, apparence
+- Auth Fortify : login, setup premier lancement, middleware household (pas de 2FA)
+- Layout mobile avec AppLayout (h-dvh, header fixe, main scrollable) + BottomNav (5 onglets)
+- Pages settings : profil (nom uniquement, email non modifiable), mot de passe
+- Thème clair uniquement (pas de dark mode, pas de page apparence)
+- Pas de suppression de compte
 
 ### Phase 5 : Module Budget (complet)
 - CRUD dépenses avec catégories et split types

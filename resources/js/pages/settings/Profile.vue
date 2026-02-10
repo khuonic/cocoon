@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Form, Head, Link, usePage } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -10,15 +9,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/profile';
-import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
-
-type Props = {
-    mustVerifyEmail: boolean;
-    status?: string;
-};
-
-defineProps<Props>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -42,7 +33,7 @@ const user = page.props.auth.user;
                 <Heading
                     variant="small"
                     title="Informations du profil"
-                    description="Modifiez votre nom et adresse email"
+                    description="Modifiez votre nom"
                 />
 
                 <Form
@@ -69,35 +60,13 @@ const user = page.props.auth.user;
                         <Input
                             id="email"
                             type="email"
-                            class="mt-1 block w-full"
-                            name="email"
+                            class="mt-1 block w-full bg-muted"
                             :default-value="user.email"
-                            required
-                            autocomplete="username"
-                            placeholder="Adresse email"
+                            disabled
                         />
-                        <InputError class="mt-2" :message="errors.email" />
-                    </div>
-
-                    <div v-if="mustVerifyEmail && !user.email_verified_at">
-                        <p class="-mt-4 text-sm text-muted-foreground">
-                            Votre adresse email n'est pas vérifiée.
-                            <Link
-                                :href="send()"
-                                as="button"
-                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                            >
-                                Cliquez ici pour renvoyer l'email de vérification.
-                            </Link>
+                        <p class="text-xs text-muted-foreground">
+                            L'adresse email ne peut pas être modifiée.
                         </p>
-
-                        <div
-                            v-if="status === 'verification-link-sent'"
-                            class="mt-2 text-sm font-medium text-green-600"
-                        >
-                            Un nouveau lien de vérification a été envoyé à votre
-                            adresse email.
-                        </div>
                     </div>
 
                     <div class="flex items-center gap-4">
@@ -123,8 +92,6 @@ const user = page.props.auth.user;
                     </div>
                 </Form>
             </div>
-
-            <DeleteUser />
         </SettingsLayout>
     </AppLayout>
 </template>
