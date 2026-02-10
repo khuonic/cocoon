@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { mobilePatch } from '@/lib/form-helpers';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,7 @@ const emit = defineEmits<{
 }>();
 
 function handleToggle(): void {
-    router.patch(toggle.url(props.todo.id), {}, {
+    mobilePatch(toggle.url(props.todo.id), {}, {
         preserveScroll: true,
     });
 }

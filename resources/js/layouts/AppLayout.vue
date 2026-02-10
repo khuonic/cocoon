@@ -23,7 +23,7 @@ withDefaults(defineProps<Props>(), {
         </header>
 
         <!-- Main content -->
-        <main class="flex-1 overflow-y-auto pb-20">
+        <main class="min-h-0 flex-1 overflow-y-auto">
             <slot />
         </main>
 

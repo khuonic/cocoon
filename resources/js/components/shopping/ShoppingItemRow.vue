@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { mobilePatch } from '@/lib/form-helpers';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Star, Trash2 } from 'lucide-vue-next';
@@ -13,13 +14,13 @@ const props = defineProps<{
 }>();
 
 function handleToggleCheck(): void {
-    router.patch(toggleCheck.url(props.item.id), {}, {
+    mobilePatch(toggleCheck.url(props.item.id), {}, {
         preserveScroll: true,
     });
 }
 
 function handleToggleFavorite(): void {
-    router.patch(toggleFavorite.url(props.item.id), {}, {
+    mobilePatch(toggleFavorite.url(props.item.id), {}, {
         preserveScroll: true,
     });
 }

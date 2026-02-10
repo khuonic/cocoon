@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { mobilePut } from '@/lib/form-helpers';
 import AppLayout from '@/layouts/AppLayout.vue';
 import InputError from '@/components/InputError.vue';
 import CategoryPicker from '@/components/budget/CategoryPicker.vue';
@@ -43,7 +44,7 @@ const form = useForm({
 });
 
 function submit(): void {
-    form.put(update.url({ expense: props.expense.id }));
+    mobilePut(form, update.url({ expense: props.expense.id }));
 }
 
 const deleteOpen = ref(false);

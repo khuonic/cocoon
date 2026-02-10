@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
+import { mobilePut } from '@/lib/form-helpers';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,7 +69,7 @@ function toggleTag(tag: MealTag): void {
 
 function submit(): void {
     if (isEditMode() && props.idea) {
-        form.put(update.url(props.idea.id), {
+        mobilePut(form, update.url(props.idea.id), {
             preserveScroll: true,
             onSuccess: () => { isOpen.value = false; },
         });

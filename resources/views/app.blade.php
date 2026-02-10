@@ -2,11 +2,13 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 
+        <meta name="color-scheme" content="light">
         <style>
             html {
                 background-color: oklch(1 0 0);
+                color-scheme: light;
             }
         </style>
 
@@ -22,7 +24,7 @@
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead
     </head>
-    <body class="nativephp-safe-area font-sans antialiased">
+    <body class="font-sans antialiased">
         @inertia
     </body>
 </html>

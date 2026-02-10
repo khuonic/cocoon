@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
+import { mobilePut } from '@/lib/form-helpers';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,7 +63,7 @@ watch(() => props.todo, () => {
 
 function submit(): void {
     if (isEditMode() && props.todo) {
-        form.put(update.url(props.todo.id), {
+        mobilePut(form, update.url(props.todo.id), {
             preserveScroll: true,
             onSuccess: () => { isOpen.value = false; },
         });

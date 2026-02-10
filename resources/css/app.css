@@ -137,46 +137,6 @@
     --sidebar: hsl(35 38% 93%);
 }
 
-.dark {
-    --background: hsl(30 10% 9%);         /* #1A1816 */
-    --foreground: hsl(35 20% 92%);
-    --card: hsl(30 8% 13%);
-    --card-foreground: hsl(35 20% 92%);
-    --popover: hsl(30 8% 13%);
-    --popover-foreground: hsl(35 20% 92%);
-    --primary: hsl(19 55% 60%);           /* brighter terracotta for dark bg */
-    --primary-foreground: hsl(30 10% 9%);
-    --secondary: hsl(30 8% 18%);
-    --secondary-foreground: hsl(35 20% 92%);
-    --muted: hsl(30 8% 16%);
-    --muted-foreground: hsl(35 10% 60%);
-    --accent: hsl(30 8% 18%);
-    --accent-foreground: hsl(35 20% 92%);
-    --destructive: hsl(0 84% 60%);
-    --destructive-foreground: hsl(35 20% 92%);
-    --border: hsl(30 8% 18%);
-    --input: hsl(30 8% 18%);
-    --ring: hsl(19 55% 60%);
-    --chart-1: hsl(19 55% 60%);
-    --chart-2: hsl(152 50% 50%);
-    --chart-3: hsl(35 65% 60%);
-    --chart-4: hsl(210 45% 55%);
-    --chart-5: hsl(340 50% 60%);
-
-    --cocon: hsl(19 55% 60%);
-    --cocon-foreground: hsl(30 10% 9%);
-    --cocon-light: hsl(19 40% 18%);
-
-    --sidebar-background: hsl(30 10% 7%);
-    --sidebar-foreground: hsl(35 20% 90%);
-    --sidebar-primary: hsl(19 55% 60%);
-    --sidebar-primary-foreground: hsl(35 20% 92%);
-    --sidebar-accent: hsl(30 8% 16%);
-    --sidebar-accent-foreground: hsl(35 20% 90%);
-    --sidebar-border: hsl(30 8% 16%);
-    --sidebar-ring: hsl(19 55% 60%);
-    --sidebar: hsl(30 10% 7%);
-}
 
 @layer base {
     * {

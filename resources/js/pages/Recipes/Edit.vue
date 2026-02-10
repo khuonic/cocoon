@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
+import { mobilePut } from '@/lib/form-helpers';
 import AppLayout from '@/layouts/AppLayout.vue';
 import RecipeForm from '@/components/meals/RecipeForm.vue';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ const form = useForm({
 });
 
 function submit(): void {
-    form.put(update.url(props.recipe.id));
+    mobilePut(form, update.url(props.recipe.id));
 }
 
 function goBack(): void {

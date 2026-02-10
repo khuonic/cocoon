@@ -28,7 +28,7 @@ function isActive(href: string): boolean {
 </script>
 
 <template>
-    <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm safe-area-bottom">
+    <nav class="shrink-0 border-t border-border bg-card safe-area-bottom">
         <div class="flex items-center justify-around">
             <Link
                 v-for="tab in tabs"

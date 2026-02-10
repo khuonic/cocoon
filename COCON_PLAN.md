@@ -383,6 +383,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | Phase 5 - Budget | [`PHASE5_BUDGET.md`](PHASE5_BUDGET.md) |
 | Phase 7 - Tâches | [`PHASE7_TODOS.md`](PHASE7_TODOS.md) |
 | Phase 8 - Repas | [`PHASE8_MEALS.md`](PHASE8_MEALS.md) |
+| Phase 9 - Notes | [`PHASE9_NOTES.md`](PHASE9_NOTES.md) |
 
 ---
 

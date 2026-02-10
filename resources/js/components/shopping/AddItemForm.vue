@@ -29,7 +29,7 @@ function submit(): void {
 </script>
 
 <template>
-    <form @submit.prevent="submit" class="sticky top-14 z-30 border-b border-border bg-card/95 p-3 backdrop-blur-sm safe-area-form">
+    <form @submit.prevent="submit" class="sticky top-0 z-30 border-b border-border bg-card p-3 backdrop-blur-sm">
         <div class="flex gap-2">
             <Input
                 v-model="form.name"
