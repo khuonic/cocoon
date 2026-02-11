@@ -22,6 +22,7 @@ class UpdateTodoRequest extends FormRequest
             'is_personal' => ['required', 'boolean'],
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
             'due_date' => ['nullable', 'date'],
+            'show_on_dashboard' => ['required', 'boolean'],
         ];
     }
 

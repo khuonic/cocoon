@@ -24,6 +24,7 @@ class UpdateBookmarkRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'category' => ['nullable', 'string', Rule::in(array_column(BookmarkCategory::cases(), 'value'))],
             'is_favorite' => ['required', 'boolean'],
+            'show_on_dashboard' => ['required', 'boolean'],
         ];
     }
 

@@ -29,6 +29,7 @@ class TodoFactory extends Factory
             'recurrence_day' => null,
             'is_done' => false,
             'completed_at' => null,
+            'show_on_dashboard' => false,
             'uuid' => Str::uuid(),
         ];
     }

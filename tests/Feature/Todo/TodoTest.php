@@ -82,6 +82,7 @@ test('store creates a shared todo', function () {
             'is_personal' => false,
             'assigned_to' => null,
             'due_date' => null,
+            'show_on_dashboard' => false,
         ])
         ->assertRedirect(route('todos.index'));
 
@@ -105,6 +106,7 @@ test('store creates a personal todo', function () {
             'is_personal' => true,
             'assigned_to' => null,
             'due_date' => null,
+            'show_on_dashboard' => false,
         ])
         ->assertRedirect(route('todos.index'));
 
@@ -122,6 +124,7 @@ test('store validates title is required', function () {
         ->post(route('todos.store'), [
             'title' => '',
             'is_personal' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertSessionHasErrors(['title']);
 });
@@ -134,6 +137,7 @@ test('store validates assigned_to exists', function () {
             'title' => 'Test',
             'is_personal' => false,
             'assigned_to' => 999,
+            'show_on_dashboard' => false,
         ])
         ->assertSessionHasErrors(['assigned_to']);
 });
@@ -147,6 +151,7 @@ test('store assigns created_by automatically', function () {
             'is_personal' => false,
             'assigned_to' => null,
             'due_date' => null,
+            'show_on_dashboard' => false,
         ]);
 
     expect(Todo::query()->first()->created_by)->toBe($user->id);
@@ -163,6 +168,7 @@ test('update modifies a todo', function () {
             'is_personal' => false,
             'assigned_to' => null,
             'due_date' => null,
+            'show_on_dashboard' => false,
         ])
         ->assertRedirect(route('todos.index'));
 

@@ -6,6 +6,8 @@ export * from './todo';
 export * from './meal';
 export * from './note';
 export * from './bookmark';
+export * from './sweet-message';
+export * from './birthday';
 export * from './ui';
 
 import type { Auth } from './auth';

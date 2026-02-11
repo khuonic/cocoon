@@ -34,6 +34,7 @@ const form = useForm({
     description: '' as string | null,
     category: null as BookmarkCategory | null,
     is_favorite: false,
+    show_on_dashboard: false,
 });
 
 function resetForm(): void {
@@ -43,6 +44,7 @@ function resetForm(): void {
         form.description = props.bookmark.description ?? '';
         form.category = props.bookmark.category;
         form.is_favorite = props.bookmark.is_favorite;
+        form.show_on_dashboard = props.bookmark.show_on_dashboard;
     } else {
         form.reset();
         form.clearErrors();
@@ -149,6 +151,15 @@ function submit(): void {
                         id="bookmark-favorite"
                         :checked="form.is_favorite"
                         @update:checked="(val: boolean) => form.is_favorite = val"
+                    />
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <Label for="bookmark-dashboard">Afficher sur l'accueil</Label>
+                    <Switch
+                        id="bookmark-dashboard"
+                        :checked="form.show_on_dashboard"
+                        @update:checked="(val: boolean) => form.show_on_dashboard = val"
                     />
                 </div>
 

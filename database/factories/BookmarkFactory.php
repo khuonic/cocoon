@@ -23,6 +23,7 @@ class BookmarkFactory extends Factory
             'description' => fake()->optional()->sentence(),
             'category' => fake()->optional(0.5)->randomElement(BookmarkCategory::cases()),
             'is_favorite' => false,
+            'show_on_dashboard' => false,
             'added_by' => User::factory(),
             'uuid' => Str::uuid(),
         ];

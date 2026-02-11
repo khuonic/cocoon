@@ -12,6 +12,7 @@ export type Bookmark = {
     description: string | null;
     category: BookmarkCategory | null;
     is_favorite: boolean;
+    show_on_dashboard: boolean;
     added_by: number;
     uuid: string;
     created_at: string;

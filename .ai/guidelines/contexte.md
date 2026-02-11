@@ -43,6 +43,9 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | RecipeStep | Étape d'une recette (instruction, ordre) |
 | Note | Note partagée (titre, contenu, couleur, épinglage) |
 | Bookmark | Bookmark générique (url, titre, description, catégorie, favori) |
+| SweetMessage | Mot doux entre partenaires (1 par utilisateur) |
+| Joke | Blague du jour (seeder 50 blagues) |
+| Birthday | Anniversaire (nom, date, âge calculé) |
 | SyncLog | Journal de sync (futur) |
 
 ### Enums (app/Enums/)
@@ -65,7 +68,9 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 ### Controllers (app/Http/Controllers/)
 
-- `DashboardController` : page d'accueil `/`
+- `DashboardController` : page d'accueil `/` avec widgets (mot doux, anniversaires du jour, todos/bookmarks épinglés, blague)
+- `SweetMessageController` : store (updateOrCreate) — mot doux
+- `BirthdayController` : CRUD complet (index, store, update, destroy) — modal sur index
 - `ExpenseController` : CRUD dépenses + settle + history
 - `ShoppingListController` : CRUD + duplicate (complet)
 - `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
@@ -92,7 +97,9 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `/recipes` : resource (sauf index)
 - `/notes` : resource (index, store, update, destroy) + `PATCH {id}/toggle-pin`
 - `/bookmarks` : resource (index, store, update, destroy) + `PATCH {id}/toggle-favorite`
-- `/more` : page "Plus"
+- `POST /sweet-messages` : store mot doux
+- `/birthdays` : resource (index, store, update, destroy)
+- `/more` : page "Plus" (repas, notes, bookmarks, anniversaires, paramètres)
 - Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
 
 ## Phases terminées
@@ -152,6 +159,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - Filtrage par catégorie côté client (boutons scrollables)
 - 12 tests Pest (BookmarkTest)
 
+### Phase 11 : Dashboard + Anniversaires (complet)
+- Dashboard avec 5 widgets : mot doux, anniversaires du jour, todos épinglés, bookmarks épinglés, blague du jour
+- Mot doux : SweetMessage (1 par utilisateur, updateOrCreate), champ inline sur le dashboard
+- Blague du jour : Joke (seeder 50 blagues FR), rotation quotidienne
+- Anniversaires : Birthday CRUD complet via modal, page dédiée dans "Plus", age calculé
+- show_on_dashboard : flag boolean sur Todo et Bookmark, switch dans les formulaires
+- 25 tests Pest (DashboardTest + SweetMessageTest + BirthdayTest)
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -166,7 +181,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | 8 | Repas (idées + recettes) | **Complet** |
 | 9 | Notes | **Complet** |
 | 10 | Bookmarks | **Complet** |
-| 11 | Dashboard (widgets agrégés) | Page vide |
+| 11 | Dashboard + Anniversaires | **Complet** |
 | 12 | Sync offline-first | Non commencé |
 | 13 | Push notifications | Non commencé |
 | 14 | Auto-update APK | Non commencé |
@@ -187,6 +202,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `PHASE8_MEALS.md` : plan détaillé phase 8
 - `PHASE9_NOTES.md` : plan détaillé phase 9
 - `PHASE10_BOOKMARKS.md` : plan détaillé phase 10
+- `PHASE11_DASHBOARD.md` : plan détaillé phase 11
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)

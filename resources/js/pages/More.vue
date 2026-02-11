@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
 import {
     UtensilsCrossed,
     StickyNote,
     Bookmark,
+    Cake,
     Settings,
     ChevronRight,
 } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 const menuItems = [
     { label: 'Repas', href: '/meal-plans', icon: UtensilsCrossed, description: 'Planifier vos repas' },
     { label: 'Notes', href: '/notes', icon: StickyNote, description: 'Notes partagées' },
-    { label: 'Leboncoin', href: '/bookmarks', icon: Bookmark, description: 'Annonces sauvegardées' },
+    { label: 'Bookmarks', href: '/bookmarks', icon: Bookmark, description: 'Liens sauvegardés' },
+    { label: 'Anniversaires', href: '/birthdays', icon: Cake, description: 'Ne plus oublier les dates' },
     { label: 'Paramètres', href: '/settings/profile', icon: Settings, description: 'Profil et préférences' },
 ];
 </script>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SetupController;
+use App\Http\Controllers\BirthdayController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ShoppingItemController;
 use App\Http\Controllers\ShoppingListController;
+use App\Http\Controllers\SweetMessageController;
 use App\Http\Controllers\TodoController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('notes', NoteController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::patch('bookmarks/{bookmark}/toggle-favorite', [BookmarkController::class, 'toggleFavorite'])->name('bookmarks.toggle-favorite');
     Route::resource('bookmarks', BookmarkController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('sweet-messages', [SweetMessageController::class, 'store'])->name('sweet-messages.store');
+    Route::resource('birthdays', BirthdayController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('more', MoreController::class)->name('more');
 });
 

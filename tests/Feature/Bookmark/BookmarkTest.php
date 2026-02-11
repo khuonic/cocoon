@@ -45,6 +45,7 @@ test('store creates a bookmark with uuid and added_by', function () {
             'description' => null,
             'category' => null,
             'is_favorite' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertRedirect(route('bookmarks.index'));
 
@@ -66,6 +67,7 @@ test('store validates url is required', function () {
             'url' => '',
             'title' => 'Un titre',
             'is_favorite' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertSessionHasErrors(['url']);
 });
@@ -78,6 +80,7 @@ test('store validates title is required', function () {
             'url' => 'https://example.com',
             'title' => '',
             'is_favorite' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertSessionHasErrors(['title']);
 });
@@ -90,6 +93,7 @@ test('store validates url format', function () {
             'url' => 'not-a-url',
             'title' => 'Un titre',
             'is_favorite' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertSessionHasErrors(['url']);
 });
@@ -103,6 +107,7 @@ test('store validates category must be a valid enum value', function () {
             'title' => 'Un titre',
             'category' => 'invalid-category',
             'is_favorite' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertSessionHasErrors(['category']);
 });
@@ -117,6 +122,7 @@ test('store creates a bookmark with category', function () {
             'description' => 'Super resto',
             'category' => 'resto',
             'is_favorite' => false,
+            'show_on_dashboard' => false,
         ])
         ->assertRedirect(route('bookmarks.index'));
 
@@ -136,6 +142,7 @@ test('update modifies a bookmark', function () {
             'description' => 'Nouvelle description',
             'category' => 'voyage',
             'is_favorite' => true,
+            'show_on_dashboard' => false,
         ])
         ->assertRedirect(route('bookmarks.index'));
 

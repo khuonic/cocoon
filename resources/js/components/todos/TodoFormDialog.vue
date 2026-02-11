@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
-import { mobilePut } from '@/lib/form-helpers';
+import { store, update } from '@/actions/App/Http/Controllers/TodoController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +15,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import type { Todo } from '@/types/todo';
+import { mobilePut } from '@/lib/form-helpers';
 import type { User } from '@/types/auth';
-import { store, update } from '@/actions/App/Http/Controllers/TodoController';
+import type { Todo } from '@/types/todo';
 
 const props = defineProps<{
     todo?: Todo;
@@ -34,6 +34,7 @@ const form = useForm({
     is_personal: false,
     assigned_to: null as number | null,
     due_date: '' as string | null,
+    show_on_dashboard: false,
 });
 
 function resetForm(): void {
@@ -43,6 +44,7 @@ function resetForm(): void {
         form.is_personal = props.todo.is_personal;
         form.assigned_to = props.todo.assigned_to;
         form.due_date = props.todo.due_date ?? '';
+        form.show_on_dashboard = props.todo.show_on_dashboard;
     } else {
         form.reset();
         form.clearErrors();
@@ -153,6 +155,16 @@ function submit(): void {
                         type="date"
                     />
                     <InputError :message="form.errors.due_date" />
+                </div>
+
+                <!-- Afficher sur l'accueil -->
+                <div class="flex items-center justify-between">
+                    <Label for="todo-dashboard">Afficher sur l'accueil</Label>
+                    <Switch
+                        id="todo-dashboard"
+                        :checked="form.show_on_dashboard"
+                        @update:checked="(val: boolean) => form.show_on_dashboard = val"
+                    />
                 </div>
 
                 <DialogFooter>

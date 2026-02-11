@@ -24,6 +24,7 @@ class Todo extends Model
         'recurrence_day',
         'is_done',
         'completed_at',
+        'show_on_dashboard',
         'uuid',
     ];
 
@@ -32,6 +33,7 @@ class Todo extends Model
         return [
             'is_personal' => 'boolean',
             'is_done' => 'boolean',
+            'show_on_dashboard' => 'boolean',
             'due_date' => 'date',
             'recurrence_type' => RecurrenceType::class,
             'completed_at' => 'datetime',
