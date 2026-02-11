@@ -384,6 +384,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | Phase 7 - Tâches | [`PHASE7_TODOS.md`](PHASE7_TODOS.md) |
 | Phase 8 - Repas | [`PHASE8_MEALS.md`](PHASE8_MEALS.md) |
 | Phase 9 - Notes | [`PHASE9_NOTES.md`](PHASE9_NOTES.md) |
+| Phase 10 - Bookmarks | [`PHASE10_BOOKMARKS.md`](PHASE10_BOOKMARKS.md) |
 
 ---
 
@@ -400,7 +401,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | 7 | Module Tâches (complet) | 4 |
 | 8 | Module Repas (complet) | 4 |
 | 9 | Module Notes (complet) | 4 |
-| 10 | Module Leboncoin (bookmarks) | 4 |
+| 10 | Module Bookmarks (generiques) | 4 |
 | 11 | Dashboard (agrégation des widgets) | 5-10 |
 | 12 | Mécanisme de sync + stockage fichiers S3 | 11 |
 | 13 | Backup personnel (endpoint + commande artisan) | 12 |

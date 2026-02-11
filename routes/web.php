@@ -43,7 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('recipes', RecipeController::class)->except(['index']);
     Route::patch('notes/{note}/toggle-pin', [NoteController::class, 'togglePin'])->name('notes.toggle-pin');
     Route::resource('notes', NoteController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('bookmarks', BookmarkController::class)->only(['index']);
+    Route::patch('bookmarks/{bookmark}/toggle-favorite', [BookmarkController::class, 'toggleFavorite'])->name('bookmarks.toggle-favorite');
+    Route::resource('bookmarks', BookmarkController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('more', MoreController::class)->name('more');
 });
 

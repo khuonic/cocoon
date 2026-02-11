@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\BookmarkCategory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -12,8 +13,6 @@ use Illuminate\Support\Str;
 class BookmarkFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -21,11 +20,18 @@ class BookmarkFactory extends Factory
         return [
             'url' => fake()->url(),
             'title' => fake()->sentence(4),
-            'price' => fake()->optional(0.8)->randomFloat(2, 5, 2000),
-            'image_url' => fake()->optional()->imageUrl(),
-            'notes' => fake()->optional()->sentence(),
+            'description' => fake()->optional()->sentence(),
+            'category' => fake()->optional(0.5)->randomElement(BookmarkCategory::cases()),
+            'is_favorite' => false,
             'added_by' => User::factory(),
             'uuid' => Str::uuid(),
         ];
+    }
+
+    public function favorite(): static
+    {
+        return $this->state(fn () => [
+            'is_favorite' => true,
+        ]);
     }
 }

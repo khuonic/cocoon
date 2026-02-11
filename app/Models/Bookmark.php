@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BookmarkCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,9 +15,9 @@ class Bookmark extends Model
     protected $fillable = [
         'url',
         'title',
-        'price',
-        'image_url',
-        'notes',
+        'description',
+        'category',
+        'is_favorite',
         'added_by',
         'uuid',
     ];
@@ -24,7 +25,8 @@ class Bookmark extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
+            'category' => BookmarkCategory::class,
+            'is_favorite' => 'boolean',
         ];
     }
 
