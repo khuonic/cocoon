@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\NoteColor;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -22,6 +23,7 @@ class NoteFactory extends Factory
             'title' => fake()->sentence(3),
             'content' => fake()->paragraphs(2, true),
             'is_pinned' => false,
+            'color' => fake()->optional(0.5)->randomElement(NoteColor::cases()),
             'created_by' => User::factory(),
             'uuid' => Str::uuid(),
         ];

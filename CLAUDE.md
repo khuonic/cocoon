@@ -14,7 +14,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - **Backend** : Laravel 12, PHP 8.4, SQLite (local, offline-first)
 - **Frontend** : Vue 3 + Inertia v2 + Tailwind CSS v4
 - **Mobile** : NativePHP Mobile v3 (runtime PHP natif sur le device)
-- **Auth** : Laravel Fortify (login, 2FA, pas de registration publique, pas de reset password)
+- **Auth** : Laravel Fortify (login uniquement, pas de 2FA, pas de registration publique, pas de reset password)
 - **Tests** : Pest 4
 - **Routes TS** : Wayfinder
 - **Sync future** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
@@ -40,8 +40,10 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | ShoppingList | Liste de courses |
 | ShoppingItem | Article dans une liste |
 | Todo | Tâche |
-| MealPlan | Planning repas |
-| MealIdea | Idée de repas |
+| MealIdea | Idée de repas (nom, description, url, tags) |
+| Recipe | Recette complète (titre, description, url, temps, portions, tags) |
+| RecipeIngredient | Ingrédient d'une recette (nom, quantité, unité, ordre) |
+| RecipeStep | Étape d'une recette (instruction, ordre) |
 | Note | Note libre |
 | Bookmark | Marque-page |
 | SyncLog | Journal de sync (futur) |
@@ -51,7 +53,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `SplitType` : Equal, FullPayer, FullOther, Custom
 - `RecurrenceType` : types de récurrence
 - `ShoppingItemCategory` : catégories d'articles
-- `MealType` : types de repas
+- `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand (tags repas)
 - `SyncAction` : actions de sync
 
 ### Services (app/Services/)
@@ -61,7 +63,6 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 ### Middleware custom
 
 - `RestrictToHousehold` : vérifie que l'email est dans la whitelist
-- `HandleAppearance` : gestion du dark mode
 
 ### Controllers (app/Http/Controllers/)
 
@@ -69,9 +70,13 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `ExpenseController` : CRUD dépenses + settle + history
 - `ShoppingListController` : CRUD + duplicate (complet)
 - `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
-- `TodoController`, `MealPlanController`, `NoteController`, `BookmarkController` : index seulement (stubs)
+- `TodoController` : CRUD complet (index, store, update, toggle, destroy) — modal sur index
+- `MealPlanController` : index (passe ideas, recipes, availableTags)
+- `MealIdeaController` : store, update, destroy — CRUD via modal
+- `RecipeController` : create, store, show, edit, update, destroy — pages dédiées
+- `NoteController`, `BookmarkController` : index seulement (stubs)
 - `MoreController` : page "Plus"
-- `Settings/ProfileController`, `Settings/PasswordController`, `Settings/TwoFactorAuthenticationController`
+- `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
 - `Auth/ApiLoginController` : login API (futur sync)
 
@@ -81,9 +86,13 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `GET|POST /setup` : Setup premier lancement (guest)
 - `/expenses` : resource (sauf show) + `POST settle` + `GET history`
 - `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
-- `/todos`, `/meal-plans`, `/notes`, `/bookmarks` : index seulement
+- `/todos` : resource (sauf create, show, edit) + `PATCH {id}/toggle`
+- `/meal-plans` : index (idées + recettes)
+- `/meal-ideas` : store, update, destroy
+- `/recipes` : resource (sauf index)
+- `/notes`, `/bookmarks` : index seulement
 - `/more` : page "Plus"
-- Settings dans `routes/settings.php` : profil, mot de passe, 2FA, apparence
+- Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
 
 ## Phases terminées
 
@@ -91,9 +100,11 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 - Setup projet Laravel 12 + NativePHP + Tailwind v4
 - Modèles, migrations, factories, seeders pour tous les modules
-- Auth Fortify : login, setup premier lancement, middleware household, 2FA
-- Layout mobile avec AppLayout + BottomNav (5 onglets)
-- Pages settings : profil, mot de passe, 2FA, apparence
+- Auth Fortify : login, setup premier lancement, middleware household (pas de 2FA)
+- Layout mobile avec AppLayout (h-dvh, header fixe, main scrollable) + BottomNav (5 onglets)
+- Pages settings : profil (nom uniquement, email non modifiable), mot de passe
+- Thème clair uniquement (pas de dark mode, pas de page apparence)
+- Pas de suppression de compte
 
 ### Phase 5 : Module Budget (complet)
 
@@ -111,6 +122,24 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - Vue Show avec formulaire inline sticky, groupes par catégorie, section cochés pliable
 - 20 tests Pest (ShoppingListTest + ShoppingItemTest)
 
+### Phase 7 : Module Tâches (complet)
+
+- CRUD complet via modal (store, update, toggle, destroy)
+- Groupement : tâches partagées, tâches personnelles, tâches terminées (collapsible)
+- Assignation à un utilisateur, date d'échéance optionnelle
+- Toggle done/undone avec completed_at
+- 15 tests Pest (TodoTest)
+
+### Phase 8 : Module Repas (complet)
+
+- Banque d'idées repas : CRUD via modal (nom, description, url, tags)
+- Recettes complètes : pages dédiées create/show/edit (titre, description, url, temps prépa/cuisson, portions, tags, ingrédients, étapes)
+- 2 onglets sur /meal-plans : Idées + Recettes
+- Filtrage par tags côté client
+- Enum MealTag (Rapide, Végé, Comfort, Léger, Gourmand)
+- 22 tests Pest (MealIdeaTest + RecipeTest)
+- Nettoyage : suppression MealPlan, MealType
+
 ### Traduction FR + NativePHP safe areas
 
 - Toutes les pages settings et auth traduites en français
@@ -122,8 +151,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Phase | Module | Statut |
 |-------|--------|--------|
 | 6 | Courses (shopping lists) | **Complet** |
-| 7 | Tâches (todos) | Stub index |
-| 8 | Repas (meal plans + ideas) | Stub index |
+| 7 | Tâches (todos) | **Complet** |
+| 8 | Repas (idées + recettes) | **Complet** |
 | 9 | Notes | Stub index |
 | 10 | Bookmarks | Stub index |
 | 11 | Dashboard (widgets agrégés) | Page vide |
@@ -143,6 +172,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 - `COCON_PLAN.md` : plan global du projet
 - `PHASE5_BUDGET.md` : plan détaillé phase 5
+- `PHASE7_TODOS.md` : plan détaillé phase 7
+- `PHASE8_MEALS.md` : plan détaillé phase 8
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)
@@ -449,7 +480,7 @@ Vue components must have a single root element.
 - NativePHP Mobile is a Laravel package that enables developers to build native iOS and Android applications using PHP and native UI components.
 - NativePHP Mobile runs a full PHP runtime directly on the device with SQLite — no web server required.
 - NativePHP Mobile supports **two frontend approaches**: Livewire/Blade (PHP) or JavaScript frameworks (Vue, React, Inertia, etc.).
-- NativePHP Mobile documentation is hosted at `https://nativephp.com/docs/mobile/3/**`
+- NativePHP Mobile documentation is hosted at `https://nativephp.com/docs/mobile//**`
 - **Before implementing any features using NativePHP Mobile, use the `web-search` tool to get the latest docs for that specific feature. The docs listing is available in <available-docs>**
 
 ### Identifying the Development Environment

@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Enums\RecurrenceType;
+use Database\Factories\TodoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Todo extends Model
 {
-    /** @use HasFactory<\Database\Factories\TodoFactory> */
+    /** @use HasFactory<TodoFactory> */
     use HasFactory;
 
     protected $fillable = [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\NoteColor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ class Note extends Model
         'title',
         'content',
         'is_pinned',
+        'color',
         'created_by',
         'uuid',
     ];
@@ -23,6 +25,7 @@ class Note extends Model
     {
         return [
             'is_pinned' => 'boolean',
+            'color' => NoteColor::class,
         ];
     }
 

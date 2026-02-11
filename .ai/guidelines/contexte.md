@@ -41,7 +41,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Recipe | Recette complète (titre, description, url, temps, portions, tags) |
 | RecipeIngredient | Ingrédient d'une recette (nom, quantité, unité, ordre) |
 | RecipeStep | Étape d'une recette (instruction, ordre) |
-| Note | Note libre |
+| Note | Note partagée (titre, contenu, couleur, épinglage) |
 | Bookmark | Marque-page |
 | SyncLog | Journal de sync (futur) |
 
@@ -51,6 +51,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `RecurrenceType` : types de récurrence
 - `ShoppingItemCategory` : catégories d'articles
 - `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand (tags repas)
+- `NoteColor` : Default, Yellow, Green, Blue, Pink, Purple (couleurs notes)
 - `SyncAction` : actions de sync
 
 ### Services (app/Services/)
@@ -71,7 +72,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MealPlanController` : index (passe ideas, recipes, availableTags)
 - `MealIdeaController` : store, update, destroy — CRUD via modal
 - `RecipeController` : create, store, show, edit, update, destroy — pages dédiées
-- `NoteController`, `BookmarkController` : index seulement (stubs)
+- `NoteController` : CRUD complet (index, store, update, togglePin, destroy) — modal sur index
+- `BookmarkController` : index seulement (stub)
 - `MoreController` : page "Plus"
 - `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
@@ -87,7 +89,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `/meal-plans` : index (idées + recettes)
 - `/meal-ideas` : store, update, destroy
 - `/recipes` : resource (sauf index)
-- `/notes`, `/bookmarks` : index seulement
+- `/notes` : resource (index, store, update, destroy) + `PATCH {id}/toggle-pin`
+- `/bookmarks` : index seulement
 - `/more` : page "Plus"
 - Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
 
@@ -132,6 +135,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - 22 tests Pest (MealIdeaTest + RecipeTest)
 - Nettoyage : suppression MealPlan, MealType
 
+### Phase 9 : Module Notes (complet)
+- CRUD complet via modal (store, update, togglePin, destroy)
+- Grille 2 colonnes style Google Keep
+- Couleurs pastel par note (enum NoteColor : 6 couleurs)
+- Épinglage de notes (affichées en premier)
+- ColorPicker (6 pastilles cliquables)
+- 12 tests Pest (NoteTest)
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -144,7 +155,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | 6 | Courses (shopping lists) | **Complet** |
 | 7 | Tâches (todos) | **Complet** |
 | 8 | Repas (idées + recettes) | **Complet** |
-| 9 | Notes | Stub index |
+| 9 | Notes | **Complet** |
 | 10 | Bookmarks | Stub index |
 | 11 | Dashboard (widgets agrégés) | Page vide |
 | 12 | Sync offline-first | Non commencé |
@@ -165,6 +176,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `PHASE5_BUDGET.md` : plan détaillé phase 5
 - `PHASE7_TODOS.md` : plan détaillé phase 7
 - `PHASE8_MEALS.md` : plan détaillé phase 8
+- `PHASE9_NOTES.md` : plan détaillé phase 9
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)
