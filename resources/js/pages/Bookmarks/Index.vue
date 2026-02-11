@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus, Bookmark as BookmarkIcon } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import EmptyState from '@/components/EmptyState.vue';
+
 import BookmarkCard from '@/components/bookmarks/BookmarkCard.vue';
 import BookmarkFormDialog from '@/components/bookmarks/BookmarkFormDialog.vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { Button } from '@/components/ui/button';
-import { Plus, Bookmark as BookmarkIcon } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
 import type { Bookmark, BookmarkCategory, BookmarkCategoryOption } from '@/types/bookmark';
 
 const props = defineProps<{

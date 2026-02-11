@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { mobilePatch } from '@/lib/form-helpers';
-import { Button } from '@/components/ui/button';
 import { Star, Trash2, ExternalLink } from 'lucide-vue-next';
-import type { Bookmark, BookmarkCategory } from '@/types/bookmark';
 import { toggleFavorite, destroy } from '@/actions/App/Http/Controllers/BookmarkController';
+import { Button } from '@/components/ui/button';
+import { mobilePatch } from '@/lib/form-helpers';
+import type { Bookmark, BookmarkCategory } from '@/types/bookmark';
 
 const props = defineProps<{
     bookmark: Bookmark;

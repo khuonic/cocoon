@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
-import { mobilePut } from '@/lib/form-helpers';
+import { store, update } from '@/actions/App/Http/Controllers/BookmarkController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,11 +13,11 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { mobilePut } from '@/lib/form-helpers';
 import type { Bookmark, BookmarkCategory, BookmarkCategoryOption } from '@/types/bookmark';
-import { store, update } from '@/actions/App/Http/Controllers/BookmarkController';
 
 const props = defineProps<{
     bookmark?: Bookmark;
