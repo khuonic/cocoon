@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 import BottomNav from '@/components/BottomNav.vue';
+import { configureSyncClient, sync } from '@/services/sync-client';
 
 type Props = {
     title?: string;
@@ -7,6 +10,16 @@ type Props = {
 
 withDefaults(defineProps<Props>(), {
     title: undefined,
+});
+
+const page = usePage();
+const syncApiUrl = (page.props as Record<string, unknown>).syncApiUrl as string;
+
+onMounted(() => {
+    if (syncApiUrl) {
+        configureSyncClient(syncApiUrl);
+        sync();
+    }
 });
 </script>
 

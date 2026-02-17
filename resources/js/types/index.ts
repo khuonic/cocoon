@@ -18,5 +18,6 @@ export type AppPageProps<
     name: string;
     auth: Auth;
     sidebarOpen: boolean;
+    syncApiUrl: string;
     [key: string]: unknown;
 };

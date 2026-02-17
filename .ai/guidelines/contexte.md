@@ -14,14 +14,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - **Auth** : Laravel Fortify (login uniquement, pas de 2FA, pas de registration publique, pas de reset password)
 - **Tests** : Pest 4
 - **Routes TS** : Wayfinder
-- **Sync future** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
+- **Sync** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
 
 ## Contraintes clés
 
 - **2 utilisateurs seulement** : Kevin et Lola, whitelist d'emails dans `config/cocon.php`
 - **Registration désactivée** : un écran de setup (`/setup`) permet de créer un compte au premier lancement si l'email est dans la whitelist
 - **Pas de reset password** : app locale sans serveur mail
-- **Offline-first** : SQLite local, sync cloud prévue mais pas encore implémentée
+- **Offline-first** : SQLite local, sync cloud via API (Syncable trait + SyncLog + SyncService)
 - **Dashboard sur `/`** : pas de redirect, Fortify home = `'/'`
 - **Safe areas NativePHP** : `viewport-fit=cover` + classe `nativephp-safe-area` sur `<body>`, CSS variables `--inset-top/--inset-bottom` avec fallback `env(safe-area-inset-*)`
 
@@ -58,9 +58,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `BookmarkCategory` : Resto, Voyage, Shopping, Loisirs, Maison, Autre
 - `SyncAction` : actions de sync
 
+### Traits (app/Traits/)
+
+- `Syncable` : trait appliqué sur les 10 modèles synchronisables (écoute created/updated/deleted → SyncLog)
+
 ### Services (app/Services/)
 
 - `BalanceCalculator` : calcul de balance budget entre les 2 utilisateurs
+- `SyncService` : logique sync push/pull/full (last-write-wins, gestion recettes imbriquées)
 
 ### Middleware custom
 
@@ -83,7 +88,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MoreController` : page "Plus"
 - `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
-- `Auth/ApiLoginController` : login API (futur sync)
+- `Auth/ApiLoginController` : login API (Sanctum token)
+- `Api/SyncController` : push/pull/full sync API endpoints
 
 ### Routes principales (routes/web.php)
 
@@ -167,6 +173,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - show_on_dashboard : flag boolean sur Todo et Bookmark, switch dans les formulaires
 - 25 tests Pest (DashboardTest + SweetMessageTest + BirthdayTest)
 
+### Phase 12 : Sync Offline-First (complet)
+- Trait Syncable appliqué sur 10 modèles (écoute created/updated/deleted → SyncLog)
+- SyncService : logique push/pull/full avec last-write-wins (basé sur updated_at)
+- SyncController API : POST push, GET pull, POST full (auth:sanctum + RestrictToHousehold)
+- SyncClient JS : service TypeScript intégré dans AppLayout (sync au montage si configuré)
+- Config : `SYNC_API_URL` dans .env, partagé via Inertia shared data
+- 19 tests Pest (SyncApiTest + SyncableTest)
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -182,7 +196,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | 9 | Notes | **Complet** |
 | 10 | Bookmarks | **Complet** |
 | 11 | Dashboard + Anniversaires | **Complet** |
-| 12 | Sync offline-first | Planifié |
+| 12 | Sync offline-first | **Complet** |
 | 13 | Biométrie (Face ID / empreinte) | Non commencé |
 | 14 | Push notifications | Non commencé |
 | 15 | Auto-update APK | Non commencé |
