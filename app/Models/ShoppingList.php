@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,8 @@ class ShoppingList extends Model
 {
     /** @use HasFactory<\Database\Factories\ShoppingListFactory> */
     use HasFactory;
+
+    use Syncable;
 
     protected $fillable = [
         'name',

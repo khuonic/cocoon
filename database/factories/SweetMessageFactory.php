@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SweetMessage>
@@ -18,6 +19,7 @@ class SweetMessageFactory extends Factory
         return [
             'user_id' => User::factory(),
             'content' => fake()->sentence(),
+            'uuid' => Str::uuid(),
         ];
     }
 }

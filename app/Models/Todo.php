@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RecurrenceType;
+use App\Traits\Syncable;
 use Database\Factories\TodoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,8 @@ class Todo extends Model
 {
     /** @use HasFactory<TodoFactory> */
     use HasFactory;
+
+    use Syncable;
 
     protected $fillable = [
         'title',

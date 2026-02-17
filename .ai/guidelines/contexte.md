@@ -182,9 +182,10 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | 9 | Notes | **Complet** |
 | 10 | Bookmarks | **Complet** |
 | 11 | Dashboard + Anniversaires | **Complet** |
-| 12 | Sync offline-first | Non commencé |
-| 13 | Push notifications | Non commencé |
-| 14 | Auto-update APK | Non commencé |
+| 12 | Sync offline-first | Planifié |
+| 13 | Biométrie (Face ID / empreinte) | Non commencé |
+| 14 | Push notifications | Non commencé |
+| 15 | Auto-update APK | Non commencé |
 
 ## Conventions de code
 
@@ -203,6 +204,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `PHASE9_NOTES.md` : plan détaillé phase 9
 - `PHASE10_BOOKMARKS.md` : plan détaillé phase 10
 - `PHASE11_DASHBOARD.md` : plan détaillé phase 11
+- `PHASE12_SYNC.md` : plan détaillé phase 12
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)

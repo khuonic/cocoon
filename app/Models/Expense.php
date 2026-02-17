@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RecurrenceType;
 use App\Enums\SplitType;
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,8 @@ class Expense extends Model
 {
     /** @use HasFactory<\Database\Factories\ExpenseFactory> */
     use HasFactory;
+
+    use Syncable;
 
     protected $fillable = [
         'amount',

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BookmarkCategory;
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,8 @@ class Bookmark extends Model
 {
     /** @use HasFactory<\Database\Factories\BookmarkFactory> */
     use HasFactory;
+
+    use Syncable;
 
     protected $fillable = [
         'url',

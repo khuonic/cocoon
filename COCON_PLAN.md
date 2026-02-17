@@ -386,6 +386,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | Phase 9 - Notes | [`PHASE9_NOTES.md`](PHASE9_NOTES.md) |
 | Phase 10 - Bookmarks | [`PHASE10_BOOKMARKS.md`](PHASE10_BOOKMARKS.md) |
 | Phase 11 - Dashboard + Anniversaires | [`PHASE11_DASHBOARD.md`](PHASE11_DASHBOARD.md) |
+| Phase 12 - Sync Offline-First | [`PHASE12_SYNC.md`](PHASE12_SYNC.md) |
 
 ---
 

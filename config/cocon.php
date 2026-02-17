@@ -17,4 +17,16 @@ return [
         ['name' => 'Lola', 'email' => 'lolavivant@hotmail.fr'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sync API URL
+    |--------------------------------------------------------------------------
+    |
+    | The base URL of the remote server API used for data synchronization.
+    | Set this in .env via SYNC_API_URL.
+    |
+    */
+
+    'sync_api_url' => env('SYNC_API_URL', ''),
+
 ];
