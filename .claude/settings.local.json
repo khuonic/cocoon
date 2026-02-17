@@ -18,7 +18,8 @@
       "WebFetch(domain:nativephp.com)",
       "WebFetch(domain:cloud.laravel.com)",
       "WebSearch",
-      "WebFetch(domain:nightwatch.laravel.com)"
+      "WebFetch(domain:nightwatch.laravel.com)",
+      "WebFetch(domain:bifrost.nativephp.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

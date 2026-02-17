@@ -388,6 +388,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | Phase 11 - Dashboard + Anniversaires | [`PHASE11_DASHBOARD.md`](PHASE11_DASHBOARD.md) |
 | Phase 12 - Sync Offline-First | [`PHASE12_SYNC.md`](PHASE12_SYNC.md) |
 | Phase 13 - Biométrie | [`PHASE13_BIOMETRIC.md`](PHASE13_BIOMETRIC.md) |
+| Phase 14 - Auto-update APK | [`PHASE14_AUTOUPDATE.md`](PHASE14_AUTOUPDATE.md) |
 
 ---
 
