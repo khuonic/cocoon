@@ -64,16 +64,20 @@ onMounted(async () => {
     <div class="flex h-dvh flex-col overflow-hidden bg-background">
         <!-- Header -->
         <header v-if="title" class="shrink-0 border-b border-border bg-card safe-area-top">
-            <div class="flex h-14 items-center px-4">
-                <h1 class="text-lg font-semibold text-foreground">{{ title }}</h1>
-                <div class="ml-auto">
-                    <slot name="header-right" />
-                </div>
+            <div class="flex h-14 items-center gap-1 px-2">
+                <slot name="header-left" />
+                <h1
+                    class="flex-1 truncate text-lg font-semibold text-foreground"
+                    :class="$slots['header-left'] ? '' : 'pl-2'"
+                >
+                    {{ title }}
+                </h1>
+                <slot name="header-right" />
             </div>
         </header>
 
         <!-- Main content -->
-        <main class="min-h-0 flex-1 overflow-y-auto">
+        <main class="min-h-0 flex-1 overflow-y-auto pb-24">
             <slot />
         </main>
 

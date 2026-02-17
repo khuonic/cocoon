@@ -2,9 +2,10 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Plus, Copy } from 'lucide-vue-next';
+import { ShoppingCart, Copy } from 'lucide-vue-next';
 import type { ShoppingList } from '@/types/shopping';
 import { create, show } from '@/routes/shopping-lists';
 import { duplicate } from '@/actions/App/Http/Controllers/ShoppingListController';
@@ -20,14 +21,6 @@ function handleDuplicate(list: ShoppingList): void {
 
 <template>
     <AppLayout title="Courses">
-        <template #header-right>
-            <Button as-child size="icon" variant="ghost">
-                <Link :href="create.url()">
-                    <Plus :size="22" />
-                </Link>
-            </Button>
-        </template>
-
         <Head title="Courses" />
 
         <div class="p-4">
@@ -49,20 +42,20 @@ function handleDuplicate(list: ShoppingList): void {
                     v-for="list in shoppingLists"
                     :key="list.id"
                     :href="show.url(list.id)"
-                    class="flex items-center gap-3 rounded-xl bg-card p-3 shadow-sm transition-colors active:bg-muted"
+                    class="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm transition-colors active:bg-muted"
                 >
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <ShoppingCart :size="18" class="text-primary" />
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <ShoppingCart :size="20" class="text-primary" />
                     </div>
 
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2">
-                            <p class="truncate font-medium text-foreground">{{ list.name }}</p>
+                            <p class="truncate text-base font-medium text-foreground">{{ list.name }}</p>
                             <Badge v-if="list.is_template" variant="secondary" class="shrink-0 text-xs">
                                 Modèle
                             </Badge>
                         </div>
-                        <p class="text-xs text-muted-foreground">
+                        <p class="text-sm text-muted-foreground">
                             {{ list.checked_items_count }}/{{ list.items_count }} cochés
                         </p>
                     </div>
@@ -74,10 +67,12 @@ function handleDuplicate(list: ShoppingList): void {
                         class="shrink-0"
                         @click.prevent="handleDuplicate(list)"
                     >
-                        <Copy :size="16" />
+                        <Copy :size="18" />
                     </Button>
                 </Link>
             </div>
         </div>
+
+        <FloatingActionButton @click="router.visit(create.url())" />
     </AppLayout>
 </template>

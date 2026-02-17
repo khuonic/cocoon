@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
+import BackButton from '@/components/BackButton.vue';
 import RecipeForm from '@/components/meals/RecipeForm.vue';
 import { Button } from '@/components/ui/button';
 import type { TagOption, MealTag } from '@/types/meal';
@@ -26,28 +27,23 @@ const form = useForm({
 function submit(): void {
     form.post(store.url());
 }
-
-function goBack(): void {
-    router.visit('/meal-plans');
-}
 </script>
 
 <template>
     <AppLayout title="Nouvelle recette">
+        <template #header-left>
+            <BackButton href="/meal-plans" />
+        </template>
+
         <Head title="Nouvelle recette" />
 
         <div class="p-4">
             <form @submit.prevent="submit" class="space-y-5">
                 <RecipeForm v-model:form="form" :available-tags="availableTags" />
 
-                <div class="flex gap-3">
-                    <Button type="button" variant="outline" class="flex-1" @click="goBack">
-                        Annuler
-                    </Button>
-                    <Button type="submit" class="flex-1" :disabled="form.processing">
-                        Créer la recette
-                    </Button>
-                </div>
+                <Button type="submit" class="w-full" size="lg" :disabled="form.processing">
+                    Créer la recette
+                </Button>
             </form>
         </div>
     </AppLayout>

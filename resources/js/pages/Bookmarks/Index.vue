@@ -6,6 +6,7 @@ import { ref, computed } from 'vue';
 import BookmarkCard from '@/components/bookmarks/BookmarkCard.vue';
 import BookmarkFormDialog from '@/components/bookmarks/BookmarkFormDialog.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Bookmark, BookmarkCategory, BookmarkCategoryOption } from '@/types/bookmark';
@@ -43,15 +44,9 @@ function openEdit(bookmark: Bookmark): void {
     <Head title="Bookmarks" />
 
     <AppLayout title="Bookmarks">
-        <template #header-right>
-            <Button v-if="bookmarks.length > 0" variant="ghost" size="icon" @click="openCreate">
-                <Plus :size="20" />
-            </Button>
-        </template>
-
         <div class="p-4">
             <!-- Category filter -->
-            <div v-if="bookmarks.length > 0" class="mb-4 flex gap-2 overflow-x-auto">
+            <div v-if="bookmarks.length > 0" class="mb-4 flex gap-2 overflow-x-auto pb-1">
                 <Button
                     size="sm"
                     :variant="selectedCategory === null ? 'default' : 'outline'"
@@ -97,6 +92,8 @@ function openEdit(bookmark: Bookmark): void {
                 />
             </div>
         </div>
+
+        <FloatingActionButton @click="openCreate" />
 
         <BookmarkFormDialog
             v-model:open="showDialog"

@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import TagFilter from '@/components/meals/TagFilter.vue';
 import MealIdeaCard from '@/components/meals/MealIdeaCard.vue';
 import MealIdeaFormDialog from '@/components/meals/MealIdeaFormDialog.vue';
 import RecipeCard from '@/components/meals/RecipeCard.vue';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, BookOpen, Plus } from 'lucide-vue-next';
+import { Lightbulb, BookOpen } from 'lucide-vue-next';
 import type { MealIdea, Recipe, TagOption, MealTag } from '@/types/meal';
 import { create } from '@/actions/App/Http/Controllers/RecipeController';
 
@@ -46,28 +47,25 @@ function openEdit(idea: MealIdea): void {
     editingIdea.value = idea;
     dialogOpen.value = true;
 }
+
+function handleFabClick(): void {
+    if (activeTab.value === 'ideas') {
+        openCreate();
+    } else {
+        router.visit(create.url());
+    }
+}
 </script>
 
 <template>
     <AppLayout title="Repas">
-        <template #header-right>
-            <Button v-if="activeTab === 'ideas'" variant="ghost" size="icon" @click="openCreate">
-                <Plus :size="22" />
-            </Button>
-            <Link v-else :href="create.url()">
-                <Button variant="ghost" size="icon">
-                    <Plus :size="22" />
-                </Button>
-            </Link>
-        </template>
-
         <Head title="Repas" />
 
         <div class="space-y-4 p-4">
             <!-- Tab switcher -->
             <div class="flex rounded-lg bg-muted p-1">
                 <button
-                    class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors"
                     :class="activeTab === 'ideas' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'"
                     @click="activeTab = 'ideas'"
                 >
@@ -75,7 +73,7 @@ function openEdit(idea: MealIdea): void {
                     Idées
                 </button>
                 <button
-                    class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors"
                     :class="activeTab === 'recipes' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'"
                     @click="activeTab = 'recipes'"
                 >
@@ -135,6 +133,8 @@ function openEdit(idea: MealIdea): void {
                 </EmptyState>
             </template>
         </div>
+
+        <FloatingActionButton @click="handleFabClick" />
 
         <MealIdeaFormDialog
             v-model:open="dialogOpen"

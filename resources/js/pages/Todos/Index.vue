@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import TodoItem from '@/components/todos/TodoItem.vue';
 import TodoFormDialog from '@/components/todos/TodoFormDialog.vue';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { CheckSquare, Plus, ChevronDown } from 'lucide-vue-next';
+import { CheckSquare, ChevronDown } from 'lucide-vue-next';
 import type { Todo } from '@/types/todo';
 import type { User } from '@/types/auth';
 
@@ -39,12 +40,6 @@ function openEdit(todo: Todo): void {
 
 <template>
     <AppLayout title="Tâches">
-        <template #header-right>
-            <Button variant="ghost" size="icon" @click="openCreate">
-                <Plus :size="22" />
-            </Button>
-        </template>
-
         <Head title="Tâches" />
 
         <div class="space-y-6 p-4">
@@ -63,7 +58,7 @@ function openEdit(todo: Todo): void {
             <template v-else>
                 <!-- Tâches partagées -->
                 <section>
-                    <h2 class="mb-2 text-sm font-medium text-muted-foreground">Tâches partagées</h2>
+                    <h2 class="mb-3 text-base font-semibold text-muted-foreground">Tâches partagées</h2>
                     <div v-if="sharedTodos.length > 0" class="space-y-1">
                         <TodoItem
                             v-for="todo in sharedTodos"
@@ -77,7 +72,7 @@ function openEdit(todo: Todo): void {
 
                 <!-- Mes tâches -->
                 <section>
-                    <h2 class="mb-2 text-sm font-medium text-muted-foreground">Mes tâches</h2>
+                    <h2 class="mb-3 text-base font-semibold text-muted-foreground">Mes tâches</h2>
                     <div v-if="personalTodos.length > 0" class="space-y-1">
                         <TodoItem
                             v-for="todo in personalTodos"
@@ -110,6 +105,8 @@ function openEdit(todo: Todo): void {
                 </Collapsible>
             </template>
         </div>
+
+        <FloatingActionButton @click="openCreate" />
 
         <TodoFormDialog
             v-model:open="dialogOpen"

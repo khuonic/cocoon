@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import { mobilePut } from '@/lib/form-helpers';
 import AppLayout from '@/layouts/AppLayout.vue';
+import BackButton from '@/components/BackButton.vue';
 import RecipeForm from '@/components/meals/RecipeForm.vue';
 import { Button } from '@/components/ui/button';
 import type { Recipe, TagOption, MealTag } from '@/types/meal';
@@ -42,20 +43,19 @@ function goBack(): void {
 
 <template>
     <AppLayout title="Modifier la recette">
+        <template #header-left>
+            <BackButton :href="`/recipes/${recipe.id}`" />
+        </template>
+
         <Head title="Modifier la recette" />
 
         <div class="p-4">
             <form @submit.prevent="submit" class="space-y-5">
                 <RecipeForm v-model:form="form" :available-tags="availableTags" />
 
-                <div class="flex gap-3">
-                    <Button type="button" variant="outline" class="flex-1" @click="goBack">
-                        Annuler
-                    </Button>
-                    <Button type="submit" class="flex-1" :disabled="form.processing">
-                        Enregistrer
-                    </Button>
-                </div>
+                <Button type="submit" class="w-full" size="lg" :disabled="form.processing">
+                    Enregistrer
+                </Button>
             </form>
         </div>
     </AppLayout>

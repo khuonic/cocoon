@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { Plus, Wallet } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Wallet } from 'lucide-vue-next';
 import type { Expense, BalanceData } from '@/types/budget';
 import type { User } from '@/types/auth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import BalanceBanner from '@/components/budget/BalanceBanner.vue';
 import ExpenseCard from '@/components/budget/ExpenseCard.vue';
 import { Button } from '@/components/ui/button';
@@ -20,14 +21,6 @@ defineProps<{
 
 <template>
     <AppLayout title="Budget">
-        <template #header-right>
-            <Button as-child size="icon" variant="ghost">
-                <Link :href="create()">
-                    <Plus :size="22" />
-                </Link>
-            </Button>
-        </template>
-
         <Head title="Budget" />
 
         <div class="space-y-4 p-4">
@@ -63,5 +56,7 @@ defineProps<{
                 </Link>
             </div>
         </div>
+
+        <FloatingActionButton @click="router.visit(create())" />
     </AppLayout>
 </template>

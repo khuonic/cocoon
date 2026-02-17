@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import BackButton from '@/components/BackButton.vue';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -46,10 +47,13 @@ function handleDuplicate(): void {
 
 <template>
     <AppLayout :title="shoppingList.name">
+        <template #header-left>
+            <BackButton href="/shopping-lists" />
+        </template>
         <template #header-right>
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon-xl">
                         <MoreVertical :size="20" />
                     </Button>
                 </DropdownMenuTrigger>

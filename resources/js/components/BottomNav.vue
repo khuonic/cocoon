@@ -34,12 +34,12 @@ function isActive(href: string): boolean {
                 v-for="tab in tabs"
                 :key="tab.href"
                 :href="tab.href"
-                class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs transition-colors"
+                class="flex flex-1 flex-col items-center gap-1 py-3 text-sm transition-colors"
                 :class="isActive(tab.href)
                     ? 'text-primary'
                     : 'text-muted-foreground'"
             >
-                <component :is="tab.icon" :size="22" :stroke-width="isActive(tab.href) ? 2.5 : 2" />
+                <component :is="tab.icon" :size="24" :stroke-width="isActive(tab.href) ? 2.5 : 2" />
                 <span class="font-medium">{{ tab.label }}</span>
             </Link>
         </div>
