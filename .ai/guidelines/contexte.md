@@ -15,6 +15,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - **Tests** : Pest 4
 - **Routes TS** : Wayfinder
 - **Sync** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
+- **Biométrie** : NativePHP Mobile Biometrics + Secure Storage (Face ID / empreinte)
 
 ## Contraintes clés
 
@@ -88,6 +89,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MoreController` : page "Plus"
 - `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
+- `Auth/BiometricController` : écran biométrie (show + verify token Sanctum)
 - `Auth/ApiLoginController` : login API (Sanctum token)
 - `Api/SyncController` : push/pull/full sync API endpoints
 
@@ -95,6 +97,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 - `GET /` : Dashboard (auth, verified)
 - `GET|POST /setup` : Setup premier lancement (guest)
+- `GET|POST /biometric-login` : Écran biométrie + vérification token (guest)
 - `/expenses` : resource (sauf show) + `POST settle` + `GET history`
 - `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
 - `/todos` : resource (sauf create, show, edit) + `PATCH {id}/toggle`
@@ -181,6 +184,18 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - Config : `SYNC_API_URL` dans .env, partagé via Inertia shared data
 - 19 tests Pest (SyncApiTest + SyncableTest)
 
+### Phase 13 : Biométrie (complet)
+- Custom LoginResponse : crée un token Sanctum, flash `api_token` en session
+- Custom LogoutResponse : flash `logged_out` pour nettoyer SecureStorage côté client
+- BiometricController : show (page Inertia) + verify (valide token Sanctum, connecte en session)
+- Service JS biometric-auth.ts : encapsule NativePHP Biometric + SecureStorage (dynamic import `#nativephp`)
+- Login.vue : redirige vers `/biometric-login` si NativePHP + credentials sauvés ; nettoie au logout
+- AppLayout.vue : sauvegarde credentials dans SecureStorage quand `flash.api_token` présent
+- Vite config : `#nativephp` externalisé pour le build web
+- Plugin `nativephp/mobile-biometrics` v1.0
+- 8 tests Pest (BiometricTest)
+- 205 tests passants au total
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -197,7 +212,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | 10 | Bookmarks | **Complet** |
 | 11 | Dashboard + Anniversaires | **Complet** |
 | 12 | Sync offline-first | **Complet** |
-| 13 | Biométrie (Face ID / empreinte) | Non commencé |
+| 13 | Biométrie (Face ID / empreinte) | **Complet** |
 | 14 | Push notifications | Non commencé |
 | 15 | Auto-update APK | Non commencé |
 
@@ -219,6 +234,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `PHASE10_BOOKMARKS.md` : plan détaillé phase 10
 - `PHASE11_DASHBOARD.md` : plan détaillé phase 11
 - `PHASE12_SYNC.md` : plan détaillé phase 12
+- `PHASE13_BIOMETRIC.md` : plan détaillé phase 13
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)

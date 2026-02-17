@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\BirthdayController;
 use App\Http\Controllers\BookmarkController;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('setup', [SetupController::class, 'create'])->name('setup');
     Route::post('setup', [SetupController::class, 'store']);
+    Route::get('biometric-login', [BiometricController::class, 'show'])->name('biometric.login');
+    Route::post('biometric-login', [BiometricController::class, 'verify'])->name('biometric.verify');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

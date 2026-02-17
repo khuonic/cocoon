@@ -43,6 +43,10 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'syncApiUrl' => config('cocon.sync_api_url'),
+            'flash' => [
+                'api_token' => $request->session()->get('api_token'),
+                'logged_out' => $request->session()->get('logged_out'),
+            ],
         ];
     }
 }

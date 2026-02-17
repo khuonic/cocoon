@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dd8b2fb3955ae39e0fcd9982ba355ce7",
+    "content-hash": "7eb90d6ca0ce30cdbbedea1520b55f60",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2745,6 +2745,47 @@
                 "source": "https://github.com/NativePHP/mobile-air/tree/3.0.0"
             },
             "time": "2026-01-31T05:23:25+00:00"
+        },
+        {
+            "name": "nativephp/mobile-biometrics",
+            "version": "1.0.0",
+            "dist": {
+                "type": "zip",
+                "url": "https://plugins.nativephp.com/dist/nativephp/mobile-biometrics/nativephp-mobile-biometrics-57ef3df4f8924a6d1cf214b1609fc70eecfe492c-zip-ccb8a8.zip",
+                "reference": "57ef3df4f8924a6d1cf214b1609fc70eecfe492c",
+                "shasum": "7665081c75530f8df398a3f56e05f89506450587"
+            },
+            "require": {
+                "nativephp/mobile": "*",
+                "php": "^8.2"
+            },
+            "type": "nativephp-plugin",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Native\\Mobile\\Providers\\BiometricsServiceProvider"
+                    ]
+                },
+                "nativephp": {
+                    "manifest": "nativephp.json"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Native\\Mobile\\Providers\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "NativePHP",
+                    "email": "info@nativephp.com"
+                }
+            ],
+            "description": "Biometric authentication plugin for NativePHP Mobile (Face ID, Touch ID, Fingerprint)",
+            "time": "2026-01-19T23:54:55+00:00"
         },
         {
             "name": "nesbot/carbon",

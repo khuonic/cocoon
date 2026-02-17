@@ -16,7 +16,9 @@
       "mcp__laravel-boost__list-routes",
       "Bash(npx shadcn-vue@latest add:*)",
       "WebFetch(domain:nativephp.com)",
-      "WebFetch(domain:cloud.laravel.com)"
+      "WebFetch(domain:cloud.laravel.com)",
+      "WebSearch",
+      "WebFetch(domain:nightwatch.laravel.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

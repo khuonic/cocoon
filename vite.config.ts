@@ -6,6 +6,11 @@ import { defineConfig } from 'vite';
 import { nativephpMobile, nativephpHotFile } from './vendor/nativephp/mobile/resources/js/vite-plugin.js';
 
 export default defineConfig({
+    build: {
+        rollupOptions: {
+            external: ['#nativephp'],
+        },
+    },
     plugins: [
         laravel({
             input: ['resources/js/app.ts'],

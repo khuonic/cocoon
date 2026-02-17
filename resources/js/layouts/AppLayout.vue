@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
 import BottomNav from '@/components/BottomNav.vue';
 import { configureSyncClient, sync } from '@/services/sync-client';
+import { saveCredentials } from '@/services/biometric-auth';
 
 type Props = {
     title?: string;
@@ -12,13 +13,27 @@ withDefaults(defineProps<Props>(), {
     title: undefined,
 });
 
-const page = usePage();
-const syncApiUrl = (page.props as Record<string, unknown>).syncApiUrl as string;
+const page = usePage<{
+    syncApiUrl?: string;
+    flash?: { api_token?: string };
+    auth?: { user?: { id: number; name: string; email: string } };
+}>();
 
 onMounted(() => {
+    const syncApiUrl = page.props.syncApiUrl;
     if (syncApiUrl) {
         configureSyncClient(syncApiUrl);
         sync();
+    }
+
+    const token = page.props.flash?.api_token;
+    const user = page.props.auth?.user;
+    if (token && user) {
+        saveCredentials(token, {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        });
     }
 });
 </script>
