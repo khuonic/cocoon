@@ -90,6 +90,18 @@ export async function authenticate(): Promise<{
     });
 }
 
+export async function getToken(): Promise<string | null> {
+    const native = await getNativePHP();
+    if (!native) return null;
+
+    try {
+        const result = await native.SecureStorage.get(TOKEN_KEY);
+        return result.value ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export async function clearCredentials(): Promise<void> {
     const native = await getNativePHP();
     if (!native) return;

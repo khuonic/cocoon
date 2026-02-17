@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import BottomNav from '@/components/BottomNav.vue';
+import UpdateDialog from '@/components/UpdateDialog.vue';
+import { getToken, isNativePHP, saveCredentials } from '@/services/biometric-auth';
 import { configureSyncClient, sync } from '@/services/sync-client';
-import { saveCredentials } from '@/services/biometric-auth';
+import { checkForUpdate } from '@/services/update-checker';
 
 type Props = {
     title?: string;
@@ -15,11 +17,15 @@ withDefaults(defineProps<Props>(), {
 
 const page = usePage<{
     syncApiUrl?: string;
+    appVersionCode?: number;
     flash?: { api_token?: string };
     auth?: { user?: { id: number; name: string; email: string } };
 }>();
 
-onMounted(() => {
+const updateDialogOpen = ref(false);
+const updateInfo = ref<{ version: string; changelog?: string; downloadUrl: string } | null>(null);
+
+onMounted(async () => {
     const syncApiUrl = page.props.syncApiUrl;
     if (syncApiUrl) {
         configureSyncClient(syncApiUrl);
@@ -34,6 +40,22 @@ onMounted(() => {
             name: user.name,
             email: user.email,
         });
+    }
+
+    if (syncApiUrl && (await isNativePHP())) {
+        const storedToken = await getToken();
+        if (storedToken) {
+            const currentVersionCode = page.props.appVersionCode ?? 0;
+            const result = await checkForUpdate(syncApiUrl, currentVersionCode, storedToken);
+            if (result.available && result.version && result.downloadUrl) {
+                updateInfo.value = {
+                    version: result.version,
+                    changelog: result.changelog,
+                    downloadUrl: result.downloadUrl,
+                };
+                updateDialogOpen.value = true;
+            }
+        }
     }
 });
 </script>
@@ -57,6 +79,16 @@ onMounted(() => {
 
         <!-- Bottom navigation -->
         <BottomNav />
+
+        <!-- Update dialog -->
+        <UpdateDialog
+            v-if="updateInfo"
+            :open="updateDialogOpen"
+            :version="updateInfo.version"
+            :changelog="updateInfo.changelog"
+            :download-url="updateInfo.downloadUrl"
+            @close="updateDialogOpen = false"
+        />
     </div>
 </template>
 

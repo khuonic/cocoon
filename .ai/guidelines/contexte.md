@@ -47,7 +47,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | SweetMessage | Mot doux entre partenaires (1 par utilisateur) |
 | Joke | Blague du jour (seeder 50 blagues) |
 | Birthday | Anniversaire (nom, date, âge calculé) |
-| SyncLog | Journal de sync (futur) |
+| SyncLog | Journal de sync (queue locale, pending/synced) |
 
 ### Enums (app/Enums/)
 
@@ -92,6 +92,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `Auth/BiometricController` : écran biométrie (show + verify token Sanctum)
 - `Auth/ApiLoginController` : login API (Sanctum token)
 - `Api/SyncController` : push/pull/full sync API endpoints
+- `Api/AppVersionController` : check (version + signed URL) + download (stream APK)
 
 ### Routes principales (routes/web.php)
 
@@ -110,6 +111,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `/birthdays` : resource (index, store, update, destroy)
 - `/more` : page "Plus" (repas, notes, bookmarks, anniversaires, paramètres)
 - Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
+- API dans `routes/api.php` : sync (push/pull/full), `GET app/version` (auth:sanctum), `GET app/download` (signed URL)
 
 ## Phases terminées
 
@@ -196,6 +198,19 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - 8 tests Pest (BiometricTest)
 - 205 tests passants au total
 
+### Phase 14 : Auto-update APK (complet)
+- `AppVersionController` : `check()` (auth:sanctum) retourne version + signed URL ; `download()` (signed middleware) stream l'APK
+- Commande artisan `app:publish-release {apk_path} {--changelog=}` : copie l'APK dans `storage/app/releases/`, crée/met à jour `latest.json`
+- Structure `storage/app/releases/latest.json` : `{ version, version_code, changelog, filename, released_at }`
+- Service JS `update-checker.ts` : `checkForUpdate(apiUrl, currentVersionCode, token)` → `{ available, version, changelog, downloadUrl }`
+- Composant `UpdateDialog.vue` : modale "Mise à jour disponible" avec bouton "Mettre à jour" → `Browser.open(signedUrl)`
+- `biometric-auth.ts` : ajout de `getToken()` (lit le token depuis SecureStorage sans déclencher la biométrie)
+- AppLayout.vue : au montage, si NativePHP + syncApiUrl → `checkForUpdate()` → affiche `UpdateDialog` si nouvelle version
+- HandleInertiaRequests : partage `appVersionCode` (depuis `config('nativephp.version_code')`)
+- Sécurité : version check protégé par `auth:sanctum`, download via signed URL temporaire (1h)
+- 8 tests Pest (AppVersionTest)
+- 213 tests passants au total
+
 ### Traduction FR + NativePHP safe areas
 - Toutes les pages settings et auth traduites en français
 - Safe areas NativePHP configurées (viewport-fit, CSS variables)
@@ -213,8 +228,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | 11 | Dashboard + Anniversaires | **Complet** |
 | 12 | Sync offline-first | **Complet** |
 | 13 | Biométrie (Face ID / empreinte) | **Complet** |
-| 14 | Push notifications | Non commencé |
-| 15 | Auto-update APK | Non commencé |
+| 14 | Auto-update APK | **Complet** |
 
 ## Conventions de code
 
@@ -235,6 +249,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `PHASE11_DASHBOARD.md` : plan détaillé phase 11
 - `PHASE12_SYNC.md` : plan détaillé phase 12
 - `PHASE13_BIOMETRIC.md` : plan détaillé phase 13
+- `PHASE14_AUTOUPDATE.md` : plan détaillé phase 14
 - `SETUP_SCREEN.md` : plan écran de setup
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)

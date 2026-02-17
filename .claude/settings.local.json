@@ -19,7 +19,8 @@
       "WebFetch(domain:cloud.laravel.com)",
       "WebSearch",
       "WebFetch(domain:nightwatch.laravel.com)",
-      "WebFetch(domain:bifrost.nativephp.com)"
+      "WebFetch(domain:bifrost.nativephp.com)",
+      "mcp__laravel-boost__get-config"
     ]
   },
   "enableAllProjectMcpServers": true,
