@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Birthday;
 use App\Models\Joke;
 use App\Models\SweetMessage;
-use App\Models\Todo;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,19 +37,11 @@ class DashboardController extends Controller
             ? Joke::query()->find((now()->dayOfYear % $jokeCount) + 1)
             : null;
 
-        $pinnedTodos = Todo::query()
-            ->where('show_on_dashboard', true)
-            ->where('is_done', false)
-            ->with('assignee')
-            ->oldest('created_at')
-            ->get();
-
         return Inertia::render('Dashboard', [
             'sweetMessage' => $sweetMessage,
             'mySweetMessage' => $mySweetMessage,
             'todayBirthdays' => $todayBirthdays,
             'joke' => $joke,
-            'pinnedTodos' => $pinnedTodos,
         ]);
     }
 }

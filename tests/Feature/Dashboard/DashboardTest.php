@@ -3,7 +3,6 @@
 use App\Models\Birthday;
 use App\Models\Joke;
 use App\Models\SweetMessage;
-use App\Models\Todo;
 use App\Models\User;
 
 test('guests are redirected to login', function () {
@@ -22,7 +21,6 @@ test('authenticated users can view the dashboard', function () {
             ->has('mySweetMessage')
             ->has('todayBirthdays')
             ->has('joke')
-            ->has('pinnedTodos')
         );
 });
 
@@ -69,20 +67,6 @@ test('dashboard shows today birthdays', function () {
             ->has('todayBirthdays', 1)
             ->where('todayBirthdays.0.name', 'Maman')
             ->where('todayBirthdays.0.age', 50)
-        );
-});
-
-test('dashboard shows pinned todos', function () {
-    $user = User::factory()->create();
-    Todo::factory()->create(['title' => 'Pinned', 'show_on_dashboard' => true, 'created_by' => $user->id]);
-    Todo::factory()->create(['title' => 'Not pinned', 'show_on_dashboard' => false, 'created_by' => $user->id]);
-    Todo::factory()->done()->create(['title' => 'Done pinned', 'show_on_dashboard' => true, 'created_by' => $user->id]);
-
-    $this->actingAs($user)
-        ->get('/')
-        ->assertInertia(fn ($page) => $page
-            ->has('pinnedTodos', 1)
-            ->where('pinnedTodos.0.title', 'Pinned')
         );
 });
 

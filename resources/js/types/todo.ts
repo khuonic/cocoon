@@ -1,15 +1,21 @@
 export type Todo = {
     id: number;
+    uuid: string;
+    todo_list_id: number;
     title: string;
-    description: string | null;
-    is_personal: boolean;
-    assigned_to: number | null;
-    created_by: number;
-    due_date: string | null;
     is_done: boolean;
     completed_at: string | null;
-    show_on_dashboard: boolean;
+    created_at: string;
+    updated_at: string;
+};
+
+export type TodoList = {
+    id: number;
     uuid: string;
-    creator?: { id: number; name: string };
-    assignee?: { id: number; name: string };
+    title: string;
+    is_personal: boolean;
+    user_id: number | null;
+    todos?: Todo[];
+    created_at: string;
+    updated_at: string;
 };

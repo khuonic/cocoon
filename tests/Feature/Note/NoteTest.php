@@ -17,6 +17,18 @@ test('authenticated users can view the notes index', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Notes/Index')
             ->has('notes')
+            ->has('todoLists')
+            ->has('tab')
+        );
+});
+
+test('notes index passes the tab query parameter', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('notes.index', ['tab' => 'todos']))
+        ->assertInertia(fn ($page) => $page
+            ->where('tab', 'todos')
         );
 });
 
@@ -34,25 +46,36 @@ test('pinned notes appear first', function () {
         );
 });
 
-test('store creates a note with uuid and created_by', function () {
+test('show renders the Notes/Show page', function () {
     $user = User::factory()->create();
+    $note = Note::factory()->create(['title' => 'Ma note', 'created_by' => $user->id]);
 
     $this->actingAs($user)
+        ->get(route('notes.show', $note))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Notes/Show')
+            ->where('note.title', 'Ma note')
+        );
+});
+
+test('store creates a note and redirects to show', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
         ->post(route('notes.store'), [
             'title' => 'Ma note',
-            'content' => 'Contenu de la note',
-            'is_pinned' => false,
             'color' => null,
-        ])
-        ->assertRedirect(route('notes.index'));
+        ]);
+
+    $note = Note::query()->where('title', 'Ma note')->first();
+    $response->assertRedirect(route('notes.show', $note));
 
     $this->assertDatabaseHas('notes', [
         'title' => 'Ma note',
-        'content' => 'Contenu de la note',
         'created_by' => $user->id,
     ]);
 
-    $note = Note::query()->where('title', 'Ma note')->first();
     expect($note->uuid)->not->toBeNull();
 });
 
@@ -60,24 +83,8 @@ test('store validates title is required', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->post(route('notes.store'), [
-            'title' => '',
-            'content' => 'Un contenu',
-            'is_pinned' => false,
-        ])
+        ->post(route('notes.store'), ['title' => ''])
         ->assertSessionHasErrors(['title']);
-});
-
-test('store validates content is required', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->post(route('notes.store'), [
-            'title' => 'Un titre',
-            'content' => '',
-            'is_pinned' => false,
-        ])
-        ->assertSessionHasErrors(['content']);
 });
 
 test('store validates color must be a valid enum value', function () {
@@ -86,8 +93,6 @@ test('store validates color must be a valid enum value', function () {
     $this->actingAs($user)
         ->post(route('notes.store'), [
             'title' => 'Un titre',
-            'content' => 'Un contenu',
-            'is_pinned' => false,
             'color' => 'invalid-color',
         ])
         ->assertSessionHasErrors(['color']);
@@ -99,30 +104,11 @@ test('store creates a note with a color', function () {
     $this->actingAs($user)
         ->post(route('notes.store'), [
             'title' => 'Note colorée',
-            'content' => 'Un contenu',
-            'is_pinned' => false,
             'color' => 'yellow',
-        ])
-        ->assertRedirect(route('notes.index'));
+        ]);
 
     $note = Note::query()->where('title', 'Note colorée')->first();
     expect($note->color)->toBe(NoteColor::Yellow);
-});
-
-test('store creates a note without color', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->post(route('notes.store'), [
-            'title' => 'Note sans couleur',
-            'content' => 'Un contenu',
-            'is_pinned' => false,
-            'color' => null,
-        ])
-        ->assertRedirect(route('notes.index'));
-
-    $note = Note::query()->where('title', 'Note sans couleur')->first();
-    expect($note->color)->toBeNull();
 });
 
 test('update modifies a note', function () {
@@ -130,19 +116,15 @@ test('update modifies a note', function () {
     $note = Note::factory()->create(['title' => 'Ancien titre', 'created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->put(route('notes.update', $note), [
+        ->patch(route('notes.update', $note), [
             'title' => 'Nouveau titre',
             'content' => 'Nouveau contenu',
-            'is_pinned' => true,
-            'color' => 'blue',
         ])
-        ->assertRedirect(route('notes.index'));
+        ->assertRedirect();
 
     $note->refresh();
     expect($note->title)->toBe('Nouveau titre');
     expect($note->content)->toBe('Nouveau contenu');
-    expect($note->is_pinned)->toBeTrue();
-    expect($note->color)->toBe(NoteColor::Blue);
 });
 
 test('toggle pin inverts is_pinned', function () {
@@ -151,7 +133,7 @@ test('toggle pin inverts is_pinned', function () {
 
     $this->actingAs($user)
         ->patch(route('notes.toggle-pin', $note))
-        ->assertRedirect(route('notes.index'));
+        ->assertRedirect();
 
     expect($note->fresh()->is_pinned)->toBeTrue();
 });

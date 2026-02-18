@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Note;
+namespace App\Http\Requests\TodoList;
 
-use App\Enums\NoteColor;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class StoreNoteRequest extends FormRequest
+class UpdateTodoListRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,9 +18,6 @@ class StoreNoteRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable', 'string', 'max:10000'],
-            'is_pinned' => ['boolean'],
-            'color' => ['nullable', 'string', Rule::in(array_column(NoteColor::cases(), 'value'))],
         ];
     }
 
@@ -34,9 +29,6 @@ class StoreNoteRequest extends FormRequest
         return [
             'title.required' => 'Le titre est obligatoire.',
             'title.max' => 'Le titre ne peut pas dépasser 255 caractères.',
-            'content.required' => 'Le contenu est obligatoire.',
-            'content.max' => 'Le contenu ne peut pas dépasser 10 000 caractères.',
-            'color.in' => 'La couleur sélectionnée n\'est pas valide.',
         ];
     }
 }

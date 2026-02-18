@@ -12,6 +12,7 @@ use App\Models\ShoppingList;
 use App\Models\SweetMessage;
 use App\Models\SyncLog;
 use App\Models\Todo;
+use App\Models\TodoList;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -27,6 +28,7 @@ class SyncService
         'expenses' => Expense::class,
         'shopping_lists' => ShoppingList::class,
         'shopping_items' => ShoppingItem::class,
+        'todo_lists' => TodoList::class,
         'todos' => Todo::class,
         'recipes' => Recipe::class,
         'notes' => Note::class,

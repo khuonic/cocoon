@@ -3,6 +3,7 @@
 use App\Models\Note;
 use App\Models\SyncLog;
 use App\Models\Todo;
+use App\Models\TodoList;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
@@ -208,7 +209,8 @@ it('performs full sync', function () {
     Sanctum::actingAs($this->user);
 
     Note::factory()->count(2)->create(['created_by' => $this->user->id]);
-    Todo::factory()->create(['created_by' => $this->user->id]);
+    $list = TodoList::factory()->create();
+    Todo::factory()->create(['todo_list_id' => $list->id]);
 
     $newUuid = (string) Str::uuid();
 
@@ -234,9 +236,9 @@ it('performs full sync', function () {
         ->assertJsonPath('applied', 1)
         ->assertJsonStructure(['applied', 'rejected', 'changes', 'server_time']);
 
-    // 3 notes (2 existing + 1 pushed) + 1 todo = 4 changes in response
+    // 3 notes (2 existing + 1 pushed) + 1 todo_list + 1 todo = 5 changes in response
     $changes = $response->json('changes');
-    expect($changes)->toHaveCount(4);
+    expect($changes)->toHaveCount(5);
 
     $this->assertDatabaseHas('notes', ['uuid' => $newUuid]);
 });
@@ -261,6 +263,8 @@ it('pushes multiple changes in one request', function () {
     $uuid1 = (string) Str::uuid();
     $uuid2 = (string) Str::uuid();
 
+    $list = TodoList::factory()->create();
+
     $response = $this->postJson('/api/sync/push', [
         'changes' => [
             [
@@ -282,10 +286,8 @@ it('pushes multiple changes in one request', function () {
                 'action' => 'created',
                 'data' => [
                     'title' => 'Todo 1',
-                    'is_personal' => false,
                     'is_done' => false,
-                    'show_on_dashboard' => false,
-                    'created_by' => $this->user->id,
+                    'todo_list_id' => $list->id,
                     'uuid' => $uuid2,
                 ],
                 'updated_at' => now()->toIso8601String(),

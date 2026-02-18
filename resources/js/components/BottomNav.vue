@@ -4,7 +4,7 @@ import {
     Home,
     Wallet,
     ShoppingCart,
-    CheckSquare,
+    StickyNote,
     MoreHorizontal,
 } from 'lucide-vue-next';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
@@ -15,7 +15,7 @@ const tabs = [
     { label: 'Accueil', href: '/', icon: Home },
     { label: 'Budget', href: '/expenses', icon: Wallet },
     { label: 'Courses', href: '/shopping-lists', icon: ShoppingCart },
-    { label: 'Tâches', href: '/todos', icon: CheckSquare },
+    { label: 'Notes', href: '/notes', icon: StickyNote },
     { label: 'Plus', href: '/more', icon: MoreHorizontal },
 ];
 
