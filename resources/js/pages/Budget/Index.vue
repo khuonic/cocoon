@@ -10,7 +10,6 @@ import BalanceBanner from '@/components/budget/BalanceBanner.vue';
 import ExpenseCard from '@/components/budget/ExpenseCard.vue';
 import { Button } from '@/components/ui/button';
 import { create } from '@/routes/expenses';
-import { history } from '@/actions/App/Http/Controllers/ExpenseController';
 
 defineProps<{
     expenses: Expense[];
@@ -45,15 +44,6 @@ defineProps<{
                     :key="expense.id"
                     :expense="expense"
                 />
-            </div>
-
-            <div v-if="expenses.length > 0" class="pt-2 text-center">
-                <Link
-                    :href="history.url()"
-                    class="text-sm text-muted-foreground underline underline-offset-4"
-                >
-                    Voir l'historique complet
-                </Link>
             </div>
         </div>
 

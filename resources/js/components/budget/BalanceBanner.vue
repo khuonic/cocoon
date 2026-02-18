@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { ArrowRight, Check } from 'lucide-vue-next';
 import { ref } from 'vue';
 import type { BalanceData } from '@/types/budget';
@@ -14,7 +14,7 @@ import {
     DialogTrigger,
     DialogClose,
 } from '@/components/ui/dialog';
-import { settle } from '@/actions/App/Http/Controllers/ExpenseController';
+import { settle, history } from '@/actions/App/Http/Controllers/ExpenseController';
 
 defineProps<{
     balance: BalanceData;
@@ -48,6 +48,7 @@ function formatAmount(amount: string): string {
             ? 'bg-green-50 dark:bg-green-950/30'
             : 'bg-primary/10'"
     >
+
         <div v-if="balance.is_settled" class="flex items-center gap-3">
             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
                 <Check :size="18" class="text-green-600 dark:text-green-400" />
@@ -105,6 +106,15 @@ function formatAmount(amount: string): string {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+        </div>
+
+        <div class="mt-3 text-right">
+            <Link
+                :href="history.url()"
+                class="text-xs text-muted-foreground underline underline-offset-2"
+            >
+                Voir l'historique →
+            </Link>
         </div>
     </div>
 </template>

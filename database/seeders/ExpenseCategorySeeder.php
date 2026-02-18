@@ -13,9 +13,9 @@ class ExpenseCategorySeeder extends Seeder
     private const CATEGORIES = [
         ['name' => 'Courses', 'icon' => 'shopping-cart', 'color' => '#4CAF50'],
         ['name' => 'Restaurant', 'icon' => 'utensils', 'color' => '#FF9800'],
-        ['name' => 'Loyer', 'icon' => 'home', 'color' => '#2196F3'],
+        ['name' => 'Charges', 'icon' => 'home', 'color' => '#2196F3'],
         ['name' => 'Loisirs', 'icon' => 'gamepad', 'color' => '#9C27B0'],
-        ['name' => 'Santé', 'icon' => 'heart-pulse', 'color' => '#F44336'],
+        ['name' => 'Cadeaux', 'icon' => 'gift', 'color' => '#F44336'],
         ['name' => 'Transport', 'icon' => 'car', 'color' => '#607D8B'],
         ['name' => 'Abonnements', 'icon' => 'repeat', 'color' => '#00BCD4'],
         ['name' => 'Autre', 'icon' => 'ellipsis', 'color' => '#795548'],

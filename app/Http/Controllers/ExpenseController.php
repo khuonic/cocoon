@@ -9,6 +9,7 @@ use App\Models\ExpenseCategory;
 use App\Models\User;
 use App\Services\BalanceCalculator;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -82,22 +83,39 @@ class ExpenseController extends Controller
         return to_route('expenses.index');
     }
 
-    public function history(): Response
+    public function history(Request $request): Response
     {
-        $expenses = Expense::query()
-            ->with(['category', 'payer'])
-            ->latest('date')
-            ->paginate(20);
+        $period = $request->query('period', 'monthly');
+        $currentMonth = $request->query('month', now()->format('Y-m'));
 
-        $categoryTotals = Expense::query()
-            ->selectRaw('category_id, SUM(amount) as total')
+        $query = Expense::query()
+            ->with(['category', 'payer'])
+            ->latest('date');
+
+        if ($period === 'monthly') {
+            [$year, $month] = explode('-', $currentMonth);
+            $query->whereYear('date', $year)->whereMonth('date', $month);
+        } elseif ($period === 'annual') {
+            $query->whereYear('date', now()->year);
+        }
+
+        $expenses = $query->get();
+
+        $categoryTotals = $expenses
             ->groupBy('category_id')
-            ->with('category')
-            ->get();
+            ->map(fn ($items) => [
+                'category_id' => $items->first()->category_id,
+                'total' => number_format((float) $items->sum('amount'), 2, '.', ''),
+                'category' => $items->first()->category,
+            ])
+            ->values();
 
         return Inertia::render('Budget/History', [
             'expenses' => $expenses,
             'categoryTotals' => $categoryTotals,
+            'period' => $period,
+            'currentMonth' => $currentMonth,
+            'totalAmount' => number_format((float) $expenses->sum('amount'), 2, '.', ''),
         ]);
     }
 }
