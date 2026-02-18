@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Birthday;
-use App\Models\Bookmark;
 use App\Models\Joke;
 use App\Models\SweetMessage;
 use App\Models\Todo;
@@ -24,7 +23,6 @@ test('authenticated users can view the dashboard', function () {
             ->has('todayBirthdays')
             ->has('joke')
             ->has('pinnedTodos')
-            ->has('pinnedBookmarks')
         );
 });
 
@@ -85,19 +83,6 @@ test('dashboard shows pinned todos', function () {
         ->assertInertia(fn ($page) => $page
             ->has('pinnedTodos', 1)
             ->where('pinnedTodos.0.title', 'Pinned')
-        );
-});
-
-test('dashboard shows pinned bookmarks', function () {
-    $user = User::factory()->create();
-    Bookmark::factory()->create(['title' => 'Pinned BM', 'show_on_dashboard' => true, 'added_by' => $user->id]);
-    Bookmark::factory()->create(['title' => 'Not pinned BM', 'show_on_dashboard' => false, 'added_by' => $user->id]);
-
-    $this->actingAs($user)
-        ->get('/')
-        ->assertInertia(fn ($page) => $page
-            ->has('pinnedBookmarks', 1)
-            ->where('pinnedBookmarks.0.title', 'Pinned BM')
         );
 });
 

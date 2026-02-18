@@ -2,8 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     UtensilsCrossed,
-    StickyNote,
-    Bookmark,
+    ShoppingCart,
     Cake,
     Settings,
     ChevronRight,
@@ -11,9 +10,8 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const menuItems = [
-    { label: 'Repas', href: '/meal-plans', icon: UtensilsCrossed, description: 'Planifier vos repas' },
-    { label: 'Notes', href: '/notes', icon: StickyNote, description: 'Notes partagées' },
-    { label: 'Bookmarks', href: '/bookmarks', icon: Bookmark, description: 'Liens sauvegardés' },
+    { label: 'Courses', href: '/shopping-lists', icon: ShoppingCart, description: 'Listes de courses' },
+    { label: 'Repas', href: '/recipes', icon: UtensilsCrossed, description: 'Recettes et idées' },
     { label: 'Anniversaires', href: '/birthdays', icon: Cake, description: 'Ne plus oublier les dates' },
     { label: 'Paramètres', href: '/settings/profile', icon: Settings, description: 'Profil et préférences' },
 ];

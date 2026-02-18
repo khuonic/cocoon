@@ -3,11 +3,8 @@
 use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\BirthdayController;
-use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
-use App\Http\Controllers\MealIdeaController;
-use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\MoreController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\RecipeController;
@@ -43,13 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('shopping-items.destroy');
     Route::patch('todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
     Route::resource('todos', TodoController::class)->except(['create', 'show', 'edit']);
-    Route::resource('meal-plans', MealPlanController::class)->only(['index']);
-    Route::resource('meal-ideas', MealIdeaController::class)->only(['store', 'update', 'destroy']);
     Route::resource('recipes', RecipeController::class)->except(['index']);
     Route::patch('notes/{note}/toggle-pin', [NoteController::class, 'togglePin'])->name('notes.toggle-pin');
     Route::resource('notes', NoteController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::patch('bookmarks/{bookmark}/toggle-favorite', [BookmarkController::class, 'toggleFavorite'])->name('bookmarks.toggle-favorite');
-    Route::resource('bookmarks', BookmarkController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('sweet-messages', [SweetMessageController::class, 'store'])->name('sweet-messages.store');
     Route::resource('birthdays', BirthdayController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('more', MoreController::class)->name('more');

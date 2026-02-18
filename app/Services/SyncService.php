@@ -4,9 +4,7 @@ namespace App\Services;
 
 use App\Enums\SyncAction;
 use App\Models\Birthday;
-use App\Models\Bookmark;
 use App\Models\Expense;
-use App\Models\MealIdea;
 use App\Models\Note;
 use App\Models\Recipe;
 use App\Models\ShoppingItem;
@@ -30,10 +28,8 @@ class SyncService
         'shopping_lists' => ShoppingList::class,
         'shopping_items' => ShoppingItem::class,
         'todos' => Todo::class,
-        'meal_ideas' => MealIdea::class,
         'recipes' => Recipe::class,
         'notes' => Note::class,
-        'bookmarks' => Bookmark::class,
         'sweet_messages' => SweetMessage::class,
         'birthdays' => Birthday::class,
     ];

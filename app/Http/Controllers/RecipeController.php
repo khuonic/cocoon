@@ -63,7 +63,7 @@ class RecipeController extends Controller
     {
         $recipe->delete();
 
-        return to_route('meal-plans.index');
+        return to_route('more');
     }
 
     /**

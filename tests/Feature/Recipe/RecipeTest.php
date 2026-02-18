@@ -152,7 +152,7 @@ test('destroy deletes recipe with cascade', function () {
 
     $this->actingAs($user)
         ->delete(route('recipes.destroy', $recipe))
-        ->assertRedirect(route('meal-plans.index'));
+        ->assertRedirect(route('more'));
 
     $this->assertDatabaseMissing('recipes', ['id' => $recipeId]);
     $this->assertDatabaseMissing('recipe_ingredients', ['recipe_id' => $recipeId]);

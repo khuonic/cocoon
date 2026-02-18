@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Birthday;
-use App\Models\Bookmark;
 use App\Models\Joke;
 use App\Models\SweetMessage;
 use App\Models\Todo;
@@ -46,18 +45,12 @@ class DashboardController extends Controller
             ->oldest('created_at')
             ->get();
 
-        $pinnedBookmarks = Bookmark::query()
-            ->where('show_on_dashboard', true)
-            ->latest()
-            ->get();
-
         return Inertia::render('Dashboard', [
             'sweetMessage' => $sweetMessage,
             'mySweetMessage' => $mySweetMessage,
             'todayBirthdays' => $todayBirthdays,
             'joke' => $joke,
             'pinnedTodos' => $pinnedTodos,
-            'pinnedBookmarks' => $pinnedBookmarks,
         ]);
     }
 }

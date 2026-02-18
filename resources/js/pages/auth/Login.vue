@@ -37,10 +37,18 @@ onMounted(async () => {
 
 <template>
     <AuthBase
-        title="Connexion"
+        title=""
         description="Entrez votre email et mot de passe pour vous connecter"
     >
         <Head title="Connexion" />
+
+        <div class="mb-8 flex flex-col items-center gap-2">
+            <div class="flex size-16 items-center justify-center rounded-2xl bg-primary text-3xl shadow-md">
+                🐛
+            </div>
+            <h1 class="text-3xl font-bold text-primary">Cocoon</h1>
+            <p class="text-sm text-muted-foreground">Votre nid douillet 🏡</p>
+        </div>
 
         <div
             v-if="status"
