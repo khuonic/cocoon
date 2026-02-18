@@ -6,7 +6,7 @@ use App\Enums\ShoppingItemCategory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreShoppingItemRequest extends FormRequest
+class UpdateShoppingItemRequest extends FormRequest
 {
     public function authorize(): bool
     {

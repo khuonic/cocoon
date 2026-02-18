@@ -19,9 +19,7 @@ class ShoppingItem extends Model
         'shopping_list_id',
         'name',
         'category',
-        'quantity',
         'is_checked',
-        'is_favorite',
         'added_by',
         'uuid',
     ];
@@ -31,7 +29,6 @@ class ShoppingItem extends Model
         return [
             'category' => ShoppingItemCategory::class,
             'is_checked' => 'boolean',
-            'is_favorite' => 'boolean',
         ];
     }
 

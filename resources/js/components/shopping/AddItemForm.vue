@@ -15,7 +15,6 @@ const props = defineProps<{
 const form = useForm({
     name: '',
     category: 'autre',
-    quantity: '',
 });
 
 function submit(): void {
@@ -46,12 +45,6 @@ function submit(): void {
                     {{ cat.label }}
                 </option>
             </select>
-            <Input
-                v-model="form.quantity"
-                type="text"
-                placeholder="Qté"
-                class="w-16"
-            />
             <Button type="submit" size="icon" :disabled="form.processing || !form.name">
                 <Plus :size="18" />
             </Button>

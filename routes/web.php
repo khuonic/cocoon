@@ -32,10 +32,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('shopping-lists/{shopping_list}/items', [ShoppingItemController::class, 'store'])
         ->name('shopping-items.store');
+    Route::put('shopping-items/{shopping_item}', [ShoppingItemController::class, 'update'])
+        ->name('shopping-items.update');
     Route::patch('shopping-items/{shopping_item}/toggle-check', [ShoppingItemController::class, 'toggleCheck'])
         ->name('shopping-items.toggle-check');
-    Route::patch('shopping-items/{shopping_item}/toggle-favorite', [ShoppingItemController::class, 'toggleFavorite'])
-        ->name('shopping-items.toggle-favorite');
     Route::delete('shopping-items/{shopping_item}', [ShoppingItemController::class, 'destroy'])
         ->name('shopping-items.destroy');
     Route::patch('todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');

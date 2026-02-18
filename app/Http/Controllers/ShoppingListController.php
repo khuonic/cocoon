@@ -103,9 +103,7 @@ class ShoppingListController extends Controller
             $newList->items()->create([
                 'name' => $item->name,
                 'category' => $item->category,
-                'quantity' => $item->quantity,
                 'is_checked' => false,
-                'is_favorite' => $item->is_favorite,
                 'added_by' => $item->added_by,
                 'uuid' => Str::uuid(),
             ]);

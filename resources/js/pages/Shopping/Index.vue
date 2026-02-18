@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import FloatingActionButton from '@/components/FloatingActionButton.vue';
@@ -10,9 +11,19 @@ import type { ShoppingList } from '@/types/shopping';
 import { create, show } from '@/routes/shopping-lists';
 import { duplicate } from '@/actions/App/Http/Controllers/ShoppingListController';
 
-defineProps<{
+const props = defineProps<{
     shoppingLists: ShoppingList[];
 }>();
+
+onMounted(() => {
+    const lastId = localStorage.getItem('cocon_last_shopping_list_id');
+    if (lastId) {
+        const found = props.shoppingLists.find((l) => String(l.id) === lastId);
+        if (found) {
+            router.visit(show.url(found.id), { replace: true });
+        }
+    }
+});
 
 function handleDuplicate(list: ShoppingList): void {
     router.post(duplicate.url(list.id));

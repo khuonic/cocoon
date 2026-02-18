@@ -12,7 +12,6 @@ test('store adds an item to the list', function () {
         ->post(route('shopping-items.store', $list), [
             'name' => 'Bananes',
             'category' => 'fruits_legumes',
-            'quantity' => '1 kg',
         ])
         ->assertRedirect(route('shopping-lists.show', $list));
 
@@ -20,7 +19,6 @@ test('store adds an item to the list', function () {
         'shopping_list_id' => $list->id,
         'name' => 'Bananes',
         'category' => 'fruits_legumes',
-        'quantity' => '1 kg',
     ]);
 });
 
@@ -60,6 +58,40 @@ test('store assigns added_by to the current user', function () {
     expect($item->uuid)->not->toBeNull();
 });
 
+test('update modifies name and category', function () {
+    $user = User::factory()->create();
+    $list = ShoppingList::factory()->create();
+    $item = ShoppingItem::factory()->create([
+        'shopping_list_id' => $list->id,
+        'name' => 'Ancien nom',
+        'category' => 'autre',
+        'added_by' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->put(route('shopping-items.update', $item), [
+            'name' => 'Nouveau nom',
+            'category' => 'frais',
+        ])
+        ->assertRedirect(route('shopping-lists.show', $list));
+
+    $item->refresh();
+    expect($item->name)->toBe('Nouveau nom');
+    expect($item->category->value)->toBe('frais');
+});
+
+test('update validates name is required', function () {
+    $user = User::factory()->create();
+    $item = ShoppingItem::factory()->create(['added_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->put(route('shopping-items.update', $item), [
+            'name' => '',
+            'category' => 'frais',
+        ])
+        ->assertSessionHasErrors('name');
+});
+
 test('toggleCheck inverts is_checked', function () {
     $user = User::factory()->create();
     $item = ShoppingItem::factory()->create([
@@ -78,26 +110,6 @@ test('toggleCheck inverts is_checked', function () {
         ->assertRedirect();
 
     expect($item->fresh()->is_checked)->toBeFalse();
-});
-
-test('toggleFavorite inverts is_favorite', function () {
-    $user = User::factory()->create();
-    $item = ShoppingItem::factory()->create([
-        'is_favorite' => false,
-        'added_by' => $user->id,
-    ]);
-
-    $this->actingAs($user)
-        ->patch(route('shopping-items.toggle-favorite', $item))
-        ->assertRedirect();
-
-    expect($item->fresh()->is_favorite)->toBeTrue();
-
-    $this->actingAs($user)
-        ->patch(route('shopping-items.toggle-favorite', $item))
-        ->assertRedirect();
-
-    expect($item->fresh()->is_favorite)->toBeFalse();
 });
 
 test('destroy deletes the item', function () {

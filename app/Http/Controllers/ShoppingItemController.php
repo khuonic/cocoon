@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ShoppingItem\StoreShoppingItemRequest;
+use App\Http\Requests\ShoppingItem\UpdateShoppingItemRequest;
 use App\Models\ShoppingItem;
 use App\Models\ShoppingList;
 use Illuminate\Http\RedirectResponse;
@@ -21,16 +22,16 @@ class ShoppingItemController extends Controller
         return to_route('shopping-lists.show', $shoppingList);
     }
 
-    public function toggleCheck(ShoppingItem $shoppingItem): RedirectResponse
+    public function update(UpdateShoppingItemRequest $request, ShoppingItem $shoppingItem): RedirectResponse
     {
-        $shoppingItem->update(['is_checked' => ! $shoppingItem->is_checked]);
+        $shoppingItem->update($request->validated());
 
         return to_route('shopping-lists.show', $shoppingItem->shopping_list_id);
     }
 
-    public function toggleFavorite(ShoppingItem $shoppingItem): RedirectResponse
+    public function toggleCheck(ShoppingItem $shoppingItem): RedirectResponse
     {
-        $shoppingItem->update(['is_favorite' => ! $shoppingItem->is_favorite]);
+        $shoppingItem->update(['is_checked' => ! $shoppingItem->is_checked]);
 
         return to_route('shopping-lists.show', $shoppingItem->shopping_list_id);
     }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,10 @@ const checkedOpen = ref(false);
 const categoryLabels: Record<string, string> = {};
 props.categories.forEach((c) => {
     categoryLabels[c.value] = c.label;
+});
+
+onMounted(() => {
+    localStorage.setItem('cocon_last_shopping_list_id', String(props.shoppingList.id));
 });
 
 function handleDelete(): void {
@@ -84,6 +88,7 @@ function handleDuplicate(): void {
                         v-for="item in items"
                         :key="item.id"
                         :item="item"
+                        :categories="categories"
                     />
                 </CategoryGroup>
             </template>
@@ -97,11 +102,12 @@ function handleDuplicate(): void {
                     />
                     Articles cochés ({{ checkedItems.length }})
                 </CollapsibleTrigger>
-                <CollapsibleContent class="space-y-1">
+                <CollapsibleContent class="space-y-2">
                     <ShoppingItemRow
                         v-for="item in checkedItems"
                         :key="item.id"
                         :item="item"
+                        :categories="categories"
                     />
                 </CollapsibleContent>
             </Collapsible>

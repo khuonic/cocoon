@@ -24,9 +24,7 @@ class ShoppingItemFactory extends Factory
             'shopping_list_id' => ShoppingList::factory(),
             'name' => fake()->word(),
             'category' => fake()->randomElement(ShoppingItemCategory::cases()),
-            'quantity' => fake()->optional()->numerify('# ##'),
             'is_checked' => false,
-            'is_favorite' => false,
             'added_by' => User::factory(),
             'uuid' => Str::uuid(),
         ];
@@ -36,13 +34,6 @@ class ShoppingItemFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_checked' => true,
-        ]);
-    }
-
-    public function favorite(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'is_favorite' => true,
         ]);
     }
 }

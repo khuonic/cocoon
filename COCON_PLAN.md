@@ -398,6 +398,7 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | Phase 20 - Calendrier | [`PHASE20_CALENDRIER.md`](PHASE20_CALENDRIER.md) |
 | Phase 21 - Dashboard V2 | [`PHASE21_DASHBOARD_V2.md`](PHASE21_DASHBOARD_V2.md) |
 | Phase 22 - Bugs | [`PHASE22_BUGS.md`](PHASE22_BUGS.md) |
+| Phase OPT-1 - Saisie vocale (optionnel) | [`PHASE_OPT1_VOICE_INPUT.md`](PHASE_OPT1_VOICE_INPUT.md) |
 
 ---
 

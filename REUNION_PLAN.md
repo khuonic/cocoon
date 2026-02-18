@@ -42,6 +42,7 @@
 | **20** | [PHASE20_CALENDRIER.md](PHASE20_CALENDRIER.md) | Module Calendrier complet + plugin local-notifications | 15 |
 | **21** | [PHASE21_DASHBOARD_V2.md](PHASE21_DASHBOARD_V2.md) | Dashboard avec événements du jour | 19, 20 |
 | **22** | [PHASE22_BUGS.md](PHASE22_BUGS.md) | Blagues + mot mignon qui ne s'affichent pas | — |
+| **OPT-1** | [PHASE_OPT1_VOICE_INPUT.md](PHASE_OPT1_VOICE_INPUT.md) | Saisie vocale dans AddItemForm (Web Speech API) | 16 |
 
 ---
 
