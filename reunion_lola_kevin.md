@@ -6,11 +6,7 @@
 ### A changer
 
 - le FAB => le surelever un peu de la BottomNav
-- ordre menu
-  - calendrier
-  - budget
-  - notes
-  - basculer courses dans "plus"
+
 - Anniversaires => "Calendrier" => a mettre en deuxieme avant 
   - A mettre dans les liens principaux
   - Meme principe que google calendar 
@@ -62,7 +58,13 @@
     - pouvoir ajouter image
     - est ce qu'a partir de plusieurs images tu pourrais faire un seeder pour remplir les recettes ? on aurait déjà une bonne base
     - pouvoir cliquer sur lien recette si inséré
-
+- ordre menu
+    - calendrier
+    - budget
+    - notes
+    - basculer courses dans "plus"
+- Les blagues ne s'affichent pas
+- Le mot mignon ne s'affiche pas 
 ### A ajouter
 
 - Accueil
@@ -75,3 +77,11 @@
 - notes ancienne version
 - anniversaires
 - bookmarks
+
+## Ne pas oublier
+- Modifier tous les tests 
+- Modifier le .ai/guidelines/contexte.md 
+- modifier la sync 
+- modifier chaque PHASE*.md si nécessaire
+- modifier COCON_PLAN.md si nécessaire
+- rédige un plan des que nécessaore/usa

@@ -389,6 +389,15 @@ php artisan native:package android --keystore=... --keystore-password=... --key-
 | Phase 12 - Sync Offline-First | [`PHASE12_SYNC.md`](PHASE12_SYNC.md) |
 | Phase 13 - Biométrie | [`PHASE13_BIOMETRIC.md`](PHASE13_BIOMETRIC.md) |
 | Phase 14 - Auto-update APK | [`PHASE14_AUTOUPDATE.md`](PHASE14_AUTOUPDATE.md) |
+| Réunion 18/02/2026 - Plan global | [`REUNION_PLAN.md`](REUNION_PLAN.md) |
+| Phase 15 - Nettoyage | [`PHASE15_CLEANUP.md`](PHASE15_CLEANUP.md) |
+| Phase 16 - Refonte Shopping | [`PHASE16_SHOPPING_REFONTE.md`](PHASE16_SHOPPING_REFONTE.md) |
+| Phase 17 - Budget V2 | [`PHASE17_BUDGET_V2.md`](PHASE17_BUDGET_V2.md) |
+| Phase 18 - Recettes V2 | [`PHASE18_RECIPES_V2.md`](PHASE18_RECIPES_V2.md) |
+| Phase 19 - Notes + Todos Fusion | [`PHASE19_NOTES_FUSION.md`](PHASE19_NOTES_FUSION.md) |
+| Phase 20 - Calendrier | [`PHASE20_CALENDRIER.md`](PHASE20_CALENDRIER.md) |
+| Phase 21 - Dashboard V2 | [`PHASE21_DASHBOARD_V2.md`](PHASE21_DASHBOARD_V2.md) |
+| Phase 22 - Bugs | [`PHASE22_BUGS.md`](PHASE22_BUGS.md) |
 
 ---
 

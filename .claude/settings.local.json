@@ -20,7 +20,8 @@
       "WebSearch",
       "WebFetch(domain:nightwatch.laravel.com)",
       "WebFetch(domain:bifrost.nativephp.com)",
-      "mcp__laravel-boost__get-config"
+      "mcp__laravel-boost__get-config",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
