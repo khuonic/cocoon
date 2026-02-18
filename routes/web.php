@@ -40,7 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('shopping-items.destroy');
     Route::patch('todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
     Route::resource('todos', TodoController::class)->except(['create', 'show', 'edit']);
-    Route::resource('recipes', RecipeController::class)->except(['index']);
+    Route::resource('recipes', RecipeController::class);
     Route::patch('notes/{note}/toggle-pin', [NoteController::class, 'togglePin'])->name('notes.toggle-pin');
     Route::resource('notes', NoteController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('sweet-messages', [SweetMessageController::class, 'store'])->name('sweet-messages.store');

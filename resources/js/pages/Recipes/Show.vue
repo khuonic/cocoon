@@ -25,7 +25,7 @@ function handleDelete(): void {
 <template>
     <AppLayout :title="recipe.title">
         <template #header-left>
-            <BackButton href="/meal-plans" />
+            <BackButton href="/recipes" />
         </template>
         <template #header-right>
             <Link :href="edit.url(recipe.id)">
@@ -38,6 +38,14 @@ function handleDelete(): void {
         <Head :title="recipe.title" />
 
         <div class="space-y-6 p-4">
+            <!-- Image -->
+            <img
+                v-if="recipe.image_path"
+                :src="`/storage/${recipe.image_path}`"
+                class="h-52 w-full rounded-xl object-cover"
+                alt=""
+            />
+
             <!-- Meta -->
             <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <span v-if="recipe.prep_time" class="flex items-center gap-1.5">
@@ -58,7 +66,7 @@ function handleDelete(): void {
             </div>
 
             <!-- Description -->
-            <p v-if="recipe.description" class="text-base text-foreground whitespace-pre-line">
+            <p v-if="recipe.description" class="whitespace-pre-line text-base text-foreground">
                 {{ recipe.description }}
             </p>
 
@@ -67,6 +75,7 @@ function handleDelete(): void {
                 v-if="recipe.url"
                 :href="recipe.url"
                 target="_blank"
+                rel="noopener noreferrer"
                 class="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
             >
                 <ExternalLink :size="15" />
@@ -107,7 +116,7 @@ function handleDelete(): void {
                         <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
                             {{ index + 1 }}
                         </span>
-                        <p class="pt-0.5 whitespace-pre-line">{{ step.instruction }}</p>
+                        <p class="whitespace-pre-line pt-0.5">{{ step.instruction }}</p>
                     </li>
                 </ol>
             </section>

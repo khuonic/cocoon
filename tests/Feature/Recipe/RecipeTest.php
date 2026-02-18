@@ -2,6 +2,25 @@
 
 use App\Models\Recipe;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
+test('index lists all recipes', function () {
+    $user = User::factory()->create();
+    Recipe::factory()->count(3)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('recipes.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Recipes/Index')
+            ->has('recipes', 3)
+        );
+});
+
+test('index requires authentication', function () {
+    $this->get(route('recipes.index'))->assertRedirect('/login');
+});
 
 test('guests cannot access recipes create', function () {
     $this->get(route('recipes.create'))->assertRedirect('/login');
@@ -152,7 +171,7 @@ test('destroy deletes recipe with cascade', function () {
 
     $this->actingAs($user)
         ->delete(route('recipes.destroy', $recipe))
-        ->assertRedirect(route('more'));
+        ->assertRedirect(route('recipes.index'));
 
     $this->assertDatabaseMissing('recipes', ['id' => $recipeId]);
     $this->assertDatabaseMissing('recipe_ingredients', ['recipe_id' => $recipeId]);
@@ -198,4 +217,67 @@ test('ingredients respect array order via sort_order', function () {
     expect($ingredients[1]->sort_order)->toBe(1);
     expect($ingredients[2]->name)->toBe('Troisième');
     expect($ingredients[2]->sort_order)->toBe(2);
+});
+
+test('store saves uploaded image', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $file = UploadedFile::fake()->image('recette.jpg');
+
+    $this->actingAs($user)
+        ->post(route('recipes.store'), [
+            'title' => 'Recette avec photo',
+            'image' => $file,
+        ])
+        ->assertRedirect();
+
+    $recipe = Recipe::query()->where('title', 'Recette avec photo')->first();
+    expect($recipe->image_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($recipe->image_path);
+});
+
+test('update replaces image and deletes old one', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $oldFile = UploadedFile::fake()->image('old.jpg');
+    $oldPath = $oldFile->store('recipes', 'public');
+    $recipe = Recipe::factory()->create(['created_by' => $user->id, 'image_path' => $oldPath]);
+
+    $newFile = UploadedFile::fake()->image('new.jpg');
+
+    $this->actingAs($user)
+        ->put(route('recipes.update', $recipe), [
+            'title' => $recipe->title,
+            'description' => null,
+            'url' => null,
+            'prep_time' => null,
+            'cook_time' => null,
+            'servings' => null,
+            'tags' => [],
+            'ingredients' => [],
+            'steps' => [],
+            'image' => $newFile,
+        ])
+        ->assertRedirect();
+
+    Storage::disk('public')->assertMissing($oldPath);
+    $recipe->refresh();
+    expect($recipe->image_path)->not->toBeNull();
+    expect($recipe->image_path)->not->toBe($oldPath);
+    Storage::disk('public')->assertExists($recipe->image_path);
+});
+
+test('destroy deletes image file', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $file = UploadedFile::fake()->image('photo.jpg');
+    $imagePath = $file->store('recipes', 'public');
+    $recipe = Recipe::factory()->create(['created_by' => $user->id, 'image_path' => $imagePath]);
+
+    $this->actingAs($user)
+        ->delete(route('recipes.destroy', $recipe))
+        ->assertRedirect(route('recipes.index'));
+
+    Storage::disk('public')->assertMissing($imagePath);
+    $this->assertDatabaseMissing('recipes', ['id' => $recipe->id]);
 });

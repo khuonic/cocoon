@@ -5,17 +5,6 @@ export type TagOption = {
     label: string;
 };
 
-export type MealIdea = {
-    id: number;
-    name: string;
-    description: string | null;
-    url: string | null;
-    tags: MealTag[] | null;
-    created_by: number;
-    uuid: string;
-    creator?: { id: number; name: string };
-};
-
 export type RecipeIngredient = {
     id: number;
     recipe_id: number;
@@ -37,6 +26,7 @@ export type Recipe = {
     title: string;
     description: string | null;
     url: string | null;
+    image_path: string | null;
     prep_time: number | null;
     cook_time: number | null;
     servings: number | null;

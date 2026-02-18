@@ -27,6 +27,7 @@ class StoreRecipeRequest extends FormRequest
             'servings' => ['nullable', 'integer', 'min:1', 'max:50'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', Rule::in(array_column(MealTag::cases(), 'value'))],
+            'image' => ['nullable', 'image', 'max:10240'],
             'ingredients' => ['nullable', 'array'],
             'ingredients.*.name' => ['required', 'string', 'max:255'],
             'ingredients.*.quantity' => ['nullable', 'string', 'max:50'],

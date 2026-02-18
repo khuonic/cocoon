@@ -7,12 +7,24 @@ use App\Http\Requests\Recipe\StoreRecipeRequest;
 use App\Http\Requests\Recipe\UpdateRecipeRequest;
 use App\Models\Recipe;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RecipeController extends Controller
 {
+    public function index(): Response
+    {
+        $recipes = Recipe::query()
+            ->latest()
+            ->get();
+
+        return Inertia::render('Recipes/Index', [
+            'recipes' => $recipes,
+        ]);
+    }
+
     public function create(): Response
     {
         return Inertia::render('Recipes/Create', [
@@ -22,8 +34,13 @@ class RecipeController extends Controller
 
     public function store(StoreRecipeRequest $request): RedirectResponse
     {
+        $imagePath = $request->hasFile('image')
+            ? $request->file('image')->store('recipes', 'public')
+            : null;
+
         $recipe = Recipe::create([
-            ...$request->safe()->except(['ingredients', 'steps']),
+            ...$request->safe()->except(['ingredients', 'steps', 'image']),
+            'image_path' => $imagePath,
             'uuid' => Str::uuid(),
             'created_by' => auth()->id(),
         ]);
@@ -51,7 +68,16 @@ class RecipeController extends Controller
 
     public function update(UpdateRecipeRequest $request, Recipe $recipe): RedirectResponse
     {
-        $recipe->update($request->safe()->except(['ingredients', 'steps']));
+        $data = $request->safe()->except(['ingredients', 'steps', 'image']);
+
+        if ($request->hasFile('image')) {
+            if ($recipe->image_path) {
+                Storage::disk('public')->delete($recipe->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('recipes', 'public');
+        }
+
+        $recipe->update($data);
 
         $this->syncIngredients($recipe, $request->validated('ingredients', []));
         $this->syncSteps($recipe, $request->validated('steps', []));
@@ -61,9 +87,13 @@ class RecipeController extends Controller
 
     public function destroy(Recipe $recipe): RedirectResponse
     {
+        if ($recipe->image_path) {
+            Storage::disk('public')->delete($recipe->image_path);
+        }
+
         $recipe->delete();
 
-        return to_route('more');
+        return to_route('recipes.index');
     }
 
     /**
