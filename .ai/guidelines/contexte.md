@@ -45,7 +45,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Note | Note partagée (titre, contenu, couleur, épinglage) |
 | SweetMessage | Mot doux entre partenaires (1 par utilisateur) |
 | Joke | Blague du jour (seeder 50 blagues) |
-| Birthday | Anniversaire (nom, date, âge calculé) |
+| Birthday | Anniversaire (nom, date, âge calculé, reminder_days_before) |
+| CalendarEvent | Événement calendrier (titre, catégorie colorée, dates, lieu, rappel, personnel) |
 | SyncLog | Journal de sync (queue locale, pending/synced) |
 
 ### Enums (app/Enums/)
@@ -54,6 +55,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `ShoppingItemCategory` : catégories d'articles
 - `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand (tags repas)
 - `NoteColor` : Default, Yellow, Green, Blue, Pink, Purple (couleurs notes)
+- `EventCategory` : Conges, Pro, Loisir, Rdv (avec label() et color() hex)
 - `SyncAction` : actions de sync
 
 ### Traits (app/Traits/)
@@ -81,7 +83,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `TodoController` : store (dans une liste), toggle, update, destroy
 - `RecipeController` : index, create, store, show, edit, update, destroy — avec image upload
 - `NoteController` : index, show, store, update, togglePin, destroy — show = page dédiée
-- `MoreController` : page "Plus" (Courses, Repas, Paramètres)
+- `CalendarController` : index (filtrage par ?month=YYYY-MM, anniversaires du mois), store, update, destroy
+- `MoreController` : page "Plus" (Courses, Repas, Anniversaires, Paramètres)
 - `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
 - `Auth/BiometricController` : écran biométrie (show + verify token Sanctum)
@@ -103,16 +106,17 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `/todos/{todo}/toggle` : PATCH toggle
 - `/todos/{todo}` : PATCH update, DELETE destroy
 - `POST /sweet-messages` : store mot doux
+- `/calendar` : GET index (?month=YYYY-MM), POST store, PATCH {calendar_event}, DELETE {calendar_event}
 - `/birthdays` : resource (index, store, update, destroy)
-- `/more` : page "Plus" (Courses, Repas, Paramètres)
+- `/more` : page "Plus" (Courses, Repas, Anniversaires, Paramètres)
 - Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
 - API dans `routes/api.php` : sync (push/pull/full), `GET app/version` (auth:sanctum), `GET app/download` (signed URL)
 
 ### Navigation (BottomNav)
 
-Accueil | Budget | Calendrier (Phase 20) | Notes | Plus
+Accueil | Budget | Calendrier | Notes | Plus
 
-**"Plus" contient :** Courses | Repas | Paramètres
+**"Plus" contient :** Courses | Repas | Anniversaires | Paramètres
 
 ## Phases terminées
 
@@ -195,14 +199,26 @@ Accueil | Budget | Calendrier (Phase 20) | Notes | Plus
 - SyncService : MODEL_MAP mis à jour (todo_lists + todos nouvelle structure)
 - Dashboard : suppression widget "todos épinglés" (show_on_dashboard retiré)
 
+### Phase 20 : Calendrier (complet)
+- Modèle `CalendarEvent` (Syncable, uuid, catégorie colorée, dates, lieu, rappel, personnel)
+- `EventCategory` enum : Conges/Pro/Loisir/Rdv avec label() et color()
+- `Birthday` : ajout `reminder_days_before` (0 = jour J, 1 = veille, null = pas de rappel)
+- `CalendarController` : index avec anniversaires du mois, store/update/destroy
+- `Calendar/Index.vue` : grille mensuelle, filtres catégories + utilisateurs, Day Modal, EventFormDialog
+- BottomNav : "Courses" → "Calendrier" (CalendarDays, `/calendar`)
+- More.vue : Anniversaires restauré → Courses | Repas | Anniversaires | Paramètres
+- SyncService : `calendar_events` ajouté au MODEL_MAP
+- **Rappels natifs** : colonnes stockées, plugin Kotlin Android (AlarmManager) à développer séparément lors du build APK
+- 209 tests passants
+
 ## Phases à venir
 
 | Phase | Module | Statut |
 |-------|--------|--------|
-| 20 | Calendrier (vue mensuelle, événements, anniversaires intégrés) | Non commencé |
-| 21 | Dashboard V2 (widget événements du jour) | Après Phase 20 |
+| 21 | Dashboard V2 (widget événements du jour) | Non commencé |
 | 22 | Bugs (blagues + mot mignon qui ne s'affichent pas) | Non commencé |
 | OPT-1 | Saisie vocale (Web Speech API dans AddItemForm) | Optionnel |
+| OPT-2 | Plugin rappels Android (Kotlin AlarmManager + NativePHP bridge) | Optionnel / Build APK |
 
 ## Conventions de code
 

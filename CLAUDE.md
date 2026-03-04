@@ -7,7 +7,7 @@
 
 ## Qu'est-ce que Cocoon ?
 
-App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne. Remplace Tricount et regroupe budget, courses, tâches, repas, notes et bookmarks. Interface 100% français, Android uniquement, distribuée par APK direct (pas de Play Store).
+App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne. Remplace Tricount et regroupe budget, courses, tâches, repas et notes. Interface 100% français, Android uniquement, distribuée par APK direct (pas de Play Store).
 
 ## Stack technique
 
@@ -18,6 +18,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - **Tests** : Pest 4
 - **Routes TS** : Wayfinder
 - **Sync** : Laravel Cloud API (Serverless Postgres) + Sanctum tokens
+- **Biométrie** : NativePHP Mobile Biometrics + Secure Storage (Face ID / empreinte)
 
 ## Contraintes clés
 
@@ -38,32 +39,31 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Expense | Dépense avec split type |
 | ExpenseCategory | Catégorie de dépense (seeder) |
 | ShoppingList | Liste de courses |
-| ShoppingItem | Article dans une liste |
-| Todo | Tâche |
-| MealIdea | Idée de repas (nom, description, url, tags) |
-| Recipe | Recette complète (titre, description, url, temps, portions, tags) |
+| ShoppingItem | Article dans une liste (sans quantité ni favori depuis Phase 16) |
+| TodoList | Liste de tâches (partagée ou personnelle) |
+| Todo | Tâche dans une TodoList (title, is_done, completed_at) |
+| Recipe | Recette complète (titre, description, url, image_path, temps, portions, tags) |
 | RecipeIngredient | Ingrédient d'une recette (nom, quantité, unité, ordre) |
 | RecipeStep | Étape d'une recette (instruction, ordre) |
 | Note | Note partagée (titre, contenu, couleur, épinglage) |
-| Bookmark | Bookmark générique (url, titre, description, catégorie, favori) |
 | SweetMessage | Mot doux entre partenaires (1 par utilisateur) |
 | Joke | Blague du jour (seeder 50 blagues) |
-| Birthday | Anniversaire (nom, date, âge calculé) |
-| SyncLog | Journal de sync (futur) |
+| Birthday | Anniversaire (nom, date, âge calculé, reminder_days_before) |
+| CalendarEvent | Événement calendrier (titre, catégorie colorée, dates, lieu, rappel, personnel) |
+| SyncLog | Journal de sync (queue locale, pending/synced) |
 
 ### Enums (app/Enums/)
 
 - `SplitType` : Equal, FullPayer, FullOther, Custom
-- `RecurrenceType` : types de récurrence
 - `ShoppingItemCategory` : catégories d'articles
 - `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand (tags repas)
 - `NoteColor` : Default, Yellow, Green, Blue, Pink, Purple (couleurs notes)
-- `BookmarkCategory` : Resto, Voyage, Shopping, Loisirs, Maison, Autre
+- `EventCategory` : Conges, Pro, Loisir, Rdv (avec label() et color() hex)
 - `SyncAction` : actions de sync
 
 ### Traits (app/Traits/)
 
-- `Syncable` : trait appliqué sur les 10 modèles synchronisables (écoute created/updated/deleted → SyncLog)
+- `Syncable` : trait appliqué sur les modèles synchronisables (écoute created/updated/deleted → SyncLog)
 
 ### Services (app/Services/)
 
@@ -76,40 +76,50 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 ### Controllers (app/Http/Controllers/)
 
-- `DashboardController` : page d'accueil `/` avec widgets (mot doux, anniversaires du jour, todos/bookmarks épinglés, blague)
+- `DashboardController` : page d'accueil `/` avec widgets (mot doux, anniversaires du jour, blague)
 - `SweetMessageController` : store (updateOrCreate) — mot doux
 - `BirthdayController` : CRUD complet (index, store, update, destroy) — modal sur index
-- `ExpenseController` : CRUD dépenses + settle + history
-- `ShoppingListController` : CRUD + duplicate (complet)
-- `ShoppingItemController` : store, toggleCheck, toggleFavorite, destroy
-- `TodoController` : CRUD complet (index, store, update, toggle, destroy) — modal sur index
-- `MealPlanController` : index (passe ideas, recipes, availableTags)
-- `MealIdeaController` : store, update, destroy — CRUD via modal
-- `RecipeController` : create, store, show, edit, update, destroy — pages dédiées
-- `NoteController` : CRUD complet (index, store, update, togglePin, destroy) — modal sur index
-- `BookmarkController` : CRUD complet (index, store, update, toggleFavorite, destroy) — modal sur index
-- `MoreController` : page "Plus"
+- `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total)
+- `ShoppingListController` : CRUD + duplicate
+- `ShoppingItemController` : store, update, toggleCheck, destroy (sans toggleFavorite)
+- `TodoListController` : show, store, update, destroy — listes de tâches
+- `TodoController` : store (dans une liste), toggle, update, destroy
+- `RecipeController` : index, create, store, show, edit, update, destroy — avec image upload
+- `NoteController` : index, show, store, update, togglePin, destroy — show = page dédiée
+- `CalendarController` : index (filtrage par ?month=YYYY-MM, anniversaires du mois), store, update, destroy
+- `MoreController` : page "Plus" (Courses, Repas, Anniversaires, Paramètres)
 - `Settings/ProfileController` (nom uniquement, email non modifiable), `Settings/PasswordController`
 - `Auth/SetupController` : premier lancement
+- `Auth/BiometricController` : écran biométrie (show + verify token Sanctum)
 - `Auth/ApiLoginController` : login API (Sanctum token)
 - `Api/SyncController` : push/pull/full sync API endpoints
+- `Api/AppVersionController` : check (version + signed URL) + download (stream APK)
 
 ### Routes principales (routes/web.php)
 
 - `GET /` : Dashboard (auth, verified)
 - `GET|POST /setup` : Setup premier lancement (guest)
+- `GET|POST /biometric-login` : Écran biométrie + vérification token (guest)
 - `/expenses` : resource (sauf show) + `POST settle` + `GET history`
-- `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, toggleCheck, toggleFavorite, destroy)
-- `/todos` : resource (sauf create, show, edit) + `PATCH {id}/toggle`
-- `/meal-plans` : index (idées + recettes)
-- `/meal-ideas` : store, update, destroy
-- `/recipes` : resource (sauf index)
-- `/notes` : resource (index, store, update, destroy) + `PATCH {id}/toggle-pin`
-- `/bookmarks` : resource (index, store, update, destroy) + `PATCH {id}/toggle-favorite`
+- `/shopping-lists` : resource (sauf edit) + `POST {id}/duplicate` + items (store, update, toggleCheck, destroy)
+- `/recipes` : resource complète (index, create, store, show, edit, update, destroy)
+- `/notes` : index, show, store, update, togglePin, destroy
+- `/todo-lists` : show, store, update, destroy
+- `/todo-lists/{todo_list}/todos` : store
+- `/todos/{todo}/toggle` : PATCH toggle
+- `/todos/{todo}` : PATCH update, DELETE destroy
 - `POST /sweet-messages` : store mot doux
+- `/calendar` : GET index (?month=YYYY-MM), POST store, PATCH {calendar_event}, DELETE {calendar_event}
 - `/birthdays` : resource (index, store, update, destroy)
-- `/more` : page "Plus" (repas, notes, bookmarks, anniversaires, paramètres)
+- `/more` : page "Plus" (Courses, Repas, Anniversaires, Paramètres)
 - Settings dans `routes/settings.php` : profil (nom uniquement), mot de passe
+- API dans `routes/api.php` : sync (push/pull/full), `GET app/version` (auth:sanctum), `GET app/download` (signed URL)
+
+### Navigation (BottomNav)
+
+Accueil | Budget | Calendrier | Notes | Plus
+
+**"Plus" contient :** Courses | Repas | Anniversaires | Paramètres
 
 ## Phases terminées
 
@@ -129,90 +139,104 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `BalanceCalculator` : calcul de qui doit quoi
 - Settle (règlement) : archive les dépenses non réglées
 - Historique des règlements
-- 83 tests Pest passants (Feature + Unit)
 
 ### Phase 6 : Module Courses (complet)
 
 - CRUD listes de courses avec templates et duplication
-- Articles par liste : ajout, check/uncheck, favoris, suppression
+- Articles par liste : ajout, check/uncheck, suppression
 - Groupement par catégorie (enum ShoppingItemCategory avec labels FR)
-- Vue Show avec formulaire inline sticky, groupes par catégorie, section cochés pliable
-- 20 tests Pest (ShoppingListTest + ShoppingItemTest)
 
-### Phase 7 : Module Tâches (complet)
+### Phase 7 : Module Tâches (complet, refactorisé en Phase 19)
 
-- CRUD complet via modal (store, update, toggle, destroy)
-- Groupement : tâches partagées, tâches personnelles, tâches terminées (collapsible)
-- Assignation à un utilisateur, date d'échéance optionnelle
-- Toggle done/undone avec completed_at
-- 15 tests Pest (TodoTest)
+- Voir Phase 19
 
-### Phase 8 : Module Repas (complet)
+### Phase 8 : Module Repas (complet, refactorisé en Phase 18)
 
-- Banque d'idées repas : CRUD via modal (nom, description, url, tags)
-- Recettes complètes : pages dédiées create/show/edit (titre, description, url, temps prépa/cuisson, portions, tags, ingrédients, étapes)
-- 2 onglets sur /meal-plans : Idées + Recettes
-- Filtrage par tags côté client
-- Enum MealTag (Rapide, Végé, Comfort, Léger, Gourmand)
-- 22 tests Pest (MealIdeaTest + RecipeTest)
-- Nettoyage : suppression MealPlan, MealType
+- Recettes complètes avec image, index grid, tags, ingrédients, étapes
 
-### Phase 9 : Module Notes (complet)
-
-- CRUD complet via modal (store, update, togglePin, destroy)
-- Grille 2 colonnes style Google Keep
-- Couleurs pastel par note (enum NoteColor : 6 couleurs)
-- Épinglage de notes (affichées en premier)
-- ColorPicker (6 pastilles cliquables)
-- 12 tests Pest (NoteTest)
-
-### Phase 10 : Module Bookmarks (complet)
-
-- CRUD complet via modal (store, update, toggleFavorite, destroy)
-- Bookmarks génériques : URL, titre, description, catégorie, favori
-- Enum BookmarkCategory (Resto, Voyage, Shopping, Loisirs, Maison, Autre)
-- Favoris affichés en premier (étoile toggle)
-- Filtrage par catégorie côté client (boutons scrollables)
-- 12 tests Pest (BookmarkTest)
+### Phase 9-10 : Notes + Bookmarks (Notes conservées, Bookmarks supprimés en Phase 15)
 
 ### Phase 11 : Dashboard + Anniversaires (complet)
 
-- Dashboard avec 5 widgets : mot doux, anniversaires du jour, todos épinglés, bookmarks épinglés, blague du jour
-- Mot doux : SweetMessage (1 par utilisateur, updateOrCreate), champ inline sur le dashboard
-- Blague du jour : Joke (seeder 50 blagues FR), rotation quotidienne
-- Anniversaires : Birthday CRUD complet via modal, page dédiée dans "Plus", age calculé
-- show_on_dashboard : flag boolean sur Todo et Bookmark, switch dans les formulaires
-- 25 tests Pest (DashboardTest + SweetMessageTest + BirthdayTest)
+- Widgets : mot doux, anniversaires du jour, blague du jour
+- Anniversaires : Birthday CRUD complet via modal
 
 ### Phase 12 : Sync Offline-First (complet)
 
-- Trait Syncable appliqué sur 10 modèles (écoute created/updated/deleted → SyncLog)
-- SyncService : logique push/pull/full avec last-write-wins (basé sur updated_at)
-- SyncController API : POST push, GET pull, POST full (auth:sanctum + RestrictToHousehold)
-- SyncClient JS : service TypeScript intégré dans AppLayout (sync au montage si configuré)
-- Config : `SYNC_API_URL` dans .env, partagé via Inertia shared data
-- 19 tests Pest (SyncApiTest + SyncableTest)
+- Syncable trait + SyncLog + SyncService (push/pull/full)
+- SyncClient JS dans AppLayout
 
-### Traduction FR + NativePHP safe areas
+### Phase 13 : Biométrie (complet)
 
-- Toutes les pages settings et auth traduites en français
-- Safe areas NativePHP configurées (viewport-fit, CSS variables)
-- Suppression de "mot de passe oublié" (inutile en local)
+- NativePHP Mobile Biometrics + Secure Storage
+- BiometricController, biometric-auth.ts, LoginResponse/LogoutResponse custom
+
+### Phase 14 : Auto-update APK (complet)
+
+- AppVersionController (check + download via signed URL)
+- Commande `app:publish-release`, update-checker.ts, UpdateDialog.vue
+
+### Phase 15 : Cleanup (complet)
+
+- Suppression complète de Bookmarks (modèle, controller, routes, tests, UI, sync)
+- Suppression complète de MealIdeas (modèle, controller, routes, tests, UI, sync)
+- FAB surélevé au-dessus de la BottomNav
+- Logo sur l'écran de connexion
+
+### Phase 16 : Shopping Refonte (complet)
+
+- ShoppingItems : cards avec menu ⋮ (modifier/supprimer), dialog d'édition inline
+- Catégories collapsibles
+- Suppression de la quantité et des favoris
+- localStorage mémorise la dernière liste consultée → redirect auto
+
+### Phase 17 : Budget V2 (complet)
+
+- Catégories renommées : Loyer → Charges, Santé → Cadeaux
+- Historique : vue mensuelle par défaut + filtres (mensuel/annuel/total) + navigation par mois
+- Lien "Voir l'historique" dans le BalanceBanner
+
+### Phase 18 : Recipes V2 (complet)
+
+- Page index grille 2 colonnes avec image/placeholder
+- Upload d'image via `Storage::disk('public')` (input file, prévisualisation)
+- Fix back buttons : `/meal-plans` → `/recipes`
+- `destroy()` redirige vers `recipes.index` (au lieu de `more`)
+- 199 tests passants
+
+### Phase 19 : Notes Fusion (complet)
+
+- Nouvelle structure TodoList + Todo (plus d'anciens todos)
+- NoteController : ajout de `show()` (page dédiée plein écran avec auto-save)
+- Notes/Index.vue : 2 onglets (Notes | Todos) via `?tab=`
+- Notes/Show.vue : édition plein écran avec fond coloré, auto-save debounce
+- TodoLists/Show.vue : style Shopping (formulaire sticky, toggle, section Terminés)
+- BottomNav : "Tâches" → "Notes" (`/notes`)
+- More.vue : Courses | Repas | Paramètres (sans Notes ni Anniversaires)
+- SyncService : MODEL_MAP mis à jour (todo_lists + todos nouvelle structure)
+- Dashboard : suppression widget "todos épinglés" (show_on_dashboard retiré)
+
+### Phase 20 : Calendrier (complet)
+
+- Modèle `CalendarEvent` (Syncable, uuid, catégorie colorée, dates, lieu, rappel, personnel)
+- `EventCategory` enum : Conges/Pro/Loisir/Rdv avec label() et color()
+- `Birthday` : ajout `reminder_days_before` (0 = jour J, 1 = veille, null = pas de rappel)
+- `CalendarController` : index avec anniversaires du mois, store/update/destroy
+- `Calendar/Index.vue` : grille mensuelle, filtres catégories + utilisateurs, Day Modal, EventFormDialog
+- BottomNav : "Courses" → "Calendrier" (CalendarDays, `/calendar`)
+- More.vue : Anniversaires restauré → Courses | Repas | Anniversaires | Paramètres
+- SyncService : `calendar_events` ajouté au MODEL_MAP
+- **Rappels natifs** : colonnes stockées, plugin Kotlin Android (AlarmManager) à développer séparément lors du build APK
+- 209 tests passants
 
 ## Phases à venir
 
 | Phase | Module | Statut |
 |-------|--------|--------|
-| 6 | Courses (shopping lists) | **Complet** |
-| 7 | Tâches (todos) | **Complet** |
-| 8 | Repas (idées + recettes) | **Complet** |
-| 9 | Notes | **Complet** |
-| 10 | Bookmarks | **Complet** |
-| 11 | Dashboard + Anniversaires | **Complet** |
-| 12 | Sync offline-first | **Complet** |
-| 13 | Biométrie (Face ID / empreinte) | Non commencé |
-| 14 | Push notifications | Non commencé |
-| 15 | Auto-update APK | Non commencé |
+| 21 | Dashboard V2 (widget événements du jour) | Non commencé |
+| 22 | Bugs (blagues + mot mignon qui ne s'affichent pas) | Non commencé |
+| OPT-1 | Saisie vocale (Web Speech API dans AddItemForm) | Optionnel |
+| OPT-2 | Plugin rappels Android (Kotlin AlarmManager + NativePHP bridge) | Optionnel / Build APK |
 
 ## Conventions de code
 
@@ -221,18 +245,15 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - **Plans** : fichiers `.md` à la racine, référencés dans `COCON_PLAN.md`
 - **Pint** : `vendor/bin/pint --dirty --format agent` avant chaque finalisation
 - **Wayfinder** : `php artisan wayfinder:generate` après modification de routes/controllers
+- **Images** : `Storage::disk('public')`, symlink via `php artisan storage:link`, URL `/storage/{path}`
+- **mobilePut / mobilePatch** : workaround Android WebView pour PUT/PATCH (POST + _method spoofing)
 
 ## Fichiers de référence
 
 - `COCON_PLAN.md` : plan global du projet
-- `PHASE5_BUDGET.md` : plan détaillé phase 5
-- `PHASE7_TODOS.md` : plan détaillé phase 7
-- `PHASE8_MEALS.md` : plan détaillé phase 8
-- `PHASE9_NOTES.md` : plan détaillé phase 9
-- `PHASE10_BOOKMARKS.md` : plan détaillé phase 10
-- `PHASE11_DASHBOARD.md` : plan détaillé phase 11
-- `PHASE12_SYNC.md` : plan détaillé phase 12
-- `SETUP_SCREEN.md` : plan écran de setup
+- `REUNION_PLAN.md` : plan issu de la réunion Kevin + Lola (18/02/2026)
+- `PHASE19_NOTES_FUSION.md` : plan détaillé phase 19
+- `PHASE20_CALENDRIER.md` : plan détaillé phase 20
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth (pas de registration, pas de reset password)
 
@@ -695,4 +716,81 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 - [https://nativephp.com/docs/mobile/2/concepts/security] Use these docs for security best practices, secure storage, and protecting sensitive data
 - [https://nativephp.com/docs/mobile/2/concepts/ci-cd] Use these docs for continuous integration and deployment pipelines for mobile apps
 </available-docs>
+
+=== nativephp/mobile-biometrics rules ===
+
+## nativephp/biometrics
+
+Biometric authentication plugin for NativePHP Mobile (Face ID, Touch ID, Fingerprint).
+
+### PHP Usage (Livewire/Blade)
+
+Use the `Biometrics` facade:
+
+<code-snippet name="Using Biometrics Facade" lang="php">
+use Native\Mobile\Facades\Biometrics;
+
+// Prompt for biometric authentication
+Biometrics::prompt();
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Using Biometrics in JavaScript" lang="javascript">
+import { biometric } from '#nativephp';
+
+// Basic usage
+await biometric.prompt();
+
+// With identifier for tracking
+await biometric.prompt().id('secure-action-auth');
+</code-snippet>
+
+### Handling Biometric Events
+
+#### PHP
+
+<code-snippet name="Listening for Biometric Events in PHP" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Biometric\Completed;
+
+#[OnNative(Completed::class)]
+public function handleBiometric(bool $success)
+{
+    if ($success) {
+        $this->unlockSecureFeature();
+    } else {
+        $this->showErrorMessage();
+    }
+}
+</code-snippet>
+
+#### Vue
+
+<code-snippet name="Listening for Biometric Events in Vue" lang="javascript">
+import { biometric, on, off, Events } from '#nativephp';
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const handleBiometricComplete = (payload) => {
+    if (payload.success) {
+        isAuthenticated.value = true;
+    } else {
+        showErrorMessage();
+    }
+};
+
+onMounted(() => {
+    on(Events.Biometric.Completed, handleBiometricComplete);
+});
+
+onUnmounted(() => {
+    off(Events.Biometric.Completed, handleBiometricComplete);
+});
+</code-snippet>
+
+### Platform Support
+
+- **iOS**: Face ID, Touch ID
+- **Android**: Fingerprint, face unlock, other biometric methods
+- **Fallback**: System authentication (PIN, password, pattern)
 </laravel-boost-guidelines>

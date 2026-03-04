@@ -6,7 +6,8 @@
     "herd_mcp": false,
     "mcp": true,
     "packages": [
-        "nativephp/mobile"
+        "nativephp/mobile",
+        "nativephp/mobile-biometrics"
     ],
     "sail": false,
     "skills": [
