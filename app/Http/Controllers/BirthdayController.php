@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Birthday\StoreBirthdayRequest;
 use App\Http\Requests\Birthday\UpdateBirthdayRequest;
 use App\Models\Birthday;
+use App\Services\ReminderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -28,26 +29,31 @@ class BirthdayController extends Controller
         ]);
     }
 
-    public function store(StoreBirthdayRequest $request): RedirectResponse
+    public function store(StoreBirthdayRequest $request, ReminderService $reminders): RedirectResponse
     {
-        Birthday::create([
+        $birthday = Birthday::create([
             ...$request->validated(),
             'uuid' => Str::uuid(),
             'added_by' => auth()->id(),
         ]);
 
+        $reminders->scheduleForBirthday($birthday);
+
         return to_route('birthdays.index');
     }
 
-    public function update(UpdateBirthdayRequest $request, Birthday $birthday): RedirectResponse
+    public function update(UpdateBirthdayRequest $request, Birthday $birthday, ReminderService $reminders): RedirectResponse
     {
+        $reminders->cancelForBirthday($birthday);
         $birthday->update($request->validated());
+        $reminders->scheduleForBirthday($birthday->fresh());
 
         return to_route('birthdays.index');
     }
 
-    public function destroy(Birthday $birthday): RedirectResponse
+    public function destroy(Birthday $birthday, ReminderService $reminders): RedirectResponse
     {
+        $reminders->cancelForBirthday($birthday);
         $birthday->delete();
 
         return to_route('birthdays.index');

@@ -7,6 +7,7 @@ use App\Http\Requests\Calendar\UpdateCalendarEventRequest;
 use App\Models\Birthday;
 use App\Models\CalendarEvent;
 use App\Models\User;
+use App\Services\ReminderService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -61,29 +62,36 @@ class CalendarController extends Controller
         ]);
     }
 
-    public function store(StoreCalendarEventRequest $request): RedirectResponse
+    public function store(StoreCalendarEventRequest $request, ReminderService $reminders): RedirectResponse
     {
-        CalendarEvent::create([
+        $event = CalendarEvent::create([
             ...$request->validated(),
             'uuid' => Str::uuid(),
             'user_id' => $request->boolean('is_personal') ? auth()->id() : null,
         ]);
 
+        $reminders->scheduleForCalendarEvent($event);
+
         return to_route('calendar.index');
     }
 
-    public function update(UpdateCalendarEventRequest $request, CalendarEvent $calendarEvent): RedirectResponse
+    public function update(UpdateCalendarEventRequest $request, CalendarEvent $calendarEvent, ReminderService $reminders): RedirectResponse
     {
+        $reminders->cancelForCalendarEvent($calendarEvent);
+
         $calendarEvent->update([
             ...$request->validated(),
             'user_id' => $request->boolean('is_personal') ? auth()->id() : null,
         ]);
 
+        $reminders->scheduleForCalendarEvent($calendarEvent->fresh());
+
         return to_route('calendar.index');
     }
 
-    public function destroy(CalendarEvent $calendarEvent): RedirectResponse
+    public function destroy(CalendarEvent $calendarEvent, ReminderService $reminders): RedirectResponse
     {
+        $reminders->cancelForCalendarEvent($calendarEvent);
         $calendarEvent->delete();
 
         return to_route('calendar.index');

@@ -1,0 +1,25 @@
+{
+    "name": "cocoon/local-notifications",
+    "description": "Local notifications plugin for Cocoon (NativePHP Mobile)",
+    "type": "nativephp-plugin",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "nativephp/mobile": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cocoon\\LocalNotifications\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Cocoon\\LocalNotifications\\LocalNotificationsServiceProvider"
+            ]
+        },
+        "nativephp": {
+            "manifest": "nativephp.json"
+        }
+    }
+}

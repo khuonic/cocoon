@@ -1,0 +1,54 @@
+{
+    "name": "cocoon/local-notifications",
+    "version": "1.0.0",
+    "description": "Local notifications plugin for Cocoon",
+    "namespace": "LocalNotification",
+    "category": "utilities",
+    "license": "MIT",
+    "platforms": ["android"],
+    "bridge_functions": [
+        {
+            "name": "LocalNotification.Schedule",
+            "android": "com.cocoon.plugins.localnotifications.LocalNotificationFunctions.Schedule",
+            "description": "Schedule a local notification at a given datetime"
+        },
+        {
+            "name": "LocalNotification.Cancel",
+            "android": "com.cocoon.plugins.localnotifications.LocalNotificationFunctions.Cancel",
+            "description": "Cancel a scheduled local notification by ID"
+        },
+        {
+            "name": "LocalNotification.CancelAll",
+            "android": "com.cocoon.plugins.localnotifications.LocalNotificationFunctions.CancelAll",
+            "description": "Cancel all scheduled local notifications"
+        }
+    ],
+    "android": {
+        "permissions": [
+            "android.permission.POST_NOTIFICATIONS",
+            "android.permission.RECEIVE_BOOT_COMPLETED",
+            "android.permission.SCHEDULE_EXACT_ALARM",
+            "android.permission.USE_EXACT_ALARM"
+        ],
+        "receivers": [
+            {
+                "name": "com.cocoon.plugins.localnotifications.NotificationAlarmReceiver",
+                "exported": false
+            },
+            {
+                "name": "com.cocoon.plugins.localnotifications.NotificationAlarmReceiver",
+                "exported": true,
+                "intent_filter": [
+                    "android.intent.action.BOOT_COMPLETED",
+                    "android.intent.action.MY_PACKAGE_REPLACED"
+                ]
+            }
+        ],
+        "dependencies": {
+            "implementation": [
+                "androidx.core:core-ktx:1.12.0"
+            ]
+        }
+    },
+    "service_provider": "Cocoon\\LocalNotifications\\LocalNotificationsServiceProvider"
+}
