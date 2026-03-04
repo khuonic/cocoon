@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\BirthdayController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MoreController;
@@ -63,6 +64,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
     Route::patch('todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::delete('todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
+
+    // Calendrier
+    Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::post('calendar', [CalendarController::class, 'store'])->name('calendar.store');
+    Route::patch('calendar/{calendar_event}', [CalendarController::class, 'update'])->name('calendar.update');
+    Route::delete('calendar/{calendar_event}', [CalendarController::class, 'destroy'])->name('calendar.destroy');
 
     // Divers
     Route::post('sweet-messages', [SweetMessageController::class, 'store'])->name('sweet-messages.store');

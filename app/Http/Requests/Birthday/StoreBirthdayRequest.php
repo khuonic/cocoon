@@ -19,6 +19,7 @@ class StoreBirthdayRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'date' => ['required', 'date', 'before_or_equal:today'],
+            'reminder_days_before' => ['nullable', 'integer', 'in:0,1'],
         ];
     }
 

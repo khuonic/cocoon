@@ -18,6 +18,7 @@ class Birthday extends Model
     protected $fillable = [
         'name',
         'date',
+        'reminder_days_before',
         'added_by',
         'uuid',
     ];
@@ -26,6 +27,7 @@ class Birthday extends Model
     {
         return [
             'date' => 'date',
+            'reminder_days_before' => 'integer',
         ];
     }
 

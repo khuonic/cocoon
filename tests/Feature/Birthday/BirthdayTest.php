@@ -125,3 +125,36 @@ test('destroy deletes a birthday', function () {
 
     $this->assertDatabaseMissing('birthdays', ['id' => $birthday->id]);
 });
+
+test('store accepts reminder_days_before', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('birthdays.store'), [
+            'name' => 'Maman',
+            'date' => '1970-05-15',
+            'reminder_days_before' => 1,
+        ])
+        ->assertRedirect(route('birthdays.index'));
+
+    $this->assertDatabaseHas('birthdays', [
+        'name' => 'Maman',
+        'reminder_days_before' => 1,
+    ]);
+});
+
+test('update accepts reminder_days_before', function () {
+    $user = User::factory()->create();
+    $birthday = Birthday::factory()->create(['added_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->put(route('birthdays.update', $birthday), [
+            'name' => $birthday->name,
+            'date' => $birthday->date->format('Y-m-d'),
+            'reminder_days_before' => 0,
+        ])
+        ->assertRedirect(route('birthdays.index'));
+
+    $birthday->refresh();
+    expect($birthday->reminder_days_before)->toBe(0);
+});

@@ -28,12 +28,14 @@ const isEditMode = () => !!props.birthday;
 const form = useForm({
     name: '',
     date: '',
+    reminder_days_before: null as number | null,
 });
 
 function resetForm(): void {
     if (props.birthday) {
         form.name = props.birthday.name;
         form.date = props.birthday.date.split('T')[0];
+        form.reminder_days_before = props.birthday.reminder_days_before;
     } else {
         form.reset();
         form.clearErrors();
@@ -101,6 +103,20 @@ function submit(): void {
                     <InputError :message="form.errors.date" />
                 </div>
 
+                <div class="space-y-2">
+                    <Label for="birthday-reminder">Rappel</Label>
+                    <select
+                        id="birthday-reminder"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        :value="form.reminder_days_before === null ? '' : String(form.reminder_days_before)"
+                        @change="(e) => { const v = (e.target as HTMLSelectElement).value; form.reminder_days_before = v === '' ? null : Number(v); }"
+                    >
+                        <option value="">Pas de rappel</option>
+                        <option value="1">La veille</option>
+                        <option value="0">Le jour J</option>
+                    </select>
+                </div>
+
                 <DialogFooter>
                     <Button type="button" variant="outline" @click="isOpen = false">
                         Annuler
@@ -109,6 +125,7 @@ function submit(): void {
                         {{ isEditMode() ? 'Enregistrer' : 'Ajouter' }}
                     </Button>
                 </DialogFooter>
+
             </form>
         </DialogContent>
     </Dialog>

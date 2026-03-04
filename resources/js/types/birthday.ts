@@ -3,6 +3,7 @@ export type Birthday = {
     name: string;
     date: string;
     age: number;
+    reminder_days_before: number | null;
     added_by: number;
     uuid: string;
     created_at: string;

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\SyncAction;
 use App\Models\Birthday;
+use App\Models\CalendarEvent;
 use App\Models\Expense;
 use App\Models\Note;
 use App\Models\Recipe;
@@ -34,6 +35,7 @@ class SyncService
         'notes' => Note::class,
         'sweet_messages' => SweetMessage::class,
         'birthdays' => Birthday::class,
+        'calendar_events' => CalendarEvent::class,
     ];
 
     /**

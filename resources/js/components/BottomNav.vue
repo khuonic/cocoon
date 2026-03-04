@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import {
     Home,
     Wallet,
-    ShoppingCart,
+    CalendarDays,
     StickyNote,
     MoreHorizontal,
 } from 'lucide-vue-next';
@@ -14,7 +14,7 @@ const { isCurrentUrl } = useCurrentUrl();
 const tabs = [
     { label: 'Accueil', href: '/', icon: Home },
     { label: 'Budget', href: '/expenses', icon: Wallet },
-    { label: 'Courses', href: '/shopping-lists', icon: ShoppingCart },
+    { label: 'Calendrier', href: '/calendar', icon: CalendarDays },
     { label: 'Notes', href: '/notes', icon: StickyNote },
     { label: 'Plus', href: '/more', icon: MoreHorizontal },
 ];
