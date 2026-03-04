@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\EventCategory;
 use App\Models\Birthday;
+use App\Models\CalendarEvent;
 use App\Models\Joke;
 use App\Models\SweetMessage;
 use App\Models\User;
@@ -19,7 +21,8 @@ test('authenticated users can view the dashboard', function () {
             ->component('Dashboard')
             ->has('sweetMessage')
             ->has('mySweetMessage')
-            ->has('todayBirthdays')
+            ->has('todayItems')
+            ->has('todayItemsCount')
             ->has('joke')
         );
 });
@@ -48,28 +51,6 @@ test('dashboard does not show own sweet message as partner message', function ()
         );
 });
 
-test('dashboard shows today birthdays', function () {
-    $user = User::factory()->create();
-    Birthday::factory()->create([
-        'name' => 'Maman',
-        'date' => now()->subYears(50)->format('Y-m-d'),
-        'added_by' => $user->id,
-    ]);
-    Birthday::factory()->create([
-        'name' => 'Autre',
-        'date' => now()->addDay()->format('Y-m-d'),
-        'added_by' => $user->id,
-    ]);
-
-    $this->actingAs($user)
-        ->get('/')
-        ->assertInertia(fn ($page) => $page
-            ->has('todayBirthdays', 1)
-            ->where('todayBirthdays.0.name', 'Maman')
-            ->where('todayBirthdays.0.age', 50)
-        );
-});
-
 test('dashboard shows joke of the day', function () {
     $user = User::factory()->create();
     Joke::create(['content' => 'Blague unique']);
@@ -78,5 +59,74 @@ test('dashboard shows joke of the day', function () {
         ->get('/')
         ->assertInertia(fn ($page) => $page
             ->where('joke.content', 'Blague unique')
+        );
+});
+
+test("today's calendar event appears in todayItems", function () {
+    $user = User::factory()->create();
+    CalendarEvent::factory()->create([
+        'title' => 'Réunion',
+        'category' => EventCategory::Pro->value,
+        'starts_at' => today()->setTime(10, 0),
+        'all_day' => false,
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/')
+        ->assertInertia(fn ($page) => $page
+            ->has('todayItems', 1)
+            ->where('todayItems.0.type', 'event')
+            ->where('todayItems.0.title', 'Réunion')
+            ->where('todayItems.0.time', '10:00')
+        );
+});
+
+test("today's birthday appears in todayItems", function () {
+    $user = User::factory()->create();
+    Birthday::factory()->create([
+        'name' => 'Maman',
+        'date' => now()->subYears(50)->format('Y-m-d'),
+        'added_by' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/')
+        ->assertInertia(fn ($page) => $page
+            ->has('todayItems', 1)
+            ->where('todayItems.0.type', 'birthday')
+            ->where('todayItems.0.age', 50)
+        );
+});
+
+test('todayItemsCount reflects total when more than 5 items', function () {
+    $user = User::factory()->create();
+
+    CalendarEvent::factory()->count(6)->create([
+        'starts_at' => today()->setTime(9, 0),
+        'all_day' => false,
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/')
+        ->assertInertia(fn ($page) => $page
+            ->has('todayItems', 5)
+            ->where('todayItemsCount', 6)
+        );
+});
+
+test("tomorrow's event does not appear in todayItems", function () {
+    $user = User::factory()->create();
+    CalendarEvent::factory()->create([
+        'starts_at' => today()->addDay()->setTime(10, 0),
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/')
+        ->assertInertia(fn ($page) => $page
+            ->has('todayItems', 0)
+            ->where('todayItemsCount', 0)
         );
 });
