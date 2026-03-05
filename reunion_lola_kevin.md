@@ -85,3 +85,44 @@
 - modifier chaque PHASE*.md si nécessaire
 - modifier COCON_PLAN.md si nécessaire
 - rédige un plan des que nécessaore/usa
+
+## Nouvelles remarques
+- calendrier
+  - pouvoir swiper pour les mois
+  - affichage avec cases pour jour
+  - inspiré de google agenda "mois"
+  - cases plus haute pour remplir la page
+    - Modification evenement non fonctionnel (erreur 500)
+  - manque de tests feature sur le calendrier
+  - pouvoir saisir les anniversaires (sur calendrier/)
+  - au click sur le FAB +
+    - menu contextuel avec choix de categorie
+    - permet d'adapter la modal de saisie, notamment anniversaire, retirer le choix de catégorie dans la modal
+    - Propose moi une solution pour que le clavier visuel mobile soit dismiss facilement dans la modal
+    - les checkbox a transformer en toggle
+    - déplacer la sauvegarde peut etre en haut a droite ()
+
+- notes
+  - affiche 8 lignes max sur ecran recap
+  - saisie de todolist
+  - ne pas avoir de bouton ajouter
+  - mais plutot a chaque ligne une case de todo a chaque fois qu'on fait entrer (s'inspier liste google keep ou alors en appuyant sur entrée que ca retourne automatiquement ensuite dans l'input de saisie)
+  - pouvoir drag and drop dans la liste pour reordonner les élements
+  - BUG: note pas scrollable a l'interieur
+- Liste de course
+  - afficher les élements en card carrées plutot que en ligne
+  - bug sur retour arriere
+  - ajouter couleur de fond sur les card (differentes entre cochées pas cochées)
+  - Les boutons d'enregistrement sont soit sous le clavier soit collés au clavier (peut etre mettre la modal en top ?)
+- Budget
+  - "vous etes quittes" est moche
+  - Déplacer description en haut
+  - mettre date a coté du montant sur meme ligne en réduisant la hauteur de la ligne de montant
+  - sur historique
+    - ajouter meme selecteur année/mois que dans le calendrier 
+
+- Bug dans parametre enregitrer
+  - POST METHOD not supported 
+- Remarque globale concernant les boutons d'enregistrement sur les differentes pages qui ressemblent trop aux autres tags filtres bouttons
+  - peut etre mettre les bouton d'enregistrement en haut de la page (notamment dans les modal ou meme tout) ou avec plus de hauteur, pas forcément toute la longueur, fais moi des propositions
+- Mettre les modal en top
