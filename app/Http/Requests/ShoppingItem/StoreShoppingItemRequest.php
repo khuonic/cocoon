@@ -13,6 +13,13 @@ class StoreShoppingItemRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('category') === '') {
+            $this->merge(['category' => null]);
+        }
+    }
+
     /**
      * @return array<string, array<mixed>>
      */
@@ -20,7 +27,7 @@ class StoreShoppingItemRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'category' => ['required', Rule::enum(ShoppingItemCategory::class)],
+            'category' => ['nullable', Rule::enum(ShoppingItemCategory::class)],
         ];
     }
 
@@ -32,7 +39,6 @@ class StoreShoppingItemRequest extends FormRequest
         return [
             'name.required' => 'Le nom de l\'article est obligatoire.',
             'name.max' => 'Le nom ne peut pas dépasser 255 caractères.',
-            'category.required' => 'La catégorie est obligatoire.',
             'category.Illuminate\Validation\Rules\Enum' => 'La catégorie sélectionnée est invalide.',
         ];
     }

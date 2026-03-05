@@ -56,8 +56,11 @@ class ShoppingListController extends Controller
 
         $uncheckedItems = $shoppingList->items
             ->where('is_checked', false)
-            ->sortBy(fn ($item) => array_search($item->category->value, $categoryOrder))
-            ->groupBy(fn ($item) => $item->category->value);
+            ->sortBy(fn ($item) => $item->category
+                ? array_search($item->category->value, $categoryOrder) + 1
+                : 0
+            )
+            ->groupBy(fn ($item) => $item->category?->value ?? '');
 
         $checkedItems = $shoppingList->items
             ->where('is_checked', true)

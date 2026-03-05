@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import CalendarWeekRow from '@/components/calendar/CalendarWeekRow.vue';
 import EventFormDialog from '@/components/calendar/EventFormDialog.vue';
+import MonthYearPicker from '@/components/calendar/MonthYearPicker.vue';
 import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,6 +50,8 @@ function navigate(direction: -1 | 1): void {
     router.get('/calendar', { month: newMonth }, { preserveState: false });
 }
 
+const showMonthPicker = ref(false);
+
 // ─── Filtres ───────────────────────────────────────────────────────────────
 const activeCategory = ref('all');
 const activeUserIds = ref<number[]>([]); // empty = tous visibles
@@ -89,12 +93,16 @@ const calendarGrid = computed<CalendarDay[]>(() => {
     return cells;
 });
 
+const calendarWeeks = computed<CalendarDay[][]>(() => {
+    const weeks: CalendarDay[][] = [];
+    for (let i = 0; i < calendarGrid.value.length; i += 7) {
+        weeks.push(calendarGrid.value.slice(i, i + 7));
+    }
+    return weeks;
+});
+
 const today = new Date();
 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-function isToday(date: string | null): boolean {
-    return date === todayStr;
-}
 
 // ─── Événements filtrés ────────────────────────────────────────────────────
 const filteredEvents = computed(() => {
@@ -110,37 +118,6 @@ const filteredEvents = computed(() => {
     });
 });
 
-function eventsForDay(date: string | null): CalendarEvent[] {
-    if (!date) { return []; }
-    if (activeCategory.value === 'birthday') { return []; }
-    return filteredEvents.value.filter((e) => e.starts_at.startsWith(date));
-}
-
-function birthdaysForDay(date: string | null): CalendarBirthday[] {
-    if (!date || (activeCategory.value !== 'all' && activeCategory.value !== 'birthday')) { return []; }
-    const day = parseInt(date.split('-')[2]);
-    return props.birthdays.filter((b) => b.day === day);
-}
-
-function dotsForDay(date: string | null): Array<{ color: string }> {
-    const dots: Array<{ color: string }> = [];
-    for (const e of eventsForDay(date)) {
-        dots.push({ color: e.category_color });
-        if (dots.length >= 3) { break; }
-    }
-    for (const _b of birthdaysForDay(date)) {
-        if (dots.length < 3) {
-            dots.push({ color: BIRTHDAY_COLOR });
-        }
-    }
-    return dots;
-}
-
-function hasMoreDots(date: string | null): boolean {
-    if (!date) { return false; }
-    return eventsForDay(date).length + birthdaysForDay(date).length > 3;
-}
-
 // ─── Day Modal ─────────────────────────────────────────────────────────────
 const selectedDate = ref<string | null>(null);
 const showDayModal = ref(false);
@@ -148,8 +125,7 @@ const showEventForm = ref(false);
 const editingEvent = ref<CalendarEvent | undefined>();
 const eventFormDefaultDate = ref<string>('');
 
-function openDay(date: string | null): void {
-    if (!date) { return; }
+function openDay(date: string): void {
     selectedDate.value = date;
     showDayModal.value = true;
 }
@@ -160,6 +136,21 @@ const selectedDayLabel = computed(() => {
         weekday: 'long', day: 'numeric', month: 'long',
     });
 });
+
+function eventsForSelectedDay(): CalendarEvent[] {
+    if (!selectedDate.value || activeCategory.value === 'birthday') { return []; }
+    return filteredEvents.value.filter(e => {
+        const eStart = e.starts_at.slice(0, 10);
+        const eEnd = e.ends_at ? e.ends_at.slice(0, 10) : eStart;
+        return selectedDate.value! >= eStart && selectedDate.value! <= eEnd;
+    });
+}
+
+function birthdaysForSelectedDay(): CalendarBirthday[] {
+    if (!selectedDate.value || (activeCategory.value !== 'all' && activeCategory.value !== 'birthday')) { return []; }
+    const day = parseInt(selectedDate.value.split('-')[2]);
+    return props.birthdays.filter(b => b.day === day);
+}
 
 function openCreateFromDay(): void {
     editingEvent.value = undefined;
@@ -185,16 +176,26 @@ function openCreate(): void {
     <Head title="Calendrier" />
 
     <AppLayout title="Calendrier">
-        <div class="flex flex-col gap-4 p-4 pb-6">
+        <div class="flex flex-col gap-3 p-4 pb-6">
             <!-- Navigation mois -->
-            <div class="flex items-center justify-between">
+            <div class="relative flex items-center justify-between">
                 <Button variant="ghost" size="icon" @click="navigate(-1)">
                     <span class="text-lg">‹</span>
                 </Button>
-                <span class="text-base font-semibold capitalize">{{ monthLabel }}</span>
+                <button
+                    class="text-base font-semibold capitalize active:opacity-70"
+                    @click="showMonthPicker = !showMonthPicker"
+                >
+                    {{ monthLabel }}
+                </button>
                 <Button variant="ghost" size="icon" @click="navigate(1)">
                     <span class="text-lg">›</span>
                 </Button>
+
+                <MonthYearPicker
+                    v-model:open="showMonthPicker"
+                    :current-month="currentMonth"
+                />
             </div>
 
             <!-- Filtres catégories -->
@@ -245,40 +246,19 @@ function openCreate(): void {
                     </span>
                 </div>
 
-                <!-- Cases jours -->
-                <div class="grid grid-cols-7 gap-y-1">
-                    <div
-                        v-for="(cell, i) in calendarGrid"
-                        :key="i"
-                        class="flex flex-col items-center gap-0.5 py-1"
-                        :class="cell.day ? 'cursor-pointer' : ''"
-                        @click="openDay(cell.date)"
-                    >
-                        <span
-                            v-if="cell.day"
-                            class="flex size-7 items-center justify-center rounded-full text-sm font-medium"
-                            :class="isToday(cell.date)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'text-foreground'"
-                        >
-                            {{ cell.day }}
-                        </span>
-                        <span v-else class="size-7" />
-
-                        <!-- Pastilles -->
-                        <div class="flex gap-0.5">
-                            <span
-                                v-for="(dot, di) in dotsForDay(cell.date)"
-                                :key="di"
-                                class="size-1.5 rounded-full"
-                                :style="{ backgroundColor: dot.color }"
-                            />
-                            <span
-                                v-if="hasMoreDots(cell.date)"
-                                class="text-[9px] text-muted-foreground leading-none"
-                            >+</span>
-                        </div>
-                    </div>
+                <!-- Semaines avec multi-day events -->
+                <div class="space-y-1">
+                    <CalendarWeekRow
+                        v-for="(week, wi) in calendarWeeks"
+                        :key="wi"
+                        :days="week"
+                        :events="filteredEvents"
+                        :birthdays="birthdays"
+                        :today-str="todayStr"
+                        :active-category="activeCategory"
+                        @open-day="openDay"
+                        @open-edit="openEdit"
+                    />
                 </div>
             </div>
         </div>
@@ -294,10 +274,10 @@ function openCreate(): void {
 
                 <div class="space-y-4">
                     <!-- Événements du jour -->
-                    <div v-if="selectedDate && eventsForDay(selectedDate).length > 0" class="space-y-2">
+                    <div v-if="eventsForSelectedDay().length > 0" class="space-y-2">
                         <p class="text-xs font-medium uppercase text-muted-foreground">Événements</p>
                         <div
-                            v-for="event in eventsForDay(selectedDate)"
+                            v-for="event in eventsForSelectedDay()"
                             :key="event.id"
                             class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors active:bg-accent"
                             @click="openEdit(event)"
@@ -326,10 +306,10 @@ function openCreate(): void {
                     </div>
 
                     <!-- Anniversaires du jour -->
-                    <div v-if="selectedDate && birthdaysForDay(selectedDate).length > 0" class="space-y-2">
+                    <div v-if="birthdaysForSelectedDay().length > 0" class="space-y-2">
                         <p class="text-xs font-medium uppercase text-muted-foreground">Anniversaires</p>
                         <div
-                            v-for="birthday in birthdaysForDay(selectedDate)"
+                            v-for="birthday in birthdaysForSelectedDay()"
                             :key="birthday.id"
                             class="flex items-center gap-3 rounded-lg border p-3"
                             :style="{ borderColor: BIRTHDAY_COLOR + '40' }"
@@ -344,7 +324,7 @@ function openCreate(): void {
 
                     <!-- État vide -->
                     <p
-                        v-if="selectedDate && eventsForDay(selectedDate).length === 0 && birthdaysForDay(selectedDate).length === 0"
+                        v-if="eventsForSelectedDay().length === 0 && birthdaysForSelectedDay().length === 0"
                         class="py-4 text-center text-sm text-muted-foreground"
                     >
                         Rien ce jour-là.

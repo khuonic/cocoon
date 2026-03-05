@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,10 @@ import {
 import AddItemForm from '@/components/shopping/AddItemForm.vue';
 import CategoryGroup from '@/components/shopping/CategoryGroup.vue';
 import ShoppingItemRow from '@/components/shopping/ShoppingItemRow.vue';
-import { MoreVertical, Trash2, Copy, ChevronDown } from 'lucide-vue-next';
+import { MoreVertical, Trash2, Copy, ChevronDown, Mic, MicOff } from 'lucide-vue-next';
 import type { ShoppingList, ShoppingItem, CategoryOption } from '@/types/shopping';
 import { destroy, duplicate } from '@/actions/App/Http/Controllers/ShoppingListController';
+import { store } from '@/actions/App/Http/Controllers/ShoppingItemController';
 
 const props = defineProps<{
     shoppingList: ShoppingList;
@@ -31,7 +32,9 @@ const props = defineProps<{
 
 const checkedOpen = ref(false);
 
-const categoryLabels: Record<string, string> = {};
+const categoryLabels: Record<string, string> = {
+    '': 'Sans catégorie',
+};
 props.categories.forEach((c) => {
     categoryLabels[c.value] = c.label;
 });
@@ -47,6 +50,50 @@ function handleDelete(): void {
 function handleDuplicate(): void {
     router.post(duplicate.url(props.shoppingList.id));
 }
+
+// ─── FAB vocal ─────────────────────────────────────────────────────────────
+
+const SpeechRecognitionAPI =
+    (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null;
+
+const speechSupported = SpeechRecognitionAPI !== null;
+const isListening = ref(false);
+let recognition: any = null;
+
+function toggleListening(): void {
+    if (isListening.value) {
+        recognition?.stop();
+        return;
+    }
+
+    recognition = new SpeechRecognitionAPI();
+    recognition.lang = 'fr-FR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+        isListening.value = true;
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        router.post(store.url(props.shoppingList.id), { name: transcript, category: null }, { preserveScroll: true });
+    };
+
+    recognition.onerror = () => {
+        isListening.value = false;
+    };
+
+    recognition.onend = () => {
+        isListening.value = false;
+    };
+
+    recognition.start();
+}
+
+onUnmounted(() => {
+    recognition?.stop();
+});
 </script>
 
 <template>
@@ -81,9 +128,9 @@ function handleDuplicate(): void {
             :categories="categories"
         />
 
-        <div class="space-y-4 p-4">
+        <div class="space-y-4 p-4 pb-28">
             <template v-for="(items, category) in uncheckedItemsByCategory" :key="category">
-                <CategoryGroup :label="categoryLabels[category] ?? category">
+                <CategoryGroup :label="categoryLabels[category as string] ?? String(category)">
                     <ShoppingItemRow
                         v-for="item in items"
                         :key="item.id"
@@ -112,5 +159,17 @@ function handleDuplicate(): void {
                 </CollapsibleContent>
             </Collapsible>
         </div>
+
+        <!-- FAB vocal flottant -->
+        <button
+            v-if="speechSupported"
+            class="fixed left-1/2 z-40 flex size-14 -translate-x-1/2 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
+            :class="isListening ? 'animate-pulse bg-red-500 text-white' : 'bg-primary text-primary-foreground'"
+            style="bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 84px)"
+            @click="toggleListening"
+        >
+            <MicOff v-if="isListening" :size="24" />
+            <Mic v-else :size="24" />
+        </button>
     </AppLayout>
 </template>

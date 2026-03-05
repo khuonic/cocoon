@@ -22,13 +22,31 @@ test('store adds an item to the list', function () {
     ]);
 });
 
-test('store validates name and category', function () {
+test('store validates name is required', function () {
     $user = User::factory()->create();
     $list = ShoppingList::factory()->create();
 
     $this->actingAs($user)
         ->post(route('shopping-items.store', $list), [])
-        ->assertSessionHasErrors(['name', 'category']);
+        ->assertSessionHasErrors(['name']);
+});
+
+test('store allows null category', function () {
+    $user = User::factory()->create();
+    $list = ShoppingList::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('shopping-items.store', $list), [
+            'name' => 'Article vocal',
+            'category' => null,
+        ])
+        ->assertRedirect(route('shopping-lists.show', $list));
+
+    $this->assertDatabaseHas('shopping_items', [
+        'shopping_list_id' => $list->id,
+        'name' => 'Article vocal',
+        'category' => null,
+    ]);
 });
 
 test('store validates the category enum', function () {

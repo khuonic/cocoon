@@ -38,7 +38,7 @@ const editForm = useForm({
 watch(editOpen, (open) => {
     if (open) {
         editForm.name = props.item.name;
-        editForm.category = props.item.category;
+        editForm.category = props.item.category ?? '';
         editForm.clearErrors();
     }
 });
@@ -127,6 +127,7 @@ function handleEdit(): void {
                         v-model="editForm.category"
                         class="h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
                     >
+                        <option value="">Sans catégorie</option>
                         <option v-for="cat in categories" :key="cat.value" :value="cat.value">
                             {{ cat.label }}
                         </option>

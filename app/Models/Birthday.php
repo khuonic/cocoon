@@ -8,6 +8,33 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property \Carbon\CarbonImmutable $date
+ * @property int $added_by
+ * @property string $uuid
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property int|null $reminder_days_before
+ * @property-read \App\Models\User $addedBy
+ * @property-read mixed $age
+ *
+ * @method static \Database\Factories\BirthdayFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereAddedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereReminderDaysBefore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Birthday whereUuid($value)
+ *
+ * @mixin \Eloquent
+ */
 class Birthday extends Model
 {
     /** @use HasFactory<\Database\Factories\BirthdayFactory> */

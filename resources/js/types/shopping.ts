@@ -4,7 +4,7 @@ export type ShoppingItem = {
     id: number;
     shopping_list_id: number;
     name: string;
-    category: ShoppingItemCategory;
+    category: ShoppingItemCategory | null;
     is_checked: boolean;
     added_by: number;
     uuid: string;

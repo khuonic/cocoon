@@ -58,9 +58,13 @@ function resetForm(): void {
         form.description = props.event.description ?? '';
         form.location = props.event.location ?? '';
         form.category = props.event.category;
-        form.starts_at = props.event.starts_at.slice(0, 16);
-        form.ends_at = props.event.ends_at ? props.event.ends_at.slice(0, 16) : '';
         form.all_day = props.event.all_day;
+        form.starts_at = props.event.all_day
+            ? props.event.starts_at.slice(0, 10)
+            : props.event.starts_at.slice(0, 16);
+        form.ends_at = props.event.ends_at
+            ? (props.event.all_day ? props.event.ends_at.slice(0, 10) : props.event.ends_at.slice(0, 16))
+            : '';
         form.is_personal = props.event.is_personal;
         form.reminder_before = props.event.reminder_before;
     } else {
@@ -69,7 +73,7 @@ function resetForm(): void {
         form.category = 'Loisir';
         form.all_day = true;
         if (props.defaultDate) {
-            form.starts_at = props.defaultDate + 'T09:00';
+            form.starts_at = props.defaultDate;
         }
     }
 }
@@ -153,6 +157,18 @@ function handleDelete(): void {
                     <InputError :message="form.errors.category" />
                 </div>
 
+                <!-- Journée entière -->
+                <div class="flex items-center gap-3">
+                    <input
+                        id="event-all-day"
+                        v-model="form.all_day"
+                        type="checkbox"
+                        class="size-4 rounded border-border"
+                        @change="form.starts_at = ''; form.ends_at = ''"
+                    />
+                    <Label for="event-all-day" class="cursor-pointer">Journée entière</Label>
+                </div>
+
                 <!-- Date début -->
                 <div class="space-y-2">
                     <Label for="event-starts-at">Début</Label>
@@ -165,24 +181,15 @@ function handleDelete(): void {
                     <InputError :message="form.errors.starts_at" />
                 </div>
 
-                <!-- Journée entière -->
-                <div class="flex items-center gap-3">
-                    <input
-                        id="event-all-day"
-                        v-model="form.all_day"
-                        type="checkbox"
-                        class="size-4 rounded border-border"
-                    />
-                    <Label for="event-all-day" class="cursor-pointer">Journée entière</Label>
-                </div>
-
-                <!-- Date fin (si pas journée entière) -->
-                <div v-if="!form.all_day" class="space-y-2">
-                    <Label for="event-ends-at">Fin</Label>
+                <!-- Date fin (all_day : date de fin optionnelle ; sinon : datetime-local optionnel) -->
+                <div class="space-y-2">
+                    <Label for="event-ends-at">
+                        Fin <span class="text-xs text-muted-foreground">(optionnel)</span>
+                    </Label>
                     <Input
                         id="event-ends-at"
                         v-model="form.ends_at"
-                        type="datetime-local"
+                        :type="form.all_day ? 'date' : 'datetime-local'"
                     />
                     <InputError :message="form.errors.ends_at" />
                 </div>

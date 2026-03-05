@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
-import { StickyNote, CheckSquare, Pin, Trash2, ListTodo, MoreVertical, Pencil } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { StickyNote, ListTodo, Pin, Trash2, Pencil, Plus, ChevronRight } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import NoteFormDialog from '@/components/notes/NoteFormDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,25 +22,18 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Note, NoteColor } from '@/types/note';
-import type { TodoList } from '@/types/todo';
+import type { Todo, TodoList } from '@/types/todo';
 import { mobilePatch } from '@/lib/form-helpers';
 import { show as showNote, togglePin, destroy as destroyNote } from '@/actions/App/Http/Controllers/NoteController';
 import { show as showTodoList, store as storeTodoList, update as updateTodoList, destroy as destroyTodoList } from '@/actions/App/Http/Controllers/TodoListController';
 
+type NoteItem = Note & { item_type: 'note' };
+type TodoListItem = TodoList & { item_type: 'todo_list' };
+type Item = NoteItem | TodoListItem;
+
 const props = defineProps<{
-    notes: Note[];
-    todoLists: TodoList[];
-    tab: string;
+    items: Item[];
 }>();
-
-const activeTab = computed(() => props.tab === 'todos' ? 'todos' : 'notes');
-
-function setTab(tab: 'notes' | 'todos'): void {
-    router.get('/notes', { tab }, { preserveState: true, replace: true });
-}
-
-// Notes
-const showNoteDialog = ref(false);
 
 const colorClasses: Record<string, string> = {
     default: 'bg-card',
@@ -57,17 +48,20 @@ function getBgClass(color: NoteColor | null): string {
     return colorClasses[color ?? 'default'] ?? 'bg-card';
 }
 
-function handleTogglePin(note: Note): void {
+// Notes
+const showNoteDialog = ref(false);
+
+function handleTogglePin(note: NoteItem): void {
     mobilePatch(togglePin.url(note.id), {}, { preserveScroll: true });
 }
 
-function handleDeleteNote(note: Note): void {
+function handleDeleteNote(note: NoteItem): void {
     router.delete(destroyNote.url(note.id), { preserveScroll: true });
 }
 
 // TodoLists
 const showTodoListDialog = ref(false);
-const editingTodoList = ref<TodoList | undefined>();
+const editingTodoList = ref<TodoListItem | undefined>();
 
 const todoListForm = useForm({
     title: '',
@@ -80,7 +74,7 @@ function openCreateTodoList(): void {
     showTodoListDialog.value = true;
 }
 
-function openEditTodoList(list: TodoList): void {
+function openEditTodoList(list: TodoListItem): void {
     editingTodoList.value = list;
     todoListForm.title = list.title;
     showTodoListDialog.value = true;
@@ -98,16 +92,34 @@ function submitTodoList(): void {
     }
 }
 
-function handleDeleteTodoList(list: TodoList): void {
+function handleDeleteTodoList(list: TodoListItem): void {
     router.delete(destroyTodoList.url(list.id));
 }
 
-function openFab(): void {
-    if (activeTab.value === 'notes') {
-        showNoteDialog.value = true;
+// FAB speed dial
+const fabOpen = ref(false);
+
+function createNote(): void {
+    fabOpen.value = false;
+    showNoteDialog.value = true;
+}
+
+function createTodoList(): void {
+    fabOpen.value = false;
+    openCreateTodoList();
+}
+
+// Navigation
+function openItem(item: Item): void {
+    if (item.item_type === 'note') {
+        router.visit(showNote.url(item.id));
     } else {
-        openCreateTodoList();
+        router.visit(showTodoList.url(item.id));
     }
+}
+
+function getPreviewTodos(item: TodoListItem): Todo[] {
+    return item.todos?.slice(0, 3) ?? [];
 }
 </script>
 
@@ -115,147 +127,160 @@ function openFab(): void {
     <AppLayout title="Notes">
         <Head title="Notes" />
 
-        <!-- Onglets -->
-        <div class="flex gap-2 px-4 pt-4">
-            <button
-                class="flex-1 rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                :class="activeTab === 'notes'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground'"
-                @click="setTab('notes')"
-            >
-                <span class="flex items-center justify-center gap-1.5">
-                    <StickyNote :size="14" />
-                    Notes
-                </span>
-            </button>
-            <button
-                class="flex-1 rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
-                :class="activeTab === 'todos'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground'"
-                @click="setTab('todos')"
-            >
-                <span class="flex items-center justify-center gap-1.5">
-                    <CheckSquare :size="14" />
-                    Todos
-                </span>
-            </button>
-        </div>
-
-        <!-- Onglet Notes -->
-        <div v-if="activeTab === 'notes'" class="p-4">
-            <EmptyState
-                v-if="notes.length === 0"
-                title="Aucune note"
-                description="Crée une note pour garder une trace de tout."
-                :icon="StickyNote"
-            >
-                <template #action>
-                    <Button @click="showNoteDialog = true">Ajouter une note</Button>
-                </template>
-            </EmptyState>
+        <div class="p-4 pb-28">
+            <div v-if="items.length === 0" class="flex flex-col items-center gap-4 py-16 text-center">
+                <StickyNote :size="48" class="text-muted-foreground opacity-40" />
+                <div>
+                    <p class="font-medium text-foreground">Aucune note ni liste</p>
+                    <p class="mt-1 text-sm text-muted-foreground">Crée une note ou une liste via le bouton +</p>
+                </div>
+            </div>
 
             <div v-else class="grid grid-cols-2 gap-3">
+                <!-- Carte Note -->
                 <div
-                    v-for="note in notes"
-                    :key="note.id"
-                    class="relative flex flex-col rounded-lg p-3"
-                    :class="getBgClass(note.color)"
+                    v-for="item in items"
+                    :key="`${item.item_type}-${item.id}`"
+                    class="relative flex flex-col rounded-xl p-3 shadow-sm"
+                    :class="item.item_type === 'note' ? getBgClass((item as NoteItem).color) : 'bg-card'"
                 >
                     <!-- Contenu cliquable -->
-                    <div
-                        class="min-w-0 flex-1 cursor-pointer"
-                        @click="router.visit(showNote.url(note.id))"
-                    >
-                        <div class="flex items-center gap-1.5 pr-6">
-                            <Pin v-if="note.is_pinned" :size="12" class="shrink-0 fill-foreground text-foreground" />
-                            <h3 class="truncate text-sm font-semibold text-foreground">{{ note.title }}</h3>
-                        </div>
-                        <p v-if="note.content" class="mt-1 line-clamp-3 text-xs text-muted-foreground">{{ note.content }}</p>
+                    <div class="min-w-0 flex-1 cursor-pointer pr-6" @click="openItem(item)">
+                        <!-- Note -->
+                        <template v-if="item.item_type === 'note'">
+                            <div class="flex items-center gap-1.5">
+                                <Pin
+                                    v-if="(item as NoteItem).is_pinned"
+                                    :size="11"
+                                    class="shrink-0 fill-foreground text-foreground"
+                                />
+                                <h3 class="truncate text-sm font-semibold text-foreground">{{ item.title }}</h3>
+                            </div>
+                            <p
+                                v-if="(item as NoteItem).content"
+                                class="mt-1 line-clamp-3 text-xs text-muted-foreground"
+                            >
+                                {{ (item as NoteItem).content }}
+                            </p>
+                        </template>
+
+                        <!-- TodoList -->
+                        <template v-else>
+                            <div class="flex items-center gap-1.5">
+                                <ListTodo :size="12" class="shrink-0 text-muted-foreground" />
+                                <h3 class="truncate text-sm font-semibold text-foreground">{{ item.title }}</h3>
+                            </div>
+                            <ul class="mt-1.5 space-y-1">
+                                <li
+                                    v-for="todo in getPreviewTodos(item as TodoListItem)"
+                                    :key="todo.id"
+                                    class="flex items-center gap-1.5 text-xs"
+                                    :class="todo.is_done ? 'text-muted-foreground line-through' : 'text-foreground'"
+                                >
+                                    <span
+                                        class="size-3 shrink-0 rounded-sm border"
+                                        :class="todo.is_done ? 'border-muted-foreground bg-muted-foreground/30' : 'border-muted-foreground'"
+                                    />
+                                    <span class="truncate">{{ todo.title }}</span>
+                                </li>
+                                <li
+                                    v-if="(item as TodoListItem).todos && (item as TodoListItem).todos!.length > 3"
+                                    class="flex items-center gap-1 text-xs text-muted-foreground"
+                                >
+                                    <ChevronRight :size="12" />
+                                    +{{ (item as TodoListItem).todos!.length - 3 }} de plus
+                                </li>
+                            </ul>
+                            <p v-if="!(item as TodoListItem).todos?.length" class="mt-1 text-xs text-muted-foreground">
+                                Liste vide
+                            </p>
+                        </template>
                     </div>
 
                     <!-- Menu ⋮ -->
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
                             <button class="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded text-muted-foreground">
-                                <MoreVertical :size="14" />
+                                <span class="text-lg leading-none">⋮</span>
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem @click="handleTogglePin(note)">
-                                <Pin :size="14" class="mr-2" />
-                                {{ note.is_pinned ? 'Désépingler' : 'Épingler' }}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem class="text-destructive" @click="handleDeleteNote(note)">
-                                <Trash2 :size="14" class="mr-2" />
-                                Supprimer
-                            </DropdownMenuItem>
+                            <template v-if="item.item_type === 'note'">
+                                <DropdownMenuItem @click="handleTogglePin(item as NoteItem)">
+                                    <Pin :size="14" class="mr-2" />
+                                    {{ (item as NoteItem).is_pinned ? 'Désépingler' : 'Épingler' }}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem class="text-destructive" @click="handleDeleteNote(item as NoteItem)">
+                                    <Trash2 :size="14" class="mr-2" />
+                                    Supprimer
+                                </DropdownMenuItem>
+                            </template>
+                            <template v-else>
+                                <DropdownMenuItem @click="openEditTodoList(item as TodoListItem)">
+                                    <Pencil :size="14" class="mr-2" />
+                                    Modifier le titre
+                                </DropdownMenuItem>
+                                <DropdownMenuItem class="text-destructive" @click="handleDeleteTodoList(item as TodoListItem)">
+                                    <Trash2 :size="14" class="mr-2" />
+                                    Supprimer
+                                </DropdownMenuItem>
+                            </template>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </div>
         </div>
 
-        <!-- Onglet Todos -->
-        <div v-else class="p-4">
-            <EmptyState
-                v-if="todoLists.length === 0"
-                title="Aucune liste"
-                description="Crée une liste de tâches pour t'organiser."
-                :icon="ListTodo"
+        <!-- FAB speed dial -->
+        <div class="fixed z-40" style="bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 84px); right: 1rem;">
+            <!-- Options speed dial -->
+            <Transition
+                enter-active-class="transition-all duration-200"
+                enter-from-class="opacity-0 translate-y-4"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition-all duration-150"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 translate-y-4"
             >
-                <template #action>
-                    <Button @click="openCreateTodoList">Créer une liste</Button>
-                </template>
-            </EmptyState>
-
-            <div v-else class="space-y-2">
-                <div
-                    v-for="list in todoLists"
-                    :key="list.id"
-                    class="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm"
-                >
-                    <div
-                        class="min-w-0 flex-1 cursor-pointer"
-                        @click="router.visit(showTodoList.url(list.id))"
+                <div v-if="fabOpen" class="mb-3 flex flex-col items-end gap-2">
+                    <button
+                        class="flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-lg"
+                        @click="createTodoList"
                     >
-                        <div class="flex items-center gap-2">
-                            <p class="font-medium text-foreground">{{ list.title }}</p>
-                            <span
-                                v-if="list.is_personal"
-                                class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                            >
-                                Perso
-                            </span>
-                        </div>
-                        <p class="mt-0.5 text-xs text-muted-foreground">
-                            {{ list.todos?.filter(t => !t.is_done).length ?? 0 }} tâche(s) restante(s)
-                        </p>
-                    </div>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                            <button class="flex h-8 w-8 items-center justify-center rounded text-muted-foreground">
-                                <MoreVertical :size="16" />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem @click="openEditTodoList(list)">
-                                <Pencil :size="14" class="mr-2" />
-                                Modifier le titre
-                            </DropdownMenuItem>
-                            <DropdownMenuItem class="text-destructive" @click="handleDeleteTodoList(list)">
-                                <Trash2 :size="14" class="mr-2" />
-                                Supprimer
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        <span class="text-sm font-medium text-foreground">Liste</span>
+                        <span class="flex size-8 items-center justify-center rounded-full bg-muted">
+                            <ListTodo :size="16" class="text-foreground" />
+                        </span>
+                    </button>
+                    <button
+                        class="flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-lg"
+                        @click="createNote"
+                    >
+                        <span class="text-sm font-medium text-foreground">Note</span>
+                        <span class="flex size-8 items-center justify-center rounded-full bg-muted">
+                            <StickyNote :size="16" class="text-foreground" />
+                        </span>
+                    </button>
                 </div>
-            </div>
+            </Transition>
+
+            <!-- Bouton principal -->
+            <button
+                class="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+                :class="fabOpen ? 'rotate-45' : ''"
+                style="transition: transform 0.2s"
+                @click="fabOpen = !fabOpen"
+            >
+                <Plus :size="26" />
+            </button>
         </div>
 
-        <FloatingActionButton @click="openFab" />
+        <!-- Overlay pour fermer le FAB -->
+        <div
+            v-if="fabOpen"
+            class="fixed inset-0 z-30"
+            @click="fabOpen = false"
+        />
 
         <!-- Dialog création note -->
         <NoteFormDialog v-model:open="showNoteDialog" />

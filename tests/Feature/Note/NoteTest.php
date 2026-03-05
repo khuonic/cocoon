@@ -16,23 +16,11 @@ test('authenticated users can view the notes index', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Notes/Index')
-            ->has('notes')
-            ->has('todoLists')
-            ->has('tab')
+            ->has('items')
         );
 });
 
-test('notes index passes the tab query parameter', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->get(route('notes.index', ['tab' => 'todos']))
-        ->assertInertia(fn ($page) => $page
-            ->where('tab', 'todos')
-        );
-});
-
-test('pinned notes appear first', function () {
+test('pinned notes appear first in items', function () {
     $user = User::factory()->create();
     Note::factory()->create(['title' => 'Note normale', 'is_pinned' => false, 'created_by' => $user->id]);
     Note::factory()->pinned()->create(['title' => 'Note épinglée', 'created_by' => $user->id]);
@@ -40,9 +28,9 @@ test('pinned notes appear first', function () {
     $this->actingAs($user)
         ->get(route('notes.index'))
         ->assertInertia(fn ($page) => $page
-            ->has('notes', 2)
-            ->where('notes.0.title', 'Note épinglée')
-            ->where('notes.1.title', 'Note normale')
+            ->has('items', 2)
+            ->where('items.0.title', 'Note épinglée')
+            ->where('items.1.title', 'Note normale')
         );
 });
 

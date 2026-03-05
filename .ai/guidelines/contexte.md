@@ -37,7 +37,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Expense | Dépense avec split type |
 | ExpenseCategory | Catégorie de dépense (seeder) |
 | ShoppingList | Liste de courses |
-| ShoppingItem | Article dans une liste |
+| ShoppingItem | Article dans une liste (category nullable — articles vocaux sans catégorie) |
 | TodoList | Liste de tâches (partagée ou personnelle) |
 | Todo | Tâche dans une TodoList (title, is_done, completed_at) |
 | Recipe | Recette (titre, description, url, image_path, temps, portions, tags) |
@@ -68,13 +68,12 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 ### Plugin local notifications (packages/cocoon/local-notifications)
 
 - PHP : `LocalNotificationManager` + `Facades/LocalNotification` (no-op si `nativephp_call` absent)
-- Kotlin : `LocalNotificationFunctions` (Schedule/Cancel/CancelAll) + `NotificationAlarmReceiver` (alarm + BOOT_COMPLETED)
+- Kotlin : `LocalNotificationFunctions` (Schedule/Cancel/CancelAll) + `NotificationAlarmReceiver`
 - Bridge calls : `LocalNotification.Schedule`, `LocalNotification.Cancel`, `LocalNotification.CancelAll`
-- Persistence via SharedPreferences pour reschedule après reboot
 
 ### Controllers (app/Http/Controllers/)
 
-- `DashboardController` : page d'accueil `/` avec widgets (mot doux, anniversaires du jour, blague)
+- `DashboardController` : page d'accueil `/` avec widgets (mot doux, anniversaires du jour, blague, today widget)
 - `SweetMessageController` : store (updateOrCreate)
 - `BirthdayController` : CRUD complet — modal sur index, intègre ReminderService
 - `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total)
@@ -83,8 +82,8 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `TodoListController` : show, store, update, destroy
 - `TodoController` : store (dans une liste), toggle, update, destroy
 - `RecipeController` : resource complète avec image upload
-- `NoteController` : index, show, store, update, togglePin, destroy
-- `CalendarController` : index (?month=YYYY-MM, anniversaires du mois), store/update/destroy — intègre ReminderService
+- `NoteController` : index (retourne `items` = mélange notes+todoLists trié, épinglées en premier), show, store, update, togglePin, destroy
+- `CalendarController` : index (?month=YYYY-MM, événements chevauchant le mois, anniversaires), store/update/destroy — intègre ReminderService
 - `MoreController` : page "Plus"
 - `Settings/ProfileController`, `Settings/PasswordController`
 - `Auth/SetupController`, `Auth/BiometricController`, `Auth/ApiLoginController`
@@ -96,6 +95,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 Accueil | Budget | Calendrier | Notes | Plus
 
 **"Plus" contient :** Courses | Repas | Anniversaires | Paramètres
+
+### Composants clés (resources/js/components/)
+
+- `calendar/CalendarWeekRow.vue` : ligne de semaine avec barres multi-jours (max 2 lanes) + dots single-day
+- `calendar/MonthYearPicker.vue` : popover grille 4×3 mois + navigation année
+- `calendar/EventFormDialog.vue` : formulaire événement (all_day → date seule, multi-jours avec date fin)
+- `dashboard/TodayWidget.vue` : widget "Aujourd'hui" cliquable (`<Link href="/calendar">`)
+- `shopping/AddItemForm.vue` : formulaire ajout article (sans bouton micro — micro déplacé sur Show.vue)
 
 ## Phases terminées
 
@@ -112,9 +119,14 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Phase 15** : Cleanup (suppression Bookmarks + MealIdeas, FAB, logo login)
 - **Phase 16** : Shopping Refonte (cards ⋮, catégories collapsibles, localStorage last list)
 - **Phase 17** : Budget V2 (catégories, historique mensuel/annuel/total, nav mois)
-- **Phase 19** : Notes Fusion (TodoList, Notes 2-tab, Notes/Show plein écran, BottomNav Tâches→Notes)
-- **Phase 20** : Calendrier (CalendarEvent, EventCategory, grille mensuelle, Day Modal, EventFormDialog, plugin rappels)
-- **209 tests passants**
+- **Phase 19** : Notes Fusion (TodoList, Notes/Show plein écran, BottomNav Tâches→Notes)
+- **Phase 20** : Calendrier (CalendarEvent, EventCategory, grille mensuelle, Day Modal, plugin rappels)
+- **Refonte UX** :
+  - Courses : FAB vocal flottant centré (ajout automatique sans catégorie, groupe "Sans catégorie")
+  - Calendrier : barres multi-jours (CalendarWeekRow), sélecteur mois/année (MonthYearPicker), date fin pour all_day
+  - Dashboard : TodayWidget entièrement cliquable → `/calendar`
+  - Notes : grille Google Keep (2 col, mixte notes+listes), FAB speed dial Note/Liste
+- **212 tests passants**
 
 ## Phases à venir
 
@@ -122,7 +134,6 @@ Accueil | Budget | Calendrier | Notes | Plus
 |-------|--------|--------|
 | 21 | Dashboard V2 (widget événements du jour) | Non commencé |
 | 22 | Bugs (blagues + mot mignon qui ne s'affichent pas) | Non commencé |
-| OPT-1 | Saisie vocale (Web Speech API dans AddItemForm) | Optionnel |
 
 ## Conventions de code
 

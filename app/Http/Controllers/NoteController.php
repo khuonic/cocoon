@@ -7,30 +7,37 @@ use App\Http\Requests\Note\UpdateNoteRequest;
 use App\Models\Note;
 use App\Models\TodoList;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class NoteController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $notes = Note::query()
             ->with('creator')
-            ->orderByDesc('is_pinned')
-            ->latest('updated_at')
-            ->get();
+            ->get()
+            ->map(fn (Note $n) => [
+                ...$n->toArray(),
+                'item_type' => 'note',
+            ]);
 
         $todoLists = TodoList::query()
             ->with(['todos' => fn ($q) => $q->oldest('created_at')])
-            ->latest('updated_at')
-            ->get();
+            ->get()
+            ->map(fn (TodoList $t) => [
+                ...$t->toArray(),
+                'item_type' => 'todo_list',
+            ]);
+
+        $items = $notes->concat($todoLists)
+            ->sortByDesc('updated_at')
+            ->sortByDesc(fn ($item) => $item['item_type'] === 'note' && ($item['is_pinned'] ?? false) ? 1 : 0)
+            ->values();
 
         return Inertia::render('Notes/Index', [
-            'notes' => $notes,
-            'todoLists' => $todoLists,
-            'tab' => $request->query('tab', 'notes'),
+            'items' => $items,
         ]);
     }
 
