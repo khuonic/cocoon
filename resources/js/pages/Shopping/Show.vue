@@ -147,12 +147,13 @@ function goBack(): void {
 
         <div class="space-y-4 p-4 pb-28">
             <template v-for="(items, category) in uncheckedItemsByCategory" :key="category">
-                <CategoryGroup :label="categoryLabels[category as string] ?? String(category)" :bg-class="CATEGORY_BG[category as string] ?? 'bg-muted/30'">
+                <CategoryGroup :label="categoryLabels[category as string] ?? String(category)">
                     <ShoppingItemRow
                         v-for="item in items"
                         :key="item.id"
                         :item="item"
                         :categories="categories"
+                        :bg-class="CATEGORY_BG[category as string] ?? 'bg-card'"
                     />
                 </CategoryGroup>
             </template>

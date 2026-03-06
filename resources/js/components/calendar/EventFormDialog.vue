@@ -141,7 +141,7 @@ function handleDelete(): void {
 
             <form @submit.prevent="submit" class="space-y-4">
                 <div class="space-y-2">
-                    <Label for="event-title">Titre</Label>
+                    <Label>Titre</Label>
                     <Input
                         id="event-title"
                         v-model="form.title"
@@ -175,7 +175,7 @@ function handleDelete(): void {
 
                 <!-- Journée entière -->
                 <div class="flex items-center justify-between">
-                    <Label for="event-all-day" class="cursor-pointer">Journée entière</Label>
+                    <Label>Journée entière</Label>
                     <Switch
                         id="event-all-day"
                         v-model:checked="form.all_day"
@@ -184,7 +184,7 @@ function handleDelete(): void {
 
                 <!-- Date début -->
                 <div class="space-y-2">
-                    <Label for="event-starts-at">Début</Label>
+                    <Label>Début</Label>
                     <Input
                         id="event-starts-at"
                         v-model="form.starts_at"
@@ -196,7 +196,7 @@ function handleDelete(): void {
 
                 <!-- Date fin (all_day : date de fin optionnelle ; sinon : datetime-local optionnel) -->
                 <div class="space-y-2">
-                    <Label for="event-ends-at">
+                    <Label>
                         Fin <span class="text-xs text-muted-foreground">(optionnel)</span>
                     </Label>
                     <Input
@@ -209,7 +209,7 @@ function handleDelete(): void {
 
                 <!-- Lieu -->
                 <div class="space-y-2">
-                    <Label for="event-location">Lieu <span class="text-muted-foreground text-xs">(optionnel)</span></Label>
+                    <Label>Lieu <span class="text-muted-foreground text-xs">(optionnel)</span></Label>
                     <Input
                         id="event-location"
                         v-model="form.location"
@@ -220,7 +220,7 @@ function handleDelete(): void {
 
                 <!-- Rappel -->
                 <div class="space-y-2">
-                    <Label for="event-reminder">Rappel</Label>
+                    <Label>Rappel</Label>
                     <select
                         id="event-reminder"
                         class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -236,7 +236,7 @@ function handleDelete(): void {
 
                 <!-- Personnel / Partagé -->
                 <div class="flex items-center justify-between">
-                    <Label for="event-personal" class="cursor-pointer">Personnel uniquement</Label>
+                    <Label>Personnel uniquement</Label>
                     <Switch
                         id="event-personal"
                         v-model:checked="form.is_personal"

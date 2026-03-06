@@ -118,9 +118,6 @@ function submit(): void {
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="outline" @click="isOpen = false">
-                        Annuler
-                    </Button>
                     <Button type="submit" :disabled="form.processing">
                         {{ isEditMode() ? 'Enregistrer' : 'Ajouter' }}
                     </Button>

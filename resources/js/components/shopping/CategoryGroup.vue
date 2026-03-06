@@ -9,14 +9,13 @@ import { ChevronDown } from 'lucide-vue-next';
 
 defineProps<{
     label: string;
-    bgClass?: string;
 }>();
 
 const isOpen = ref(true);
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-xl" :class="bgClass">
+    <div>
         <Collapsible v-model:open="isOpen">
             <CollapsibleTrigger class="flex w-full items-center gap-2 px-2 py-2">
                 <span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">

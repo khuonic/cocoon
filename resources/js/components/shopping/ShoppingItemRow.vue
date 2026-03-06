@@ -26,6 +26,7 @@ import { toggleCheck, update, destroy } from '@/actions/App/Http/Controllers/Sho
 const props = defineProps<{
     item: ShoppingItem;
     categories: CategoryOption[];
+    bgClass?: string;
 }>();
 
 const editOpen = ref(false);
@@ -66,7 +67,7 @@ function handleEdit(): void {
         <button
             type="button"
             class="w-full min-h-[3.5rem] rounded-xl p-3 pr-8 text-left shadow-sm transition-all active:opacity-70"
-            :class="item.is_checked ? 'bg-muted/60' : 'bg-card'"
+            :class="item.is_checked ? 'bg-muted/60' : (bgClass ?? 'bg-card')"
             @click="handleToggleCheck"
         >
             <span

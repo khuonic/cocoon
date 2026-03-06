@@ -414,9 +414,6 @@ function onDragEnd(): void {
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" @click="showTodoListDialog = false">
-                            Annuler
-                        </Button>
                         <Button type="submit" :disabled="todoListForm.processing">
                             {{ editingTodoList ? 'Enregistrer' : 'Créer' }}
                         </Button>
