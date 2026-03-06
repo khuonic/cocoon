@@ -314,8 +314,7 @@ function getPreviewTodos(item: TodoListItem): Todo[] {
                         <Label for="list-personal" class="cursor-pointer">Liste personnelle</Label>
                         <Switch
                             id="list-personal"
-                            :checked="todoListForm.is_personal"
-                            @update:checked="(val) => { todoListForm.is_personal = val; }"
+                            v-model:checked="todoListForm.is_personal"
                         />
                     </div>
 

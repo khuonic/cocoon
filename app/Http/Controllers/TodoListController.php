@@ -32,7 +32,10 @@ class TodoListController extends Controller
 
     public function update(UpdateTodoListRequest $request, TodoList $todoList): RedirectResponse
     {
-        $todoList->update($request->validated());
+        $todoList->update([
+            ...$request->validated(),
+            'user_id' => $request->boolean('is_personal') ? auth()->id() : null,
+        ]);
 
         return to_route('todo-lists.show', $todoList);
     }

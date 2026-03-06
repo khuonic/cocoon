@@ -18,6 +18,7 @@ class UpdateTodoListRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'is_personal' => ['boolean'],
         ];
     }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { mobilePut } from '@/lib/form-helpers';
 import AppLayout from '@/layouts/AppLayout.vue';
 import InputError from '@/components/InputError.vue';
@@ -41,6 +41,10 @@ const form = useForm({
     date: props.expense.date.split('T')[0],
     is_recurring: props.expense.is_recurring,
     recurrence_type: props.expense.recurrence_type,
+});
+
+watch(() => form.is_recurring, (val) => {
+    if (!val) { form.recurrence_type = null; }
 });
 
 function submit(): void {
@@ -196,11 +200,7 @@ const recurrenceOptions = [
                     <Label for="is_recurring">Dépense récurrente</Label>
                     <Switch
                         id="is_recurring"
-                        :checked="form.is_recurring"
-                        @update:checked="(val: boolean) => {
-                            form.is_recurring = val;
-                            if (!val) form.recurrence_type = null;
-                        }"
+                        v-model:checked="form.is_recurring"
                     />
                 </div>
 

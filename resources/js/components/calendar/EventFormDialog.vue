@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { watch } from 'vue';
+import { watch, ref, nextTick } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/CalendarController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,8 @@ const props = defineProps<{
 
 const isOpen = defineModel<boolean>('open');
 
+const isResetting = ref(false);
+
 const isEditMode = () => !!props.event;
 
 const form = useForm({
@@ -54,6 +56,7 @@ const form = useForm({
 });
 
 function resetForm(): void {
+    isResetting.value = true;
     if (props.event) {
         form.title = props.event.title;
         form.description = props.event.description ?? '';
@@ -77,7 +80,14 @@ function resetForm(): void {
             form.starts_at = props.defaultDate;
         }
     }
+    nextTick(() => { isResetting.value = false; });
 }
+
+watch(() => form.all_day, () => {
+    if (isResetting.value) { return; }
+    form.starts_at = '';
+    form.ends_at = '';
+});
 
 watch(isOpen, (open) => {
     if (open) {
@@ -168,8 +178,7 @@ function handleDelete(): void {
                     <Label for="event-all-day" class="cursor-pointer">Journée entière</Label>
                     <Switch
                         id="event-all-day"
-                        :checked="form.all_day"
-                        @update:checked="(val) => { form.all_day = val; form.starts_at = ''; form.ends_at = ''; }"
+                        v-model:checked="form.all_day"
                     />
                 </div>
 
@@ -230,8 +239,7 @@ function handleDelete(): void {
                     <Label for="event-personal" class="cursor-pointer">Personnel uniquement</Label>
                     <Switch
                         id="event-personal"
-                        :checked="form.is_personal"
-                        @update:checked="(val) => { form.is_personal = val; }"
+                        v-model:checked="form.is_personal"
                     />
                 </div>
 

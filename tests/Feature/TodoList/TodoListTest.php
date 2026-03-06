@@ -79,6 +79,25 @@ test('update modifies the list title', function () {
     expect($list->fresh()->title)->toBe('Nouveau titre');
 });
 
+test('update can toggle is_personal and updates user_id accordingly', function () {
+    $user = User::factory()->create();
+    $list = TodoList::factory()->create(['title' => 'Ma liste', 'is_personal' => false, 'user_id' => null]);
+
+    $this->actingAs($user)
+        ->patch(route('todo-lists.update', $list), ['title' => 'Ma liste', 'is_personal' => true]);
+
+    expect($list->fresh())
+        ->is_personal->toBeTrue()
+        ->user_id->toBe($user->id);
+
+    $this->actingAs($user)
+        ->patch(route('todo-lists.update', $list), ['title' => 'Ma liste', 'is_personal' => false]);
+
+    expect($list->fresh())
+        ->is_personal->toBeFalse()
+        ->user_id->toBeNull();
+});
+
 test('destroy deletes the list and redirects to notes index', function () {
     $user = User::factory()->create();
     $list = TodoList::factory()->create();
