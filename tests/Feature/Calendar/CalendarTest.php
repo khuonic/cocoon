@@ -168,3 +168,78 @@ test('events include category color and label', function () {
             ->where('events.0.category_label', 'Congés')
         );
 });
+
+test('index includes multi-day events spanning the month boundary', function () {
+    // Événement qui commence le mois dernier et finit ce mois-ci
+    $event = CalendarEvent::factory()->create([
+        'starts_at' => now()->subMonth()->endOfMonth()->subDays(2),
+        'ends_at' => now()->startOfMonth()->addDays(5),
+        'user_id' => $this->user->id,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('calendar.index'))
+        ->assertInertia(fn ($page) => $page
+            ->has('events', 1)
+            ->where('events.0.id', $event->id)
+        );
+});
+
+test('store creates a multi-day all-day event', function () {
+    $this->actingAs($this->user)
+        ->post(route('calendar.store'), [
+            'title' => 'Vacances',
+            'category' => 'Conges',
+            'starts_at' => now()->addWeek()->format('Y-m-d'),
+            'ends_at' => now()->addWeeks(2)->format('Y-m-d'),
+            'all_day' => true,
+            'is_personal' => false,
+        ])
+        ->assertRedirect(route('calendar.index'));
+
+    $this->assertDatabaseHas('calendar_events', [
+        'title' => 'Vacances',
+        'category' => 'Conges',
+        'all_day' => true,
+    ]);
+});
+
+test('store validates ends_at is after starts_at', function () {
+    $this->actingAs($this->user)
+        ->post(route('calendar.store'), [
+            'title' => 'Test',
+            'category' => 'Loisir',
+            'starts_at' => now()->addWeek()->format('Y-m-d'),
+            'ends_at' => now()->format('Y-m-d'), // avant starts_at
+            'all_day' => true,
+            'is_personal' => false,
+        ])
+        ->assertSessionHasErrors(['ends_at']);
+});
+
+test('guests cannot store events', function () {
+    $this->post(route('calendar.store'), [
+        'title' => 'Test',
+        'category' => 'Loisir',
+        'starts_at' => now()->addWeek()->format('Y-m-d'),
+    ])->assertRedirect('/login');
+});
+
+test('guests cannot update events', function () {
+    $event = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
+
+    $this->patch(route('calendar.update', $event), [
+        'title' => 'Modifié',
+        'category' => 'Pro',
+        'starts_at' => now()->addWeek()->format('Y-m-d'),
+        'all_day' => false,
+        'is_personal' => false,
+    ])->assertRedirect('/login');
+});
+
+test('guests cannot destroy events', function () {
+    $event = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
+
+    $this->delete(route('calendar.destroy', $event))
+        ->assertRedirect('/login');
+});

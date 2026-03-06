@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { Trash2, MoreVertical, ChevronDown } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { Trash2, MoreVertical, ChevronDown, GripVertical } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { mobilePatch } from '@/lib/form-helpers';
 import {
     store as storeTodo,
     toggle as toggleTodo,
+    reorder as reorderTodo,
     destroy as destroyTodo,
 } from '@/actions/App/Http/Controllers/TodoController';
 import { destroy as destroyTodoList } from '@/actions/App/Http/Controllers/TodoListController';
@@ -32,8 +33,19 @@ const props = defineProps<{
 
 const doneOpen = ref(false);
 
-const pendingTodos = () => props.todoList.todos?.filter((t) => !t.is_done) ?? [];
-const doneTodos = () => props.todoList.todos?.filter((t) => t.is_done) ?? [];
+const sortedPending = ref<Todo[]>([]);
+
+watch(
+    () => props.todoList.todos,
+    (todos) => {
+        sortedPending.value = [...(todos ?? [])]
+            .filter((t) => !t.is_done)
+            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    },
+    { immediate: true },
+);
+
+const doneTodos = computed(() => props.todoList.todos?.filter((t) => t.is_done) ?? []);
 
 const form = useForm({ title: '' });
 
@@ -55,6 +67,35 @@ function handleDeleteTodo(todo: Todo): void {
 function handleDeleteList(): void {
     router.delete(destroyTodoList.url(props.todoList.id));
 }
+
+// ─── Drag to reorder ────────────────────────────────────────────────────────
+const draggingIndex = ref<number | null>(null);
+const overIndex = ref<number | null>(null);
+
+function onDragStart(index: number): void {
+    draggingIndex.value = index;
+}
+
+function onDragEnter(index: number): void {
+    if (draggingIndex.value === null || draggingIndex.value === index) { return; }
+    overIndex.value = index;
+    // Reorder locally for visual feedback
+    const items = [...sortedPending.value];
+    const [moved] = items.splice(draggingIndex.value, 1);
+    items.splice(index, 0, moved);
+    sortedPending.value = items;
+    draggingIndex.value = index;
+}
+
+function onDragEnd(): void {
+    if (draggingIndex.value !== null) {
+        router.post(reorderTodo.url(props.todoList.id), {
+            ids: sortedPending.value.map((t) => t.id),
+        }, { preserveScroll: true });
+    }
+    draggingIndex.value = null;
+    overIndex.value = null;
+}
 </script>
 
 <template>
@@ -62,7 +103,7 @@ function handleDeleteList(): void {
         <Head :title="todoList.title" />
 
         <template #header-left>
-            <BackButton href="/notes?tab=todos" />
+            <BackButton href="/notes" />
         </template>
 
         <template #header-right>
@@ -83,27 +124,35 @@ function handleDeleteList(): void {
 
         <!-- Formulaire d'ajout sticky -->
         <form
-            class="sticky top-0 z-10 flex gap-2 border-b border-border bg-background px-4 py-3"
+            class="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background px-4 py-3"
             @submit.prevent="submitTodo"
         >
+            <span class="flex size-5 shrink-0 items-center justify-center rounded border border-dashed border-muted-foreground/40" />
             <Input
                 v-model="form.title"
-                placeholder="Ajouter une tâche..."
-                class="flex-1"
+                placeholder="Nouvelle tâche..."
+                class="flex-1 border-none bg-transparent px-0 shadow-none focus-visible:ring-0"
                 :disabled="form.processing"
+                @keydown.enter.prevent="submitTodo"
             />
-            <Button type="submit" :disabled="!form.title.trim() || form.processing">
-                Ajouter
-            </Button>
         </form>
 
         <div class="space-y-1 p-4">
             <!-- Tâches en cours -->
             <div
-                v-for="todo in pendingTodos()"
+                v-for="(todo, index) in sortedPending"
                 :key="todo.id"
-                class="flex items-center gap-3 rounded-lg bg-card px-3 py-2.5"
+                class="flex items-center gap-2 rounded-lg bg-card px-2 py-2.5 transition-opacity"
+                :class="draggingIndex === index ? 'opacity-40' : ''"
+                draggable="true"
+                @dragstart="onDragStart(index)"
+                @dragenter.prevent="onDragEnter(index)"
+                @dragover.prevent
+                @dragend="onDragEnd"
             >
+                <span class="cursor-grab touch-none text-muted-foreground/40 active:cursor-grabbing">
+                    <GripVertical :size="16" />
+                </span>
                 <button
                     class="flex size-5 shrink-0 items-center justify-center rounded border border-border"
                     @click="handleToggle(todo)"
@@ -119,25 +168,25 @@ function handleDeleteList(): void {
 
             <!-- Vide -->
             <p
-                v-if="pendingTodos().length === 0 && doneTodos().length === 0"
+                v-if="sortedPending.length === 0 && doneTodos.length === 0"
                 class="py-8 text-center text-sm text-muted-foreground"
             >
                 Aucune tâche. Ajoutes-en une !
             </p>
 
             <!-- Terminées -->
-            <Collapsible v-if="doneTodos().length > 0" v-model:open="doneOpen" class="mt-2">
+            <Collapsible v-if="doneTodos.length > 0" v-model:open="doneOpen" class="mt-2">
                 <CollapsibleTrigger class="flex w-full items-center gap-2 rounded-lg px-1 py-2 text-sm text-muted-foreground">
                     <ChevronDown
                         :size="16"
                         class="transition-transform"
                         :class="doneOpen ? 'rotate-0' : '-rotate-90'"
                     />
-                    Terminées ({{ doneTodos().length }})
+                    Terminées ({{ doneTodos.length }})
                 </CollapsibleTrigger>
                 <CollapsibleContent class="space-y-1">
                     <div
-                        v-for="todo in doneTodos()"
+                        v-for="todo in doneTodos"
                         :key="todo.id"
                         class="flex items-center gap-3 rounded-lg bg-card px-3 py-2.5"
                     >

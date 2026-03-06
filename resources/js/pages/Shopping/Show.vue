@@ -149,13 +149,15 @@ onUnmounted(() => {
                     />
                     Articles cochés ({{ checkedItems.length }})
                 </CollapsibleTrigger>
-                <CollapsibleContent class="space-y-2">
-                    <ShoppingItemRow
-                        v-for="item in checkedItems"
-                        :key="item.id"
-                        :item="item"
-                        :categories="categories"
-                    />
+                <CollapsibleContent>
+                    <div class="grid grid-cols-3 gap-2">
+                        <ShoppingItemRow
+                            v-for="item in checkedItems"
+                            :key="item.id"
+                            :item="item"
+                            :categories="categories"
+                        />
+                    </div>
                 </CollapsibleContent>
             </Collapsible>
         </div>

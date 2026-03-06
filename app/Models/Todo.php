@@ -47,6 +47,7 @@ class Todo extends Model
         'uuid',
         'todo_list_id',
         'title',
+        'position',
         'is_done',
         'completed_at',
     ];

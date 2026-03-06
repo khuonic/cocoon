@@ -26,8 +26,10 @@ const isOpen = ref(true);
                 :class="isOpen ? 'rotate-0' : '-rotate-90'"
             />
         </CollapsibleTrigger>
-        <CollapsibleContent class="space-y-2">
-            <slot />
+        <CollapsibleContent>
+            <div class="grid grid-cols-3 gap-2">
+                <slot />
+            </div>
         </CollapsibleContent>
     </Collapsible>
 </template>

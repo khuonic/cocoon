@@ -3,6 +3,7 @@ export type Todo = {
     uuid: string;
     todo_list_id: number;
     title: string;
+    position: number;
     is_done: boolean;
     completed_at: string | null;
     created_at: string;

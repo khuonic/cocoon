@@ -4,6 +4,8 @@ import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
     currentMonth: string; // 'YYYY-MM'
+    navigateTo?: string;  // route cible, défaut '/calendar'
+    navigateParams?: Record<string, string>; // params supplémentaires
 }>();
 
 const isOpen = defineModel<boolean>('open');
@@ -17,7 +19,8 @@ const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep',
 function select(monthIndex: number): void {
     const m = `${pickerYear.value}-${String(monthIndex + 1).padStart(2, '0')}`;
     isOpen.value = false;
-    router.get('/calendar', { month: m }, { preserveState: false });
+    const target = props.navigateTo ?? '/calendar';
+    router.get(target, { month: m, ...(props.navigateParams ?? {}) }, { preserveState: false });
 }
 
 function isSelected(monthIndex: number): boolean {

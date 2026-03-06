@@ -15,7 +15,7 @@ class TodoListController extends Controller
     public function show(TodoList $todoList): Response
     {
         return Inertia::render('TodoLists/Show', [
-            'todoList' => $todoList->load(['todos' => fn ($q) => $q->oldest('created_at')]),
+            'todoList' => $todoList->load(['todos' => fn ($q) => $q->orderBy('position')->oldest('created_at')]),
         ]);
     }
 
@@ -41,6 +41,6 @@ class TodoListController extends Controller
     {
         $todoList->delete();
 
-        return to_route('notes.index', ['tab' => 'todos']);
+        return to_route('notes.index');
     }
 }

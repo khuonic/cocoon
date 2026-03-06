@@ -36,16 +36,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <AuthBase
-        title=""
-        description="Entrez votre email et mot de passe pour vous connecter"
-    >
+    <AuthBase>
         <Head title="Connexion" />
 
-        <div class="mb-8 flex flex-col items-center gap-2">
-            <img src="/icon.png" alt="Cocoon" class="size-24" />
-            <h1 class="text-3xl font-bold text-primary">Cocoon</h1>
-            <p class="text-sm text-muted-foreground">Votre nid douillet 🏡</p>
+        <div class="mb-8 flex flex-col items-center">
+            <img src="/icon.png" alt="Cocoon" class="size-36" />
         </div>
 
         <div

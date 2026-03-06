@@ -16,14 +16,23 @@ defineOptions({
   inheritAttrs: false,
 })
 
-const props = withDefaults(defineProps<DialogContentProps & { class?: HTMLAttributes["class"], showCloseButton?: boolean }>(), {
+const props = withDefaults(defineProps<DialogContentProps & { class?: HTMLAttributes["class"], showCloseButton?: boolean, position?: 'top' | 'center' }>(), {
   showCloseButton: true,
+  position: 'top',
 })
 const emits = defineEmits<DialogContentEmits>()
 
-const delegatedProps = reactiveOmit(props, "class")
+const delegatedProps = reactiveOmit(props, "class", "position")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+function dismissKeyboard(e: MouseEvent): void {
+  const target = e.target as HTMLElement;
+  // Blur uniquement si on clique sur le fond du dialog (pas sur un input/button/select)
+  if (!target.closest('input, textarea, select, button, [role="combobox"]')) {
+    (document.activeElement as HTMLElement)?.blur();
+  }
+}
 </script>
 
 <template>
@@ -32,9 +41,13 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     <DialogContent
       data-slot="dialog-content"
       v-bind="{ ...$attrs, ...forwarded }"
+      @click="dismissKeyboard"
       :class="
         cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          props.position === 'center'
+            ? 'top-[50%] translate-y-[-50%]'
+            : 'top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto',
           props.class,
         )"
     >

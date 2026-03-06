@@ -42,12 +42,12 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | ShoppingList | Liste de courses |
 | ShoppingItem | Article dans une liste (category nullable — articles vocaux sans catégorie) |
 | TodoList | Liste de tâches (partagée ou personnelle) |
-| Todo | Tâche dans une TodoList (title, is_done, completed_at) |
+| Todo | Tâche dans une TodoList (title, position, is_done, completed_at) |
 | Recipe | Recette (titre, description, url, image_path, temps, portions, tags) |
 | RecipeIngredient | Ingrédient d'une recette (nom, quantité, unité, ordre) |
 | RecipeStep | Étape d'une recette (instruction, ordre) |
 | Note | Note partagée (titre, contenu, couleur, épinglage) |
-| SweetMessage | Mot doux entre partenaires (1 par utilisateur) |
+| SweetMessage | Mot doux entre partenaires (1 par utilisateur, updateOrCreate) |
 | Joke | Blague du jour (seeder 50 blagues) |
 | Birthday | Anniversaire (nom, date, âge calculé, reminder_days_before) |
 | CalendarEvent | Événement calendrier (titre, catégorie colorée, dates, lieu, rappel en minutes, personnel) |
@@ -76,14 +76,14 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 
 ### Controllers (app/Http/Controllers/)
 
-- `DashboardController` : page d'accueil `/` avec widgets (mot doux, anniversaires du jour, blague, today widget)
-- `SweetMessageController` : store (updateOrCreate)
+- `DashboardController` : page d'accueil `/` — salutation personnalisée, mot doux partenaire, TodayWidget, blague
+- `SweetMessageController` : store (updateOrCreate — 1 message par user)
 - `BirthdayController` : CRUD complet — modal sur index, intègre ReminderService
 - `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total)
 - `ShoppingListController` : CRUD + duplicate
 - `ShoppingItemController` : store, update, toggleCheck, destroy
 - `TodoListController` : show, store, update, destroy
-- `TodoController` : store (dans une liste), toggle, update, destroy
+- `TodoController` : store, toggle, update, reorder, destroy
 - `RecipeController` : resource complète avec image upload
 - `NoteController` : index (retourne `items` = mélange notes+todoLists trié, épinglées en premier), show, store, update, togglePin, destroy
 - `CalendarController` : index (?month=YYYY-MM, événements chevauchant le mois, anniversaires), store/update/destroy — intègre ReminderService
@@ -101,11 +101,27 @@ Accueil | Budget | Calendrier | Notes | Plus
 
 ### Composants clés (resources/js/components/)
 
-- `calendar/CalendarWeekRow.vue` : ligne de semaine avec barres multi-jours (max 2 lanes) + dots single-day
-- `calendar/MonthYearPicker.vue` : popover grille 4×3 mois + navigation année
-- `calendar/EventFormDialog.vue` : formulaire événement (all_day → date seule, multi-jours avec date fin)
-- `dashboard/TodayWidget.vue` : widget "Aujourd'hui" cliquable (`<Link href="/calendar">`)
+- `calendar/CalendarWeekRow.vue` : ligne de semaine style Google Agenda — barres multi-jours (max 2 lanes) + badges événements single-day avec titre
+- `calendar/MonthYearPicker.vue` : popover grille 4×3 mois + navigation année — props `navigateTo` + `navigateParams` pour réutilisation (Budget/History)
+- `calendar/EventFormDialog.vue` : formulaire événement — bouton Enregistrer dans le header, Switch pour all_day/is_personal, date fin pour all_day
+- `dashboard/SweetMessageWidget.vue` : salutation personnalisée (heure) + message du partenaire en italic
+- `dashboard/TodayWidget.vue` : widget "Aujourd'hui" entièrement cliquable (`<Link href="/calendar">`)
 - `shopping/AddItemForm.vue` : formulaire ajout article (sans bouton micro — micro déplacé sur Show.vue)
+- `ui/dialog/DialogContent.vue` : positionné en `top-4` par défaut (évite que le clavier couvre le modal) — prop `position: 'top'|'center'` ; tap sur fond blur le focus (dismiss clavier)
+
+## Fonctionnement SweetMessage
+
+- 1 enregistrement par utilisateur en base (`updateOrCreate` sur `user_id`)
+- Dashboard affiche le message de **l'autre** utilisateur (lecture seule)
+- **FAB cœur** (bas droite) : rose plein si message existant, rose pâle sinon → ouvre dialog d'édition
+- Le message reste permanent jusqu'à réécriture
+
+## Fonctionnement Drag & Drop Todos
+
+- Colonne `position` sur `todos` (migration `2026_03_06_...`)
+- Endpoint `POST /todo-lists/{todo_list}/todos/reorder` → `TodoController@reorder`
+- Frontend : drag natif HTML5 (`draggable`, `@dragstart/enter/end`) avec handle GripVertical
+- Réordonnancement local immédiat pour feedback visuel + sauvegarde serveur
 
 ## Phases terminées
 
@@ -124,19 +140,15 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Phase 17** : Budget V2 (catégories, historique mensuel/annuel/total, nav mois)
 - **Phase 19** : Notes Fusion (TodoList, Notes/Show plein écran, BottomNav Tâches→Notes)
 - **Phase 20** : Calendrier (CalendarEvent, EventCategory, grille mensuelle, Day Modal, plugin rappels)
-- **Refonte UX** :
-  - Courses : FAB vocal flottant centré (ajout automatique sans catégorie, groupe "Sans catégorie")
-  - Calendrier : barres multi-jours (CalendarWeekRow), sélecteur mois/année (MonthYearPicker), date fin pour all_day
-  - Dashboard : TodayWidget entièrement cliquable → `/calendar`
-  - Notes : grille Google Keep (2 col, mixte notes+listes), FAB speed dial Note/Liste
-- **212 tests passants**
-
-## Phases à venir
-
-| Phase | Module | Statut |
-|-------|--------|--------|
-| 21 | Dashboard V2 (widget événements du jour) | Non commencé |
-| 22 | Bugs (blagues + mot mignon qui ne s'affichent pas) | Non commencé |
+- **Refonte UX multi-modules** :
+  - Courses : FAB vocal flottant centré, category nullable, groupe "Sans catégorie", cards 3 colonnes, fond différent cochés
+  - Calendrier : style Google Agenda (bordures, cellules hautes, badges titres), barres multi-jours, sélecteur mois/année, swipe navigation, Switch toggles, bouton save dans header, FAB speed dial Événement/Anniversaire, BirthdayFormDialog inline
+  - Budget : description en premier, date+montant même ligne, "Vous êtes quittes" redesign, MonthYearPicker dans historique
+  - Notes : grille Google Keep (2 col, mixte), FAB speed dial Note/Liste, line-clamp-8, TodoList Enter=nouvelle tâche, drag & drop reorder
+  - Dashboard : salutation personnalisée (heure), mot doux partenaire en bannière, FAB cœur pour édition
+  - Global : DialogContent top-4 par défaut, dismiss clavier au tap, boutons redesign (rounded-lg, font-semibold, h-10)
+  - Login : logo agrandi (size-36), suppression texte superflu
+- **218 tests passants**
 
 ## Conventions de code
 
@@ -145,7 +157,8 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Pint** : `vendor/bin/pint --dirty --format agent` avant chaque finalisation
 - **Wayfinder** : `php artisan wayfinder:generate` après modification de routes/controllers
 - **Images** : `Storage::disk('public')`, symlink via `php artisan storage:link`, URL `/storage/{path}`
-- **mobilePut / mobilePatch** : workaround Android WebView pour PUT/PATCH (POST + _method spoofing)
+- **mobilePut / mobilePatchForm** : workaround Android WebView pour PUT/PATCH (POST + _method spoofing) — utiliser ces helpers, jamais `form.put()` ou `form.patch()` directement
+- **$fillable** : toujours ajouter les nouvelles colonnes dans `$fillable` du modèle sinon silently ignored
 
 ## Fichiers de référence
 

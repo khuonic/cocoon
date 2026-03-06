@@ -65,12 +65,12 @@ function handleEdit(): void {
     <div class="relative">
         <button
             type="button"
-            class="w-full rounded-xl bg-card p-4 pr-12 text-left shadow-sm transition-opacity active:opacity-70"
-            :class="item.is_checked ? 'opacity-50' : ''"
+            class="w-full rounded-xl p-3 pr-8 text-left shadow-sm transition-all active:opacity-70"
+            :class="item.is_checked ? 'bg-muted/60' : 'bg-card'"
             @click="handleToggleCheck"
         >
             <span
-                class="text-sm font-medium"
+                class="text-xs font-medium leading-tight"
                 :class="item.is_checked ? 'text-muted-foreground line-through' : 'text-foreground'"
             >
                 {{ item.name }}
@@ -82,10 +82,10 @@ function handleEdit(): void {
                 <Button
                     variant="ghost"
                     size="icon"
-                    class="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground"
+                    class="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
                     @click.stop
                 >
-                    <MoreVertical :size="16" />
+                    <MoreVertical :size="14" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

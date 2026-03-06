@@ -49,11 +49,12 @@ function formatAmount(amount: string): string {
             : 'bg-primary/10'"
     >
 
-        <div v-if="balance.is_settled" class="flex items-center gap-3">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
-                <Check :size="18" class="text-green-600 dark:text-green-400" />
+        <div v-if="balance.is_settled" class="flex flex-col items-center gap-1 py-2">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
+                <Check :size="20" class="text-green-600 dark:text-green-400" />
             </div>
-            <p class="font-medium text-green-700 dark:text-green-300">Vous êtes quittes</p>
+            <p class="text-base font-semibold text-green-700 dark:text-green-300">Vous êtes quittes !</p>
+            <p class="text-xs text-muted-foreground">Aucune dette en cours</p>
         </div>
 
         <div v-else class="flex items-center justify-between">

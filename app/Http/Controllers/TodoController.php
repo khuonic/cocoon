@@ -42,6 +42,20 @@ class TodoController extends Controller
         return to_route('todo-lists.show', $todo->todo_list_id);
     }
 
+    public function reorder(Request $request, TodoList $todoList): RedirectResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        foreach ($request->input('ids') as $position => $id) {
+            $todoList->todos()->where('id', $id)->update(['position' => $position]);
+        }
+
+        return to_route('todo-lists.show', $todoList);
+    }
+
     public function destroy(Todo $todo): RedirectResponse
     {
         $listId = $todo->todo_list_id;

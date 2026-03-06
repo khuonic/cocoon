@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('todo-lists/{todo_list}', [TodoListController::class, 'destroy'])->name('todo-lists.destroy');
 
     Route::post('todo-lists/{todo_list}/todos', [TodoController::class, 'store'])->name('todos.store');
+    Route::post('todo-lists/{todo_list}/todos/reorder', [TodoController::class, 'reorder'])->name('todos.reorder');
     Route::patch('todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
     Route::patch('todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::delete('todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');

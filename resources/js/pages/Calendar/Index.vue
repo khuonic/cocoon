@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import CalendarWeekRow from '@/components/calendar/CalendarWeekRow.vue';
 import EventFormDialog from '@/components/calendar/EventFormDialog.vue';
 import MonthYearPicker from '@/components/calendar/MonthYearPicker.vue';
-import FloatingActionButton from '@/components/FloatingActionButton.vue';
+import BirthdayFormDialog from '@/components/birthdays/BirthdayFormDialog.vue';
 import { Button } from '@/components/ui/button';
+import { CalendarPlus, Cake, Plus } from 'lucide-vue-next';
 import {
     Dialog,
     DialogContent,
@@ -168,7 +169,31 @@ function openEdit(event: CalendarEvent): void {
 function openCreate(): void {
     editingEvent.value = undefined;
     eventFormDefaultDate.value = '';
+    fabOpen.value = false;
     showEventForm.value = true;
+}
+
+// ─── FAB speed dial ─────────────────────────────────────────────────────────
+const fabOpen = ref(false);
+const showBirthdayForm = ref(false);
+
+function openCreateBirthday(): void {
+    fabOpen.value = false;
+    showBirthdayForm.value = true;
+}
+
+// ─── Swipe pour navigation ───────────────────────────────────────────────
+let touchStartX = 0;
+
+function onTouchStart(e: TouchEvent): void {
+    touchStartX = e.touches[0].clientX;
+}
+
+function onTouchEnd(e: TouchEvent): void {
+    const delta = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(delta) > 60) {
+        navigate(delta < 0 ? 1 : -1);
+    }
 }
 </script>
 
@@ -176,7 +201,7 @@ function openCreate(): void {
     <Head title="Calendrier" />
 
     <AppLayout title="Calendrier">
-        <div class="flex flex-col gap-3 p-4 pb-6">
+        <div class="flex flex-col gap-3 p-4 pb-6 pb-safe">
             <!-- Navigation mois -->
             <div class="relative flex items-center justify-between">
                 <Button variant="ghost" size="icon" @click="navigate(-1)">
@@ -234,36 +259,76 @@ function openCreate(): void {
             </div>
 
             <!-- Grille calendrier -->
-            <div class="rounded-xl bg-card p-3 shadow-sm">
+            <div class="overflow-hidden rounded-xl border border-border bg-card shadow-sm" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
                 <!-- En-têtes jours -->
-                <div class="mb-2 grid grid-cols-7 text-center">
+                <div class="grid grid-cols-7 border-b border-border bg-muted/30">
                     <span
                         v-for="(day, i) in DAYS_SHORT"
                         :key="i"
-                        class="text-xs font-medium text-muted-foreground"
+                        class="py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                     >
                         {{ day }}
                     </span>
                 </div>
 
                 <!-- Semaines avec multi-day events -->
-                <div class="space-y-1">
-                    <CalendarWeekRow
-                        v-for="(week, wi) in calendarWeeks"
-                        :key="wi"
-                        :days="week"
-                        :events="filteredEvents"
-                        :birthdays="birthdays"
-                        :today-str="todayStr"
-                        :active-category="activeCategory"
-                        @open-day="openDay"
-                        @open-edit="openEdit"
-                    />
-                </div>
+                <CalendarWeekRow
+                    v-for="(week, wi) in calendarWeeks"
+                    :key="wi"
+                    :days="week"
+                    :events="filteredEvents"
+                    :birthdays="birthdays"
+                    :today-str="todayStr"
+                    :active-category="activeCategory"
+                    @open-day="openDay"
+                    @open-edit="openEdit"
+                />
             </div>
         </div>
 
-        <FloatingActionButton @click="openCreate" />
+        <!-- FAB speed dial -->
+        <div class="fixed z-40" style="bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 84px); right: 1rem;">
+            <Transition
+                enter-active-class="transition-all duration-200"
+                enter-from-class="opacity-0 translate-y-4"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition-all duration-150"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 translate-y-4"
+            >
+                <div v-if="fabOpen" class="mb-3 flex flex-col items-end gap-2">
+                    <button
+                        class="flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-lg"
+                        @click="openCreateBirthday"
+                    >
+                        <span class="text-sm font-medium text-foreground">Anniversaire</span>
+                        <span class="flex size-8 items-center justify-center rounded-full bg-pink-100">
+                            <Cake :size="16" class="text-pink-500" />
+                        </span>
+                    </button>
+                    <button
+                        class="flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-lg"
+                        @click="openCreate"
+                    >
+                        <span class="text-sm font-medium text-foreground">Événement</span>
+                        <span class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                            <CalendarPlus :size="16" class="text-primary" />
+                        </span>
+                    </button>
+                </div>
+            </Transition>
+
+            <button
+                class="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+                :class="fabOpen ? 'rotate-45' : ''"
+                style="transition: transform 0.2s"
+                @click="fabOpen = !fabOpen"
+            >
+                <Plus :size="26" />
+            </button>
+        </div>
+
+        <div v-if="fabOpen" class="fixed inset-0 z-30" @click="fabOpen = false" />
 
         <!-- Day Modal -->
         <Dialog :open="showDayModal" @update:open="showDayModal = $event">
@@ -343,6 +408,9 @@ function openCreate(): void {
             :event="editingEvent"
             :default-date="eventFormDefaultDate"
         />
+
+        <!-- Birthday Form Dialog -->
+        <BirthdayFormDialog v-model:open="showBirthdayForm" />
     </AppLayout>
 </template>
 

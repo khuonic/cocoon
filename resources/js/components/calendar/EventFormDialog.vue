@@ -4,6 +4,7 @@ import { watch } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/CalendarController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
     Dialog,
     DialogContent,
@@ -117,8 +118,13 @@ function handleDelete(): void {
     <Dialog :open="isOpen" @update:open="isOpen = $event">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>{{ isEditMode() ? 'Modifier l\'événement' : 'Nouvel événement' }}</DialogTitle>
-                <DialogDescription>
+                <div class="flex items-center justify-between">
+                    <DialogTitle>{{ isEditMode() ? 'Modifier l\'événement' : 'Nouvel événement' }}</DialogTitle>
+                    <Button type="button" size="sm" :disabled="form.processing" @click="submit">
+                        {{ isEditMode() ? 'Enregistrer' : 'Ajouter' }}
+                    </Button>
+                </div>
+                <DialogDescription class="sr-only">
                     {{ isEditMode() ? 'Modifie les détails de l\'événement.' : 'Ajoute un événement au calendrier.' }}
                 </DialogDescription>
             </DialogHeader>
@@ -158,15 +164,13 @@ function handleDelete(): void {
                 </div>
 
                 <!-- Journée entière -->
-                <div class="flex items-center gap-3">
-                    <input
-                        id="event-all-day"
-                        v-model="form.all_day"
-                        type="checkbox"
-                        class="size-4 rounded border-border"
-                        @change="form.starts_at = ''; form.ends_at = ''"
-                    />
+                <div class="flex items-center justify-between">
                     <Label for="event-all-day" class="cursor-pointer">Journée entière</Label>
+                    <Switch
+                        id="event-all-day"
+                        :checked="form.all_day"
+                        @update:checked="(val) => { form.all_day = val; form.starts_at = ''; form.ends_at = ''; }"
+                    />
                 </div>
 
                 <!-- Date début -->
@@ -222,32 +226,24 @@ function handleDelete(): void {
                 </div>
 
                 <!-- Personnel / Partagé -->
-                <div class="flex items-center gap-3">
-                    <input
+                <div class="flex items-center justify-between">
+                    <Label for="event-personal" class="cursor-pointer">Personnel uniquement</Label>
+                    <Switch
                         id="event-personal"
-                        v-model="form.is_personal"
-                        type="checkbox"
-                        class="size-4 rounded border-border"
+                        :checked="form.is_personal"
+                        @update:checked="(val) => { form.is_personal = val; }"
                     />
-                    <Label for="event-personal" class="cursor-pointer">Personnel (visible par moi uniquement)</Label>
                 </div>
 
-                <DialogFooter class="flex-col gap-2 sm:flex-row">
+                <DialogFooter v-if="isEditMode()" class="pt-2">
                     <Button
-                        v-if="isEditMode()"
                         type="button"
                         variant="destructive"
-                        class="sm:mr-auto"
+                        class="w-full"
                         :disabled="form.processing"
                         @click="handleDelete"
                     >
-                        Supprimer
-                    </Button>
-                    <Button type="button" variant="outline" @click="isOpen = false">
-                        Annuler
-                    </Button>
-                    <Button type="submit" :disabled="form.processing">
-                        {{ isEditMode() ? 'Enregistrer' : 'Ajouter' }}
+                        Supprimer l'événement
                     </Button>
                 </DialogFooter>
             </form>

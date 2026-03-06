@@ -158,7 +158,7 @@ function getPreviewTodos(item: TodoListItem): Todo[] {
                             </div>
                             <p
                                 v-if="(item as NoteItem).content"
-                                class="mt-1 line-clamp-3 text-xs text-muted-foreground"
+                                class="mt-1 line-clamp-8 text-xs text-muted-foreground"
                             >
                                 {{ (item as NoteItem).content }}
                             </p>

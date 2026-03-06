@@ -12,7 +12,6 @@ interface SpanItem {
 }
 
 const BIRTHDAY_COLOR = '#EC4899';
-const MAX_DOTS = 3;
 
 const props = defineProps<{
     days: CalendarDay[];
@@ -102,23 +101,16 @@ function birthdaysForDate(date: string | null): CalendarBirthday[] {
     return props.birthdays.filter(b => b.day === day);
 }
 
-function dotsForDate(date: string | null): Array<{ color: string }> {
-    const dots: Array<{ color: string }> = [];
-    for (const e of singleDayEventsForDate(date)) {
-        dots.push({ color: e.category_color });
-        if (dots.length >= MAX_DOTS) { break; }
-    }
-    for (const _b of birthdaysForDate(date)) {
-        if (dots.length < MAX_DOTS) {
-            dots.push({ color: BIRTHDAY_COLOR });
-        }
-    }
-    return dots;
+function totalForDate(date: string | null): number {
+    if (!date) { return 0; }
+    return singleDayEventsForDate(date).length + birthdaysForDate(date).length;
 }
 
-function hasOverflow(date: string | null): boolean {
-    if (!date) { return false; }
-    return singleDayEventsForDate(date).length + birthdaysForDate(date).length > MAX_DOTS;
+/** Combien de slots restants pour les anniversaires après les 2 événements affichés */
+function overflowSlots(date: string | null): number {
+    if (!date) { return 0; }
+    const evCount = singleDayEventsForDate(date).length;
+    return Math.max(0, 2 - evCount);
 }
 
 // ─── Lane rendering helpers ────────────────────────────────────────────────
@@ -135,61 +127,81 @@ function getLaneItems(lane: number): SpanItem[] {
 
 <template>
     <div>
-        <!-- Lane rows for multi-day events -->
+        <!-- Lane rows pour événements multi-jours -->
         <template v-if="maxLanes > 0">
             <div
                 v-for="lane in maxLanes"
                 :key="lane"
-                class="mb-0.5 grid h-5 grid-cols-7 gap-x-0.5"
+                class="mb-px grid h-5 grid-cols-7"
             >
                 <div
                     v-for="item in getLaneItems(lane - 1)"
                     :key="item.event.id"
-                    class="flex cursor-pointer items-center overflow-hidden rounded-sm px-1 text-[10px] font-medium text-white"
+                    class="z-10 flex cursor-pointer items-center overflow-hidden rounded-sm px-1.5 text-[10px] font-medium text-white"
                     :style="{
                         gridColumn: `${item.colStart} / ${item.colEnd + 1}`,
                         backgroundColor: item.event.category_color,
                     }"
-                    @click="$emit('openEdit', item.event)"
+                    @click.stop="$emit('openEdit', item.event)"
                 >
                     <span class="truncate">{{ item.event.title }}</span>
                 </div>
             </div>
         </template>
 
-        <!-- Day cells -->
-        <div class="grid grid-cols-7">
+        <!-- Cellules jours -->
+        <div class="grid grid-cols-7 border-t border-border">
             <div
                 v-for="(cell, i) in days"
                 :key="i"
-                class="flex flex-col items-center gap-0.5 py-1"
-                :class="cell.day ? 'cursor-pointer' : ''"
+                class="relative min-h-[78px] cursor-pointer border-b border-r border-border p-1 last:border-r-0"
+                :class="[
+                    cell.date ? '' : 'bg-muted/30',
+                    cell.date === todayStr ? 'bg-primary/5' : '',
+                ]"
                 @click="cell.date && $emit('openDay', cell.date)"
             >
+                <!-- Numéro du jour -->
                 <span
                     v-if="cell.day"
-                    class="flex size-8 items-center justify-center rounded-full text-sm font-medium"
+                    class="mb-1 flex size-6 items-center justify-center rounded-full text-xs font-semibold"
                     :class="todayStr === cell.date
                         ? 'bg-primary text-primary-foreground'
                         : 'text-foreground'"
                 >
                     {{ cell.day }}
                 </span>
-                <span v-else class="size-8" />
 
-                <!-- Dots -->
-                <div class="flex gap-0.5">
+                <!-- Événements simples comme badges -->
+                <template v-if="cell.date">
+                    <div
+                        v-for="e in singleDayEventsForDate(cell.date).slice(0, 2)"
+                        :key="e.id"
+                        class="mb-px truncate rounded px-1 py-px text-[10px] font-medium leading-4 text-white"
+                        :style="{ backgroundColor: e.category_color }"
+                        @click.stop="$emit('openEdit', e)"
+                    >
+                        {{ e.title }}
+                    </div>
+
+                    <!-- Anniversaires -->
+                    <div
+                        v-for="b in birthdaysForDate(cell.date).slice(0, overflowSlots(cell.date))"
+                        :key="b.id"
+                        class="mb-px truncate rounded px-1 py-px text-[10px] font-medium leading-4 text-white"
+                        style="background-color: #EC4899"
+                    >
+                        🎂 {{ b.name }}
+                    </div>
+
+                    <!-- Overflow -->
                     <span
-                        v-for="(dot, di) in dotsForDate(cell.date)"
-                        :key="di"
-                        class="size-1.5 rounded-full"
-                        :style="{ backgroundColor: dot.color }"
-                    />
-                    <span
-                        v-if="hasOverflow(cell.date)"
-                        class="text-[9px] leading-none text-muted-foreground"
-                    >+</span>
-                </div>
+                        v-if="totalForDate(cell.date) > 2"
+                        class="text-[10px] text-muted-foreground"
+                    >
+                        +{{ totalForDate(cell.date) - 2 }}
+                    </span>
+                </template>
             </div>
         </div>
     </div>

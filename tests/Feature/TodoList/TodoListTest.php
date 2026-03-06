@@ -85,7 +85,7 @@ test('destroy deletes the list and redirects to notes index', function () {
 
     $this->actingAs($user)
         ->delete(route('todo-lists.destroy', $list))
-        ->assertRedirect(route('notes.index', ['tab' => 'todos']));
+        ->assertRedirect(route('notes.index'));
 
     $this->assertDatabaseMissing('todo_lists', ['id' => $list->id]);
 });

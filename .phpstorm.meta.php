@@ -3197,11 +3197,11 @@ namespace PHPSTORM_META {
 'recipes.index','recipes.create','recipes.store','recipes.show','recipes.edit',
 'recipes.update','recipes.destroy','notes.index','notes.store','notes.show',
 'notes.update','notes.toggle-pin','notes.destroy','todo-lists.store','todo-lists.show',
-'todo-lists.update','todo-lists.destroy','todos.store','todos.toggle','todos.update',
-'todos.destroy','calendar.index','calendar.store','calendar.update','calendar.destroy',
-'sweet-messages.store','birthdays.index','birthdays.store','birthdays.update','birthdays.destroy',
-'more','profile.edit','profile.update','user-password.edit',
-'user-password.update','storage.local','storage.local.upload',);
+'todo-lists.update','todo-lists.destroy','todos.store','todos.reorder','todos.toggle',
+'todos.update','todos.destroy','calendar.index','calendar.store','calendar.update',
+'calendar.destroy','sweet-messages.store','birthdays.index','birthdays.store','birthdays.update',
+'birthdays.destroy','more','profile.edit','profile.update',
+'user-password.edit','user-password.update','storage.local','storage.local.upload',);
         registerArgumentsSet('views', 
 'app','jump::native-placeholder','jump::native-placeholder-with-children','jump::qr','jump::qr-offline',
 'laravel-exceptions-renderer::components.badge','laravel-exceptions-renderer::components.empty-state','laravel-exceptions-renderer::components.file-with-line','laravel-exceptions-renderer::components.formatted-source','laravel-exceptions-renderer::components.frame',

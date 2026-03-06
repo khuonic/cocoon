@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
 import CategoryIcon from '@/components/budget/CategoryIcon.vue';
+import MonthYearPicker from '@/components/calendar/MonthYearPicker.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Expense, ExpenseCategory } from '@/types/budget';
@@ -64,6 +65,8 @@ function navigateMonth(month: string): void {
     router.get(history.url(), { period: 'monthly', month });
 }
 
+const showMonthPicker = ref(false);
+
 function formatAmount(amount: string | number): string {
     return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
@@ -105,16 +108,26 @@ function formatDate(dateStr: string): string {
             </div>
 
             <!-- Navigation mensuelle -->
-            <div v-if="period === 'monthly'" class="flex items-center justify-between">
+            <div v-if="period === 'monthly'" class="relative flex items-center justify-between">
                 <Button variant="ghost" size="icon" @click="navigateMonth(prevMonth)">
                     <ChevronLeft :size="20" />
                 </Button>
-                <span class="text-sm font-medium capitalize text-foreground">
+                <button
+                    class="text-sm font-medium capitalize text-foreground active:opacity-70"
+                    @click="showMonthPicker = !showMonthPicker"
+                >
                     {{ currentMonthLabel }}
-                </span>
+                </button>
                 <Button variant="ghost" size="icon" @click="navigateMonth(nextMonth)">
                     <ChevronRight :size="20" />
                 </Button>
+
+                <MonthYearPicker
+                    v-model:open="showMonthPicker"
+                    :current-month="currentMonth"
+                    :navigate-to="history.url()"
+                    :navigate-params="{ period: 'monthly' }"
+                />
             </div>
 
             <!-- Total période -->

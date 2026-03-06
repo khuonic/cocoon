@@ -103,7 +103,7 @@ function handleDelete(): void {
             </DropdownMenu>
         </template>
 
-        <div class="flex flex-col gap-2 p-4" :class="getBgClass(note.color)">
+        <div class="flex flex-1 flex-col gap-2 overflow-y-auto p-4" :class="getBgClass(note.color)">
             <input
                 v-model="title"
                 type="text"
@@ -113,7 +113,7 @@ function handleDelete(): void {
             />
             <textarea
                 v-model="content"
-                class="min-h-[50vh] w-full resize-none bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+                class="min-h-[50vh] w-full flex-1 resize-none bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
                 placeholder="Commencer à écrire..."
                 @input="(e) => { autoResize(e); scheduleSave(); }"
             />
