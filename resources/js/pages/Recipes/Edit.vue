@@ -63,6 +63,12 @@ function submit(): void {
             <BackButton :href="`/recipes/${recipe.id}`" />
         </template>
 
+        <template #header-right>
+            <Button size="sm" :disabled="form.processing" @click="submit">
+                Enregistrer
+            </Button>
+        </template>
+
         <Head title="Modifier la recette" />
 
         <div class="p-4">
@@ -103,9 +109,6 @@ function submit(): void {
 
                 <RecipeForm v-model:form="form" :available-tags="availableTags" />
 
-                <Button type="submit" class="w-full" size="lg" :disabled="form.processing">
-                    Enregistrer
-                </Button>
             </form>
         </div>
     </AppLayout>

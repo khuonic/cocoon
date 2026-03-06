@@ -54,6 +54,12 @@ const recurrenceOptions = [
 
 <template>
     <AppLayout title="Nouvelle dépense">
+        <template #header-right>
+            <Button size="sm" :disabled="form.processing" @click="submit">
+                Ajouter
+            </Button>
+        </template>
+
         <Head title="Nouvelle dépense" />
 
         <form @submit.prevent="submit" class="space-y-6 p-4">
@@ -190,15 +196,6 @@ const recurrenceOptions = [
                 <InputError :message="form.errors.recurrence_type" />
             </div>
 
-            <!-- Submit -->
-            <Button
-                type="submit"
-                class="w-full"
-                size="lg"
-                :disabled="form.processing"
-            >
-                Ajouter la dépense
-            </Button>
         </form>
     </AppLayout>
 </template>

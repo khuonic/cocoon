@@ -79,7 +79,7 @@ function submit(): void {
 
         <!-- Dialog mot doux -->
         <Dialog v-model:open="showSweetForm">
-            <DialogContent>
+            <DialogContent position="center">
                 <DialogHeader>
                     <DialogTitle>
                         {{ mySweetMessage ? 'Modifier ton mot doux' : 'Écrire un mot doux' }}

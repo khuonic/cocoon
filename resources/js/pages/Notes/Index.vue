@@ -24,6 +24,7 @@ import {
 import type { Note, NoteColor } from '@/types/note';
 import type { Todo, TodoList } from '@/types/todo';
 import { mobilePatch } from '@/lib/form-helpers';
+import { Switch } from '@/components/ui/switch';
 import { show as showNote, togglePin, destroy as destroyNote } from '@/actions/App/Http/Controllers/NoteController';
 import { show as showTodoList, store as storeTodoList, update as updateTodoList, destroy as destroyTodoList } from '@/actions/App/Http/Controllers/TodoListController';
 
@@ -77,6 +78,7 @@ function openCreateTodoList(): void {
 function openEditTodoList(list: TodoListItem): void {
     editingTodoList.value = list;
     todoListForm.title = list.title;
+    todoListForm.is_personal = list.is_personal ?? false;
     showTodoListDialog.value = true;
 }
 
@@ -232,7 +234,7 @@ function getPreviewTodos(item: TodoListItem): Todo[] {
         </div>
 
         <!-- FAB speed dial -->
-        <div class="fixed z-40" style="bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 84px); right: 1rem;">
+        <div class="fixed z-40 flex flex-col items-end" style="bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 84px); right: 1rem;">
             <!-- Options speed dial -->
             <Transition
                 enter-active-class="transition-all duration-200"
@@ -308,13 +310,12 @@ function getPreviewTodos(item: TodoListItem): Todo[] {
                         />
                     </div>
 
-                    <div v-if="!editingTodoList" class="flex items-center justify-between">
-                        <Label for="list-personal">Liste personnelle</Label>
-                        <input
+                    <div class="flex items-center justify-between">
+                        <Label for="list-personal" class="cursor-pointer">Liste personnelle</Label>
+                        <Switch
                             id="list-personal"
-                            type="checkbox"
-                            v-model="todoListForm.is_personal"
-                            class="h-4 w-4 rounded"
+                            :checked="todoListForm.is_personal"
+                            @update:checked="(val) => { todoListForm.is_personal = val; }"
                         />
                     </div>
 

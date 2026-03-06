@@ -16,6 +16,10 @@ const props = defineProps<{
 }>();
 
 onMounted(() => {
+    if (sessionStorage.getItem('shopping_no_redirect')) {
+        sessionStorage.removeItem('shopping_no_redirect');
+        return;
+    }
     const lastId = localStorage.getItem('cocon_last_shopping_list_id');
     if (lastId) {
         const found = props.shoppingLists.find((l) => String(l.id) === lastId);

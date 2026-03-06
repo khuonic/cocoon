@@ -2,7 +2,6 @@
 import { Head, router } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import BackButton from '@/components/BackButton.vue';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -18,7 +17,7 @@ import {
 import AddItemForm from '@/components/shopping/AddItemForm.vue';
 import CategoryGroup from '@/components/shopping/CategoryGroup.vue';
 import ShoppingItemRow from '@/components/shopping/ShoppingItemRow.vue';
-import { MoreVertical, Trash2, Copy, ChevronDown, Mic, MicOff } from 'lucide-vue-next';
+import { MoreVertical, Trash2, Copy, ChevronDown, Mic, MicOff, ArrowLeft } from 'lucide-vue-next';
 import type { ShoppingList, ShoppingItem, CategoryOption } from '@/types/shopping';
 import { destroy, duplicate } from '@/actions/App/Http/Controllers/ShoppingListController';
 import { store } from '@/actions/App/Http/Controllers/ShoppingItemController';
@@ -38,6 +37,17 @@ const categoryLabels: Record<string, string> = {
 props.categories.forEach((c) => {
     categoryLabels[c.value] = c.label;
 });
+
+const CATEGORY_BG: Record<string, string> = {
+    'fruits_legumes': 'bg-green-50',
+    'frais': 'bg-sky-50',
+    'epicerie': 'bg-amber-50',
+    'boissons': 'bg-cyan-50',
+    'hygiene': 'bg-violet-50',
+    'maison': 'bg-orange-50',
+    'autre': 'bg-zinc-50',
+    '': 'bg-slate-50',
+};
 
 onMounted(() => {
     localStorage.setItem('cocon_last_shopping_list_id', String(props.shoppingList.id));
@@ -94,12 +104,19 @@ function toggleListening(): void {
 onUnmounted(() => {
     recognition?.stop();
 });
+
+function goBack(): void {
+    sessionStorage.setItem('shopping_no_redirect', '1');
+    router.visit('/shopping-lists');
+}
 </script>
 
 <template>
     <AppLayout :title="shoppingList.name">
         <template #header-left>
-            <BackButton href="/shopping-lists" />
+            <Button variant="ghost" size="icon-xl" @click="goBack">
+                <ArrowLeft :size="22" />
+            </Button>
         </template>
         <template #header-right>
             <DropdownMenu>
@@ -130,7 +147,7 @@ onUnmounted(() => {
 
         <div class="space-y-4 p-4 pb-28">
             <template v-for="(items, category) in uncheckedItemsByCategory" :key="category">
-                <CategoryGroup :label="categoryLabels[category as string] ?? String(category)">
+                <CategoryGroup :label="categoryLabels[category as string] ?? String(category)" :bg-class="CATEGORY_BG[category as string] ?? 'bg-muted/30'">
                     <ShoppingItemRow
                         v-for="item in items"
                         :key="item.id"

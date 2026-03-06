@@ -65,12 +65,12 @@ function handleEdit(): void {
     <div class="relative">
         <button
             type="button"
-            class="w-full rounded-xl p-3 pr-8 text-left shadow-sm transition-all active:opacity-70"
+            class="w-full min-h-[3.5rem] rounded-xl p-3 pr-8 text-left shadow-sm transition-all active:opacity-70"
             :class="item.is_checked ? 'bg-muted/60' : 'bg-card'"
             @click="handleToggleCheck"
         >
             <span
-                class="text-xs font-medium leading-tight"
+                class="text-xs font-medium leading-snug break-words"
                 :class="item.is_checked ? 'text-muted-foreground line-through' : 'text-foreground'"
             >
                 {{ item.name }}

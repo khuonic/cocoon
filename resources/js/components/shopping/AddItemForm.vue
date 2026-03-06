@@ -36,6 +36,7 @@ function submit(): void {
                 placeholder="Ajouter un article..."
                 class="flex-1"
                 autofocus
+                @keydown.enter.prevent="submit"
             />
             <select
                 v-model="form.category"

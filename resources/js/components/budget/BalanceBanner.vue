@@ -45,7 +45,7 @@ function formatAmount(amount: string): string {
     <div
         class="rounded-xl p-4"
         :class="balance.is_settled
-            ? 'bg-green-50 dark:bg-green-950/30'
+            ? 'bg-green-50'
             : 'bg-primary/10'"
     >
 
@@ -77,7 +77,7 @@ function formatAmount(amount: string): string {
                 <DialogTrigger as-child>
                     <Button size="sm" variant="outline">Régler</Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent position="center">
                     <DialogHeader>
                         <DialogTitle>Règlement</DialogTitle>
                         <DialogDescription>

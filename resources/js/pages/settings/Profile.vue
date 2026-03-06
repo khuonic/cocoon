@@ -25,7 +25,7 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout title="Paramètres">
         <Head title="Paramètres du profil" />
 
         <SettingsLayout>

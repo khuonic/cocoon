@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { Trash2, MoreVertical, ChevronDown, GripVertical } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
@@ -48,10 +48,14 @@ watch(
 const doneTodos = computed(() => props.todoList.todos?.filter((t) => t.is_done) ?? []);
 
 const form = useForm({ title: '' });
+const inputRef = ref<{ $el: HTMLInputElement } | null>(null);
 
 function submitTodo(): void {
     form.post(storeTodo.url(props.todoList.id), {
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            form.reset();
+            nextTick(() => inputRef.value?.$el?.focus());
+        },
         preserveScroll: true,
     });
 }
@@ -129,9 +133,10 @@ function onDragEnd(): void {
         >
             <span class="flex size-5 shrink-0 items-center justify-center rounded border border-dashed border-muted-foreground/40" />
             <Input
+                ref="inputRef"
                 v-model="form.title"
                 placeholder="Nouvelle tâche..."
-                class="flex-1 border-none bg-transparent px-0 shadow-none focus-visible:ring-0"
+                class="flex-1 border-none bg-transparent pl-1 shadow-none focus-visible:ring-0"
                 :disabled="form.processing"
                 @keydown.enter.prevent="submitTodo"
             />
@@ -145,12 +150,13 @@ function onDragEnd(): void {
                 class="flex items-center gap-2 rounded-lg bg-card px-2 py-2.5 transition-opacity"
                 :class="draggingIndex === index ? 'opacity-40' : ''"
                 draggable="true"
+                style="touch-action: none"
                 @dragstart="onDragStart(index)"
                 @dragenter.prevent="onDragEnter(index)"
                 @dragover.prevent
                 @dragend="onDragEnd"
             >
-                <span class="cursor-grab touch-none text-muted-foreground/40 active:cursor-grabbing">
+                <span class="cursor-grab text-muted-foreground/40 active:cursor-grabbing">
                     <GripVertical :size="16" />
                 </span>
                 <button

@@ -48,7 +48,7 @@ const form = useForm({
     category: 'Loisir',
     starts_at: '',
     ends_at: '',
-    all_day: true,
+    all_day: false,
     is_personal: false,
     reminder_before: null as number | null,
 });
@@ -72,7 +72,7 @@ function resetForm(): void {
         form.reset();
         form.clearErrors();
         form.category = 'Loisir';
-        form.all_day = true;
+        form.all_day = false;
         if (props.defaultDate) {
             form.starts_at = props.defaultDate;
         }
@@ -116,7 +116,7 @@ function handleDelete(): void {
 
 <template>
     <Dialog :open="isOpen" @update:open="isOpen = $event">
-        <DialogContent>
+        <DialogContent :show-close-button="false">
             <DialogHeader>
                 <div class="flex items-center justify-between">
                     <DialogTitle>{{ isEditMode() ? 'Modifier l\'événement' : 'Nouvel événement' }}</DialogTitle>

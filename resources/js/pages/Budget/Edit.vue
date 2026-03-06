@@ -77,26 +77,15 @@ const recurrenceOptions = [
 
 <template>
     <AppLayout title="Modifier la dépense">
+        <template #header-right>
+            <Button size="sm" :disabled="form.processing" @click="submit">
+                Enregistrer
+            </Button>
+        </template>
+
         <Head title="Modifier la dépense" />
 
         <form @submit.prevent="submit" class="space-y-6 p-4">
-            <!-- Montant -->
-            <div class="space-y-2">
-                <Label for="amount">Montant (EUR)</Label>
-                <Input
-                    id="amount"
-                    v-model="form.amount"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    inputmode="decimal"
-                    placeholder="0.00"
-                    class="text-2xl font-bold text-center h-14"
-                    required
-                />
-                <InputError :message="form.errors.amount" />
-            </div>
-
             <!-- Description -->
             <div class="space-y-2">
                 <Label for="description">Description</Label>
@@ -106,8 +95,37 @@ const recurrenceOptions = [
                     type="text"
                     placeholder="Ex: Courses Leclerc"
                     required
+                    autofocus
                 />
                 <InputError :message="form.errors.description" />
+            </div>
+
+            <!-- Montant + Date sur la même ligne -->
+            <div class="flex gap-3">
+                <div class="flex-1 space-y-2">
+                    <Label for="amount">Montant (EUR)</Label>
+                    <Input
+                        id="amount"
+                        v-model="form.amount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                        class="text-xl font-bold text-center"
+                        required
+                    />
+                    <InputError :message="form.errors.amount" />
+                </div>
+                <div class="flex-1 space-y-2">
+                    <Label for="date">Date</Label>
+                    <Input
+                        id="date"
+                        v-model="form.date"
+                        type="date"
+                    />
+                    <InputError :message="form.errors.date" />
+                </div>
             </div>
 
             <!-- Catégorie -->
@@ -172,17 +190,6 @@ const recurrenceOptions = [
                 </div>
             </div>
 
-            <!-- Date -->
-            <div class="space-y-2">
-                <Label for="date">Date</Label>
-                <Input
-                    id="date"
-                    v-model="form.date"
-                    type="date"
-                />
-                <InputError :message="form.errors.date" />
-            </div>
-
             <!-- Récurrence -->
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
@@ -211,16 +218,6 @@ const recurrenceOptions = [
                 </div>
                 <InputError :message="form.errors.recurrence_type" />
             </div>
-
-            <!-- Submit -->
-            <Button
-                type="submit"
-                class="w-full"
-                size="lg"
-                :disabled="form.processing"
-            >
-                Enregistrer les modifications
-            </Button>
 
             <!-- Delete -->
             <Dialog v-model:open="deleteOpen">
