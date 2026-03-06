@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { StickyNote, ListTodo, Pin, Trash2, Pencil, Plus, ChevronRight } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import NoteFormDialog from '@/components/notes/NoteFormDialog.vue';
@@ -123,6 +123,91 @@ function openItem(item: Item): void {
 function getPreviewTodos(item: TodoListItem): Todo[] {
     return item.todos?.slice(0, 3) ?? [];
 }
+
+// Masonry order — persisted in localStorage
+const ORDER_KEY = 'notes_grid_order';
+const displayItems = ref<Item[]>([...props.items]);
+
+function getItemKey(item: Item): string {
+    return `${item.item_type}-${item.id}`;
+}
+
+function applySavedOrder(items: Item[]): Item[] {
+    const savedOrder: string[] = JSON.parse(localStorage.getItem(ORDER_KEY) ?? '[]');
+    if (savedOrder.length === 0) { return [...items]; }
+
+    const itemMap = new Map(items.map(i => [getItemKey(i), i]));
+    const result: Item[] = [];
+
+    for (const key of savedOrder) {
+        const item = itemMap.get(key);
+        if (item) { result.push(item); }
+    }
+
+    // Append new items not yet in saved order
+    const orderedKeys = new Set(savedOrder);
+    for (const item of items) {
+        if (!orderedKeys.has(getItemKey(item))) { result.push(item); }
+    }
+
+    return result;
+}
+
+onMounted(() => { displayItems.value = applySavedOrder(props.items); });
+watch(() => props.items, (items) => { displayItems.value = applySavedOrder(items); });
+
+// Drag & drop
+const draggingKey = ref<string | null>(null);
+const overKey = ref<string | null>(null);
+
+function onDragStart(e: DragEvent, item: Item): void {
+    draggingKey.value = getItemKey(item);
+    if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; }
+}
+
+function onDragOver(e: DragEvent, item: Item): void {
+    e.preventDefault();
+    if (draggingKey.value && draggingKey.value !== getItemKey(item)) {
+        overKey.value = getItemKey(item);
+    }
+}
+
+function onDragLeave(e: DragEvent): void {
+    // Only clear if leaving the card entirely (not entering a child)
+    if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) {
+        overKey.value = null;
+    }
+}
+
+function onDrop(e: DragEvent, targetItem: Item): void {
+    e.preventDefault();
+    const fromKey = draggingKey.value;
+    const toKey = getItemKey(targetItem);
+
+    if (!fromKey || fromKey === toKey) {
+        draggingKey.value = null;
+        overKey.value = null;
+        return;
+    }
+
+    const items = [...displayItems.value];
+    const fromIndex = items.findIndex(i => getItemKey(i) === fromKey);
+    const toIndex = items.findIndex(i => getItemKey(i) === toKey);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+        items.splice(toIndex, 0, items.splice(fromIndex, 1)[0]);
+        displayItems.value = items;
+        localStorage.setItem(ORDER_KEY, JSON.stringify(items.map(getItemKey)));
+    }
+
+    draggingKey.value = null;
+    overKey.value = null;
+}
+
+function onDragEnd(): void {
+    draggingKey.value = null;
+    overKey.value = null;
+}
 </script>
 
 <template>
@@ -138,13 +223,23 @@ function getPreviewTodos(item: TodoListItem): Todo[] {
                 </div>
             </div>
 
-            <div v-else class="grid grid-cols-2 gap-3">
-                <!-- Carte Note -->
+            <div v-else class="columns-2 gap-3">
                 <div
-                    v-for="item in items"
-                    :key="`${item.item_type}-${item.id}`"
-                    class="relative flex flex-col rounded-xl p-3 shadow-sm"
-                    :class="item.item_type === 'note' ? getBgClass((item as NoteItem).color) : 'bg-card'"
+                    v-for="item in displayItems"
+                    :key="getItemKey(item)"
+                    class="relative mb-3 flex flex-col break-inside-avoid rounded-xl p-3 shadow-sm transition-opacity"
+                    :class="[
+                        item.item_type === 'note' ? getBgClass((item as NoteItem).color) : 'bg-card',
+                        draggingKey === getItemKey(item) ? 'opacity-30' : '',
+                        overKey === getItemKey(item) ? 'ring-2 ring-primary' : '',
+                    ]"
+                    draggable="true"
+                    style="touch-action: none;"
+                    @dragstart="onDragStart($event, item)"
+                    @dragover="onDragOver($event, item)"
+                    @dragleave="onDragLeave($event)"
+                    @drop="onDrop($event, item)"
+                    @dragend="onDragEnd"
                 >
                     <!-- Contenu cliquable -->
                     <div class="min-w-0 flex-1 cursor-pointer pr-6" @click="openItem(item)">
