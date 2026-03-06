@@ -125,4 +125,4 @@
   - POST METHOD not supported 
 - Remarque globale concernant les boutons d'enregistrement sur les differentes pages qui ressemblent trop aux autres tags filtres bouttons
   - peut etre mettre les bouton d'enregistrement en haut de la page (notamment dans les modal ou meme tout) ou avec plus de hauteur, pas forcément toute la longueur, fais moi des propositions
-- Mettre les modal en top
+  - Mettre les modal en top

@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import { Form, Head, usePage } from '@inertiajs/vue3';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { update } from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { mobilePatchForm } from '@/lib/form-helpers';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { edit } from '@/routes/profile';
-import { type BreadcrumbItem } from '@/types';
-
-const breadcrumbItems: BreadcrumbItem[] = [
-    {
-        title: 'Paramètres du profil',
-        href: edit().url,
-    },
-];
 
 const page = usePage();
 const user = page.props.auth.user;
+
+const form = useForm({
+    name: user.name,
+});
+
+function submit(): void {
+    mobilePatchForm(form, update.url(), {
+        preserveScroll: true,
+    });
+}
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbItems">
+    <AppLayout>
         <Head title="Paramètres du profil" />
-
-        <h1 class="sr-only">Paramètres du profil</h1>
 
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
@@ -36,23 +36,18 @@ const user = page.props.auth.user;
                     description="Modifiez votre nom"
                 />
 
-                <Form
-                    v-bind="ProfileController.update.form()"
-                    class="space-y-6"
-                    v-slot="{ errors, processing, recentlySuccessful }"
-                >
+                <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid gap-2">
                         <Label for="name">Nom</Label>
                         <Input
                             id="name"
-                            class="mt-1 block w-full"
-                            name="name"
-                            :default-value="user.name"
+                            v-model="form.name"
+                            type="text"
                             required
                             autocomplete="name"
                             placeholder="Nom complet"
                         />
-                        <InputError class="mt-2" :message="errors.name" />
+                        <InputError :message="form.errors.name" />
                     </div>
 
                     <div class="grid gap-2">
@@ -60,9 +55,9 @@ const user = page.props.auth.user;
                         <Input
                             id="email"
                             type="email"
-                            class="mt-1 block w-full bg-muted"
                             :default-value="user.email"
                             disabled
+                            class="bg-muted"
                         />
                         <p class="text-xs text-muted-foreground">
                             L'adresse email ne peut pas être modifiée.
@@ -70,27 +65,14 @@ const user = page.props.auth.user;
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <Button
-                            :disabled="processing"
-                            data-test="update-profile-button"
-                            >Enregistrer</Button
-                        >
-
-                        <Transition
-                            enter-active-class="transition ease-in-out"
-                            enter-from-class="opacity-0"
-                            leave-active-class="transition ease-in-out"
-                            leave-to-class="opacity-0"
-                        >
-                            <p
-                                v-show="recentlySuccessful"
-                                class="text-sm text-neutral-600"
-                            >
-                                Enregistré.
-                            </p>
+                        <Button type="submit" :disabled="form.processing" data-test="update-profile-button">
+                            Enregistrer
+                        </Button>
+                        <Transition enter-active-class="transition ease-in-out" enter-from-class="opacity-0" leave-active-class="transition ease-in-out" leave-to-class="opacity-0">
+                            <p v-show="form.recentlySuccessful" class="text-sm text-neutral-600">Enregistré.</p>
                         </Transition>
                     </div>
-                </Form>
+                </form>
             </div>
         </SettingsLayout>
     </AppLayout>

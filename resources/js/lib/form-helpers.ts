@@ -24,3 +24,18 @@ export function mobilePut<T extends Record<string, unknown>>(
 export function mobilePatch(url: string, data: Record<string, unknown> = {}, options: Partial<VisitOptions> = {}): void {
     router.post(url, { _method: 'patch', ...data }, options);
 }
+
+export function mobilePatchForm<T extends Record<string, unknown>>(
+    form: InertiaForm<T>,
+    url: string,
+    options: Partial<VisitOptions> = {},
+): void {
+    router.post(url, { _method: 'patch', ...form.data() }, {
+        ...options,
+        onError: (errors) => {
+            form.clearErrors();
+            Object.entries(errors).forEach(([key, value]) => form.setError(key as keyof T, value as string));
+            options.onError?.(errors);
+        },
+    });
+}

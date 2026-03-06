@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { mobilePut } from '@/lib/form-helpers';
+import { mobilePatchForm } from '@/lib/form-helpers';
 import type { CalendarEvent } from '@/types/calendar';
 
 const CATEGORIES = [
@@ -92,7 +92,7 @@ watch(() => props.event, () => {
 
 function submit(): void {
     if (isEditMode() && props.event) {
-        mobilePut(form, update.url(props.event.id), {
+        mobilePatchForm(form, update.url(props.event.id), {
             preserveScroll: true,
             onSuccess: () => { isOpen.value = false; },
         });
