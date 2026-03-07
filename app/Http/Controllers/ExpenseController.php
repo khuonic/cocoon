@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class ExpenseController extends Controller
 {
@@ -62,7 +63,10 @@ class ExpenseController extends Controller
 
     public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
     {
-        $expense->update($request->validated());
+        $expense->update([
+            ...$request->validated(),
+            'settled_at' => null,
+        ]);
 
         return to_route('expenses.index');
     }
@@ -81,6 +85,20 @@ class ExpenseController extends Controller
             ->update(['settled_at' => now()]);
 
         return to_route('expenses.index');
+    }
+
+    public function changelog(): Response
+    {
+        $activities = Activity::query()
+            ->where('subject_type', Expense::class)
+            ->with('causer')
+            ->latest()
+            ->limit(100)
+            ->get();
+
+        return Inertia::render('Budget/Changelog', [
+            'activities' => $activities,
+        ]);
     }
 
     public function history(Request $request): Response

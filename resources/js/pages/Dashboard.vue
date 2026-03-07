@@ -96,9 +96,6 @@ function submit(): void {
                     <InputError :message="form.errors.content" />
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" @click="showSweetForm = false">
-                            Annuler
-                        </Button>
                         <Button type="submit" :disabled="form.processing">
                             <Send :size="14" />
                             Envoyer

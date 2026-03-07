@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, History } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
 import CategoryIcon from '@/components/budget/CategoryIcon.vue';
@@ -9,7 +9,7 @@ import MonthYearPicker from '@/components/calendar/MonthYearPicker.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Expense, ExpenseCategory } from '@/types/budget';
-import { history } from '@/actions/App/Http/Controllers/ExpenseController';
+import { history, changelog, edit } from '@/actions/App/Http/Controllers/ExpenseController';
 
 type CategoryTotal = {
     category_id: number;
@@ -87,6 +87,13 @@ function formatDate(dateStr: string): string {
     <AppLayout title="Historique">
         <template #header-left>
             <BackButton href="/expenses" />
+        </template>
+        <template #header-right>
+            <Link :href="changelog.url()">
+                <Button variant="ghost" size="icon-xl">
+                    <History :size="20" />
+                </Button>
+            </Link>
         </template>
 
         <Head title="Historique" />
@@ -178,9 +185,10 @@ function formatDate(dateStr: string): string {
                     Dépenses
                 </h2>
 
-                <div
+                <Link
                     v-for="expense in expenses"
                     :key="expense.id"
+                    :href="edit.url({ expense: expense.id })"
                     class="flex items-center gap-3 rounded-xl bg-card p-3 shadow-sm"
                     :class="expense.settled_at ? 'opacity-60' : ''"
                 >
@@ -212,7 +220,7 @@ function formatDate(dateStr: string): string {
                             Réglé
                         </Badge>
                     </div>
-                </div>
+                </Link>
             </div>
 
             <div v-else class="py-8 text-center text-sm text-muted-foreground">

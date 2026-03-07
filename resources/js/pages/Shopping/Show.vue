@@ -183,7 +183,7 @@ function goBack(): void {
         <!-- FAB vocal flottant -->
         <button
             v-if="speechSupported"
-            class="fixed left-1/2 z-40 flex size-14 -translate-x-1/2 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
+            class="fixed right-4 z-40 flex size-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
             :class="isListening ? 'animate-pulse bg-red-500 text-white' : 'bg-primary text-primary-foreground'"
             style="bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 84px)"
             @click="toggleListening"

@@ -90,6 +90,14 @@ const recurrenceOptions = [
         <Head title="Modifier la dépense" />
 
         <form @submit.prevent="submit" class="space-y-6 p-4">
+            <!-- Avertissement dépense réglée -->
+            <div
+                v-if="expense.settled_at"
+                class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+            >
+                Cette dépense fait partie d'un règlement. La modifier la rouvrira dans la balance.
+            </div>
+
             <!-- Description -->
             <div class="space-y-2">
                 <Label for="description">Description</Label>

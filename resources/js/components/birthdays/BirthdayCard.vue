@@ -26,23 +26,24 @@ function handleDelete(): void {
 </script>
 
 <template>
-    <div class="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-        <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100">
-            <Cake :size="16" class="text-amber-600" />
+    <div class="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+        <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-amber-100">
+            <Cake :size="22" class="text-amber-600" />
         </div>
         <div class="min-w-0 flex-1 cursor-pointer" @click="emit('edit', birthday)">
-            <h3 class="truncate text-sm font-medium text-foreground">{{ birthday.name }}</h3>
-            <p class="text-xs text-muted-foreground">
-                {{ formatDate(birthday.date) }} ({{ birthday.age }} ans)
+            <h3 class="truncate text-base font-semibold text-foreground">{{ birthday.name }}</h3>
+            <p class="mt-0.5 text-sm text-muted-foreground">
+                {{ formatDate(birthday.date) }}
             </p>
+            <p class="text-sm font-medium text-foreground">{{ birthday.age }} ans</p>
         </div>
         <Button
             variant="ghost"
             size="icon"
-            class="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+            class="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
             @click="handleDelete"
         >
-            <Trash2 :size="16" />
+            <Trash2 :size="18" />
         </Button>
     </div>
 </template>

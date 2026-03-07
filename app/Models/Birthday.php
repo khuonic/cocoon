@@ -60,7 +60,7 @@ class Birthday extends Model
 
     protected function age(): Attribute
     {
-        return Attribute::get(fn () => (int) $this->date->age);
+        return Attribute::get(fn () => (int) now()->year - (int) $this->date->year);
     }
 
     public function addedBy(): BelongsTo

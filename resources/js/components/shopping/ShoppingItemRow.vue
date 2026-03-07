@@ -137,9 +137,6 @@ function handleEdit(): void {
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="outline" @click="editOpen = false">
-                        Annuler
-                    </Button>
                     <Button type="submit" :disabled="editForm.processing">
                         Enregistrer
                     </Button>

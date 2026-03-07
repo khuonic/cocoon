@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Budget
     Route::post('expenses/settle', [ExpenseController::class, 'settle'])->name('expenses.settle');
     Route::get('expenses/history', [ExpenseController::class, 'history'])->name('expenses.history');
+    Route::get('expenses/changelog', [ExpenseController::class, 'changelog'])->name('expenses.changelog');
     Route::resource('expenses', ExpenseController::class)->except(['show']);
 
     // Courses

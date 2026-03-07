@@ -129,14 +129,21 @@
 
 ## remarques bis
 - calendrier evenement plusieurs jours
-  - bizarre que ce soit en absolute on ne comprend pas
+  - bizarre que les evenements sur plusieurs ce soit en absolute on ne comprend pas forcément, c'est impossible de les mettre comme les autres jours ? sans les séparer par des espaces
   - affichage anniversaire dans calendrier calcul mal l'age
-  - debuger les toggle partout
 - Shopping
   - retirer "annuler de la modal de modification"
   - decaler fab micro en bas a droite
 - Retirer "annuler" de toutes les modals
-- anniversaires
+- plus > anniversaires
   - agrandir la taille des card dans le listing
   - ajout bouton de tri au dessus par date / nom
   - tri date doit etre fait sans prise en compte de l'année
+- BUDGET :
+  - garder un historique des modifications faites sur les dépenses du budget () 
+  
+  - voir si possibilité d'importer donnée tricount a l'initialisation dans le budget 
+  - 
+  - debuger les toggle partout
+  - calendreir saisie
+    - si click depuis un jour du calendrier, remplir automatiquement la date de début
