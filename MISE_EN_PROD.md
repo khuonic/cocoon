@@ -183,7 +183,7 @@ Il suffit de rebuilder et republier (voir étape 7).
 Au tout premier lancement, l'app affiche l'écran `/setup` :
 
 1. Saisir l'**email** (`kevininc155@gmail.com` ou `lolavivant@hotmail.fr`)
-2. Choisir un **mot de passe local** (propre à l'appareil, indépendant du Cloud)
+2. Saisir le **mot de passe** (le même que celui créé sur le Cloud à l'étape 2d)
 3. L'app crée le compte en base SQLite locale et ouvre le dashboard
 
 ### 5b. Activer la biométrie

@@ -72,6 +72,14 @@ test('users can logout', function () {
     $response->assertRedirect('/');
 });
 
+test('logout flashes logged_out for biometric credential cleanup', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(route('logout'));
+
+    $response->assertSessionHas('logged_out', true);
+});
+
 test('users are rate limited', function () {
     $user = User::factory()->create();
 

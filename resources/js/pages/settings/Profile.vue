@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { update } from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -17,6 +17,10 @@ const form = useForm({
     name: user.name,
 });
 
+function logout(): void {
+    router.post('/logout');
+}
+
 function submit(): void {
     mobilePatchForm(form, update.url(), {
         preserveScroll: true,
@@ -26,6 +30,12 @@ function submit(): void {
 
 <template>
     <AppLayout title="Paramètres">
+        <template #header-right>
+            <button class="text-sm font-medium text-destructive" @click="logout">
+                Déconnexion
+            </button>
+        </template>
+
         <Head title="Paramètres du profil" />
 
         <SettingsLayout>
