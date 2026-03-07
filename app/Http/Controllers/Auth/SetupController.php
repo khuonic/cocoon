@@ -10,6 +10,7 @@ use Database\Seeders\ExpenseCategorySeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,6 +57,25 @@ class SetupController extends Controller
 
         Auth::login($currentUser);
 
+        $this->flashSyncToken($validated['email'], $validated['password']);
+
         return redirect('/');
+    }
+
+    private function flashSyncToken(string $email, string $password): void
+    {
+        $syncApiUrl = config('cocon.sync_api_url');
+        if (! $syncApiUrl) {
+            return;
+        }
+
+        $response = Http::timeout(5)->post("{$syncApiUrl}/api/login", [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        if ($response->ok() && $response->json('token')) {
+            session()->flash('sync_token', $response->json('token'));
+        }
     }
 }

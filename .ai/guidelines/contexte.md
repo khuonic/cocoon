@@ -76,7 +76,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `DashboardController` : page d'accueil `/` — salutation personnalisée, mot doux partenaire, TodayWidget, blague
 - `SweetMessageController` : store (updateOrCreate — 1 message par user)
 - `BirthdayController` : CRUD complet — modal sur index, intègre ReminderService
-- `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total)
+- `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total) + changelog (activity log via spatie/laravel-activitylog)
 - `ShoppingListController` : CRUD + duplicate
 - `ShoppingItemController` : store, update, toggleCheck, destroy
 - `TodoListController` : show, store, update, destroy
@@ -139,13 +139,13 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Phase 20** : Calendrier (CalendarEvent, EventCategory, grille mensuelle, Day Modal, plugin rappels)
 - **Refonte UX multi-modules** :
   - Courses : FAB vocal flottant centré, category nullable, groupe "Sans catégorie", cards 3 colonnes, fond différent cochés
-  - Calendrier : style Google Agenda (bordures, cellules hautes, badges titres), barres multi-jours, sélecteur mois/année, swipe navigation, Switch toggles, bouton save dans header, FAB speed dial Événement/Anniversaire, BirthdayFormDialog inline
-  - Budget : description en premier, date+montant même ligne, "Vous êtes quittes" redesign, MonthYearPicker dans historique
+  - Calendrier : style Google Agenda (bordures, cellules hautes, badges titres), barres multi-jours, sélecteur mois/année, swipe navigation, Switch toggles, bouton save dans header, FAB speed dial Événement/Anniversaire, BirthdayFormDialog inline, date pré-remplie depuis clic sur jour
+  - Budget : description en premier, date+montant même ligne, "Vous êtes quittes" redesign, MonthYearPicker dans historique, changelog activité via spatie/laravel-activitylog, édition dépenses réglées (reset settled_at)
   - Notes : grille Google Keep (2 col, mixte), FAB speed dial Note/Liste, line-clamp-8, TodoList Enter=nouvelle tâche, drag & drop reorder
   - Dashboard : salutation personnalisée (heure), mot doux partenaire en bannière, FAB cœur pour édition
   - Global : DialogContent top-4 par défaut, dismiss clavier au tap, boutons redesign (rounded-lg, font-semibold, h-10)
   - Login : logo agrandi (size-36), suppression texte superflu
-- **218 tests passants**
+- **225 tests passants**
 
 ## Conventions de code
 

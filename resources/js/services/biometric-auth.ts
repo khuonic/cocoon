@@ -6,6 +6,7 @@ type SavedUser = {
 
 const TOKEN_KEY = 'cocoon_auth_token';
 const USER_KEY = 'cocoon_auth_user';
+const SYNC_TOKEN_KEY = 'cocoon_sync_token';
 
 let nativephpModule: typeof import('#nativephp') | null = null;
 
@@ -96,6 +97,29 @@ export async function getToken(): Promise<string | null> {
 
     try {
         const result = await native.SecureStorage.get(TOKEN_KEY);
+        return result.value ?? null;
+    } catch {
+        return null;
+    }
+}
+
+export async function saveSyncToken(token: string): Promise<void> {
+    const native = await getNativePHP();
+    if (!native) return;
+
+    try {
+        await native.SecureStorage.set(SYNC_TOKEN_KEY, token);
+    } catch {
+        console.warn('[BiometricAuth] Failed to save sync token');
+    }
+}
+
+export async function getSyncToken(): Promise<string | null> {
+    const native = await getNativePHP();
+    if (!native) return null;
+
+    try {
+        const result = await native.SecureStorage.get(SYNC_TOKEN_KEY);
         return result.value ?? null;
     } catch {
         return null;
