@@ -77,16 +77,23 @@ function resetForm(): void {
         form.category = 'Loisir';
         form.all_day = false;
         if (props.defaultDate) {
-            form.starts_at = props.defaultDate;
+            form.starts_at = form.all_day ? props.defaultDate : `${props.defaultDate}T09:00`;
         }
     }
     nextTick(() => { isResetting.value = false; });
 }
 
-watch(() => form.all_day, () => {
+watch(() => form.all_day, (val) => {
     if (isResetting.value) { return; }
-    form.starts_at = '';
-    form.ends_at = '';
+    if (val) {
+        // Retirer l'heure : garder juste la date
+        form.starts_at = form.starts_at ? form.starts_at.slice(0, 10) : '';
+        form.ends_at = form.ends_at ? form.ends_at.slice(0, 10) : '';
+    } else {
+        // Ajouter heure par défaut, vider la fin
+        form.starts_at = form.starts_at ? `${form.starts_at.slice(0, 10)}T09:00` : '';
+        form.ends_at = '';
+    }
 });
 
 watch(isOpen, (open) => {
