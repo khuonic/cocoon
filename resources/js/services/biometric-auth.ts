@@ -8,133 +8,136 @@ const TOKEN_KEY = 'cocoon_auth_token';
 const USER_KEY = 'cocoon_auth_user';
 const SYNC_TOKEN_KEY = 'cocoon_sync_token';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let nativephpModule: any = null;
+const BIOMETRIC_EVENT = 'Native\\Mobile\\Events\\Biometrics\\BiometricCompleted';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getNativePHP(): Promise<any> {
-    if (nativephpModule) return nativephpModule;
-
-    try {
-        nativephpModule = await import('#nativephp');
-        return nativephpModule;
-    } catch {
-        return null;
+function getNative(): { on: (e: string, cb: (p: unknown) => void) => void; off: (e: string, cb: (p: unknown) => void) => void } | null {
+    if (typeof window !== 'undefined' && (window as Record<string, unknown>).Native) {
+        return (window as Record<string, unknown>).Native as ReturnType<typeof getNative>;
     }
+    return null;
 }
 
 export async function isNativePHP(): Promise<boolean> {
-    return (await getNativePHP()) !== null;
+    const native = getNative();
+    console.log('[BiometricAuth] isNativePHP:', native !== null, 'window.Native:', (window as Record<string, unknown>).Native);
+    return native !== null;
+}
+
+async function nativeCall(method: string, params: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    console.log('[BiometricAuth] nativeCall:', method, params);
+    const response = await fetch('/_native/api/call', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ method, params }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Native call failed: ${response.status}`);
+    }
+
+    const json = await response.json() as Record<string, unknown>;
+    console.log('[BiometricAuth] nativeCall result:', method, json);
+    return json;
 }
 
 export async function hasSavedCredentials(): Promise<boolean> {
-    const native = await getNativePHP();
-    if (!native) return false;
-
     try {
-        const result = await native.SecureStorage.get(TOKEN_KEY);
-        return !!result.value;
+        const result = await nativeCall('SecureStorage.Get', { key: TOKEN_KEY });
+        const data = result.data as Record<string, unknown> | undefined;
+        return !!data?.value;
     } catch {
         return false;
     }
 }
 
-export async function saveCredentials(
-    token: string,
-    user: SavedUser,
-): Promise<void> {
-    const native = await getNativePHP();
-    if (!native) return;
-
+export async function saveCredentials(token: string, user: SavedUser): Promise<void> {
     try {
-        await native.SecureStorage.set(TOKEN_KEY, token);
-        await native.SecureStorage.set(USER_KEY, JSON.stringify(user));
+        await nativeCall('SecureStorage.Set', { key: TOKEN_KEY, value: token });
+        await nativeCall('SecureStorage.Set', { key: USER_KEY, value: JSON.stringify(user) });
     } catch {
         console.warn('[BiometricAuth] Failed to save credentials');
     }
 }
 
-export async function authenticate(): Promise<{
-    token: string;
-    user: SavedUser;
-} | null> {
-    const native = await getNativePHP();
+export async function authenticate(): Promise<{ token: string; user: SavedUser } | null> {
+    const native = getNative();
     if (!native) return null;
 
     return new Promise((resolve) => {
-        const handler = async (payload: { success: boolean }) => {
-            native.Off(native.Events.Biometric.Completed, handler);
+        const handler = async (payload: unknown) => {
+            console.log('[BiometricAuth] Biometric event received:', payload);
+            native.off(BIOMETRIC_EVENT, handler);
 
-            if (!payload.success) {
+            const p = payload as { success: boolean };
+            if (!p.success) {
                 resolve(null);
                 return;
             }
 
             try {
-                const tokenResult = await native.SecureStorage.get(TOKEN_KEY);
-                const userResult = await native.SecureStorage.get(USER_KEY);
+                const tokenResult = await nativeCall('SecureStorage.Get', { key: TOKEN_KEY });
+                const userResult = await nativeCall('SecureStorage.Get', { key: USER_KEY });
 
-                if (!tokenResult.value || !userResult.value) {
+                const token = (tokenResult.data as Record<string, unknown>)?.value as string | undefined;
+                const userStr = (userResult.data as Record<string, unknown>)?.value as string | undefined;
+
+                if (!token || !userStr) {
                     resolve(null);
                     return;
                 }
 
-                resolve({
-                    token: tokenResult.value,
-                    user: JSON.parse(userResult.value) as SavedUser,
-                });
+                resolve({ token, user: JSON.parse(userStr) as SavedUser });
             } catch {
                 resolve(null);
             }
         };
 
-        native.On(native.Events.Biometric.Completed, handler);
-        native.Biometric.prompt();
+        console.log('[BiometricAuth] Starting biometric prompt, listening for:', BIOMETRIC_EVENT);
+        native.on(BIOMETRIC_EVENT, handler);
+
+        nativeCall('Biometric.Prompt', {}).catch((e) => {
+            console.error('[BiometricAuth] Biometric.Prompt call failed:', e);
+            native.off(BIOMETRIC_EVENT, handler);
+            resolve(null);
+        });
     });
 }
 
 export async function getToken(): Promise<string | null> {
-    const native = await getNativePHP();
-    if (!native) return null;
-
     try {
-        const result = await native.SecureStorage.get(TOKEN_KEY);
-        return result.value ?? null;
+        const result = await nativeCall('SecureStorage.Get', { key: TOKEN_KEY });
+        const data = result.data as Record<string, unknown> | undefined;
+        return (data?.value as string) ?? null;
     } catch {
         return null;
     }
 }
 
 export async function saveSyncToken(token: string): Promise<void> {
-    const native = await getNativePHP();
-    if (!native) return;
-
     try {
-        await native.SecureStorage.set(SYNC_TOKEN_KEY, token);
+        await nativeCall('SecureStorage.Set', { key: SYNC_TOKEN_KEY, value: token });
     } catch {
         console.warn('[BiometricAuth] Failed to save sync token');
     }
 }
 
 export async function getSyncToken(): Promise<string | null> {
-    const native = await getNativePHP();
-    if (!native) return null;
-
     try {
-        const result = await native.SecureStorage.get(SYNC_TOKEN_KEY);
-        return result.value ?? null;
+        const result = await nativeCall('SecureStorage.Get', { key: SYNC_TOKEN_KEY });
+        const data = result.data as Record<string, unknown> | undefined;
+        return (data?.value as string) ?? null;
     } catch {
         return null;
     }
 }
 
 export async function clearCredentials(): Promise<void> {
-    const native = await getNativePHP();
-    if (!native) return;
-
     try {
-        await native.SecureStorage.delete(TOKEN_KEY);
-        await native.SecureStorage.delete(USER_KEY);
+        await nativeCall('SecureStorage.Delete', { key: TOKEN_KEY });
+        await nativeCall('SecureStorage.Delete', { key: USER_KEY });
     } catch {
         console.warn('[BiometricAuth] Failed to clear credentials');
     }

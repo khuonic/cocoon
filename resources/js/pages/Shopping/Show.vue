@@ -66,38 +66,50 @@ function handleDuplicate(): void {
 const SpeechRecognitionAPI =
     (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null;
 
+console.log('[Micro] SpeechRecognition API:', SpeechRecognitionAPI ? 'disponible' : 'ABSENT');
+
 const speechSupported = SpeechRecognitionAPI !== null;
 const isListening = ref(false);
 let recognition: any = null;
 
 function toggleListening(): void {
+    console.log('[Micro] toggleListening — isListening:', isListening.value);
+
     if (isListening.value) {
+        console.log('[Micro] stop()');
         recognition?.stop();
         return;
     }
 
+    console.log('[Micro] Création SpeechRecognition, lang=fr-FR');
     recognition = new SpeechRecognitionAPI();
     recognition.lang = 'fr-FR';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
+        console.log('[Micro] onstart — micro actif');
         isListening.value = true;
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
+        const confidence = event.results[0][0].confidence;
+        console.log('[Micro] onresult — transcript:', transcript, 'confidence:', confidence);
         router.post(store.url(props.shoppingList.id), { name: transcript, category: null }, { preserveScroll: true });
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: any) => {
+        console.error('[Micro] onerror — code:', event.error, 'message:', event.message);
         isListening.value = false;
     };
 
     recognition.onend = () => {
+        console.log('[Micro] onend — micro arrêté');
         isListening.value = false;
     };
 
+    console.log('[Micro] start()');
     recognition.start();
 }
 

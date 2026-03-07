@@ -11,7 +11,10 @@ import androidx.fragment.app.FragmentActivity
 import com.nativephp.mobile.bridge.BridgeFunction
 import com.nativephp.mobile.bridge.BridgeResponse
 import org.json.JSONObject
+import android.util.Log
 import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 
 const val PREFS_NAME = "cocoon_local_notifications"
 const val CHANNEL_ID = "cocoon_reminders"
@@ -54,12 +57,18 @@ object LocalNotificationFunctions {
                 ?: return BridgeResponse.success(mapOf("scheduled" to false, "error" to "trigger_at required"))
 
             val triggerMillis = try {
-                Instant.parse(triggerAt).toEpochMilli()
-            } catch (e: Exception) {
-                return BridgeResponse.success(mapOf("scheduled" to false, "error" to "invalid trigger_at"))
+                // Handles both UTC (Z) and offset (+01:00) ISO 8601 formats
+                OffsetDateTime.parse(triggerAt).toInstant().toEpochMilli()
+            } catch (e: DateTimeParseException) {
+                Log.e("LocalNotification", "Invalid trigger_at format: $triggerAt — ${e.message}")
+                return BridgeResponse.success(mapOf("scheduled" to false, "error" to "invalid trigger_at: $triggerAt"))
             }
 
-            if (triggerMillis <= System.currentTimeMillis()) {
+            val now = System.currentTimeMillis()
+            Log.d("LocalNotification", "Schedule id=$id title=$title trigger_at=$triggerAt millis=$triggerMillis now=$now delta=${triggerMillis - now}ms")
+
+            if (triggerMillis <= now) {
+                Log.w("LocalNotification", "trigger_at is in the past, skipping")
                 return BridgeResponse.success(mapOf("scheduled" to false, "reason" to "past"))
             }
 
@@ -89,6 +98,7 @@ object LocalNotificationFunctions {
             }
             prefs.edit().putString("notif_$id", stored.toString()).apply()
 
+            Log.d("LocalNotification", "✅ Scheduled id=$id in ${triggerMillis - now}ms")
             return BridgeResponse.success(mapOf("scheduled" to true, "id" to id))
         }
     }
