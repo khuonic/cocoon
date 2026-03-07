@@ -75,7 +75,6 @@ function resetForm(): void {
         form.reset();
         form.clearErrors();
         form.category = 'Loisir';
-        form.all_day = false;
         if (props.defaultDate) {
             form.starts_at = form.all_day ? props.defaultDate : `${props.defaultDate}T09:00`;
         }
@@ -185,7 +184,7 @@ function handleDelete(): void {
                     <Label>Journée entière</Label>
                     <Switch
                         id="event-all-day"
-                        v-model:checked="form.all_day"
+                        v-model="form.all_day"
                     />
                 </div>
 
@@ -234,10 +233,9 @@ function handleDelete(): void {
                         :value="form.reminder_before === null ? '' : String(form.reminder_before)"
                         @change="(e) => { const v = (e.target as HTMLSelectElement).value; form.reminder_before = v === '' ? null : Number(v); }"
                     >
-                        <option value="">Pas de rappel</option>
-                        <option value="30">30 min avant</option>
-                        <option value="60">1h avant</option>
-                        <option value="1440">Veille (9h)</option>
+                        <option v-for="r in REMINDERS" :key="String(r.value)" :value="r.value === null ? '' : String(r.value)">
+                            {{ r.label }}
+                        </option>
                     </select>
                 </div>
 
@@ -246,7 +244,7 @@ function handleDelete(): void {
                     <Label>Personnel uniquement</Label>
                     <Switch
                         id="event-personal"
-                        v-model:checked="form.is_personal"
+                        v-model="form.is_personal"
                     />
                 </div>
 

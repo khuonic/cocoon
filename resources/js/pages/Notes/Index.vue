@@ -409,7 +409,7 @@ function onDragEnd(): void {
                         <Label for="list-personal" class="cursor-pointer">Liste personnelle</Label>
                         <Switch
                             id="list-personal"
-                            v-model:checked="todoListForm.is_personal"
+                            v-model="todoListForm.is_personal"
                         />
                     </div>
 

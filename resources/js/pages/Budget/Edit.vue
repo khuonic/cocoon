@@ -208,7 +208,7 @@ const recurrenceOptions = [
                     <Label for="is_recurring">Dépense récurrente</Label>
                     <Switch
                         id="is_recurring"
-                        v-model:checked="form.is_recurring"
+                        v-model="form.is_recurring"
                     />
                 </div>
 

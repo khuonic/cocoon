@@ -40,8 +40,7 @@ function submit(): void {
                 <Label for="is_template">Liste modèle</Label>
                 <Switch
                     id="is_template"
-                    :checked="form.is_template"
-                    @update:checked="(val: boolean) => form.is_template = val"
+                    v-model="form.is_template"
                 />
             </div>
 
