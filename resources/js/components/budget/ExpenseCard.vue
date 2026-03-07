@@ -4,7 +4,7 @@ import type { Expense } from '@/types/budget';
 import CategoryIcon from './CategoryIcon.vue';
 import { edit } from '@/routes/expenses';
 
-const props = defineProps<{
+defineProps<{
     expense: Expense;
 }>();
 

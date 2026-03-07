@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -14,7 +14,7 @@ import type { ExpenseCategory } from '@/types/budget';
 import type { User } from '@/types/auth';
 import { store } from '@/actions/App/Http/Controllers/ExpenseController';
 
-const props = defineProps<{
+defineProps<{
     categories: ExpenseCategory[];
     users: User[];
 }>();

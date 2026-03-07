@@ -8,9 +8,11 @@ const TOKEN_KEY = 'cocoon_auth_token';
 const USER_KEY = 'cocoon_auth_user';
 const SYNC_TOKEN_KEY = 'cocoon_sync_token';
 
-let nativephpModule: typeof import('#nativephp') | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let nativephpModule: any = null;
 
-async function getNativePHP(): Promise<typeof import('#nativephp') | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getNativePHP(): Promise<any> {
     if (nativephpModule) return nativephpModule;
 
     try {

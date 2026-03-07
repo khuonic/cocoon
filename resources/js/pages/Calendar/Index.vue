@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { computed, ref, nextTick } from 'vue';
 import CalendarWeekRow from '@/components/calendar/CalendarWeekRow.vue';
 import EventFormDialog from '@/components/calendar/EventFormDialog.vue';
 import MonthYearPicker from '@/components/calendar/MonthYearPicker.vue';
