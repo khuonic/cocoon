@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, router, usePage } from '@inertiajs/vue3';
+import { Form, Head, router } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7,11 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import {
-    clearCredentials,
-    hasSavedCredentials,
-    isNativePHP,
-} from '@/services/biometric-auth';
+import { hasSavedCredentials, isNativePHP } from '@/services/biometric-auth';
 import { store } from '@/routes/login';
 import { onMounted } from 'vue';
 
@@ -19,16 +15,7 @@ defineProps<{
     status?: string;
 }>();
 
-const page = usePage<{
-    flash?: { logged_out?: boolean };
-}>();
-
 onMounted(async () => {
-    if (page.props.flash?.logged_out) {
-        await clearCredentials();
-        return;
-    }
-
     if (await isNativePHP() && await hasSavedCredentials()) {
         router.visit('/biometric-login');
     }

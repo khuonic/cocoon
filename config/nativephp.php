@@ -299,7 +299,9 @@ return [
     */
 
     'permissions' => [
-        //
+        'push_notifications' => true,
+        'microphone' => true,
+        'camera' => true,
     ],
 
     /*

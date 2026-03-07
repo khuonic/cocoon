@@ -220,7 +220,35 @@ La sync s'active automatiquement — aucune action manuelle :
 
 ---
 
-## 7. Workflow pour les mises à jour
+## 7. Développement en parallèle de la prod
+
+### APP_ID différent pour coexistence debug/prod
+
+Pour avoir l'app debug et l'app prod sur le même téléphone simultanément, utiliser un `APP_ID` différent en développement :
+
+**`.env` local (dev) :**
+```env
+NATIVEPHP_APP_ID=com.cocoon.app.debug
+APP_NAME="Cocoon Debug"
+```
+
+**`.env` prod :**
+```env
+NATIVEPHP_APP_ID=com.cocoon.app
+APP_NAME="Cocoon"
+```
+
+Android considère les deux apps comme distinctes → installation sans conflit, pas besoin de désinstaller entre les deux.
+
+### Idées pour distinguer visuellement debug vs prod
+
+- **Header rouge** : conditionner la couleur du header sur `APP_ENV=local` via une prop Inertia
+- **Icône différente** : remplacer `ic_launcher` dans `nativephp/android/app/src/debug/res/` (dossier debug Android Studio)
+- **Splash screen différent** : idem, variante dans le dossier debug
+
+---
+
+## 8. Workflow pour les mises à jour
 
 ```bash
 # 1. Développer + tester
