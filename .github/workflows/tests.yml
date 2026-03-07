@@ -40,10 +40,11 @@ jobs:
       - name: Install Node Dependencies
         run: npm i
 
+      - name: Configure NativePHP Auth
+        run: composer config --global http-basic.plugins.nativephp.com "${{ secrets.NATIVEPHP_USERNAME }}" "${{ secrets.NATIVEPHP_TOKEN }}"
+
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
-        env:
-          COMPOSER_AUTH: ${{ secrets.NATIVEPHP_COMPOSER_AUTH }}
 
       - name: Copy Environment File
         run: cp .env.example .env

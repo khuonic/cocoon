@@ -28,12 +28,13 @@ jobs:
         with:
           php-version: '8.4'
 
+      - name: Configure NativePHP Auth
+        run: composer config --global http-basic.plugins.nativephp.com "${{ secrets.NATIVEPHP_USERNAME }}" "${{ secrets.NATIVEPHP_TOKEN }}"
+
       - name: Install Dependencies
         run: |
           composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
           npm install
-        env:
-          COMPOSER_AUTH: ${{ secrets.NATIVEPHP_COMPOSER_AUTH }}
 
       - name: Run Pint
         run: composer lint
