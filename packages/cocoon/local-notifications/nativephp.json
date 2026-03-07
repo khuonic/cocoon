@@ -36,14 +36,11 @@
         "receivers": [
             {
                 "name": "com.cocoon.plugins.localnotifications.NotificationAlarmReceiver",
-                "exported": false
-            },
-            {
-                "name": "com.cocoon.plugins.localnotifications.NotificationAlarmReceiver",
                 "exported": true,
                 "intent_filter": [
-                    "android.intent.action.BOOT_COMPLETED",
-                    "android.intent.action.MY_PACKAGE_REPLACED"
+                    {
+                        "action": ["android.intent.action.BOOT_COMPLETED", "android.intent.action.MY_PACKAGE_REPLACED"]
+                    }
                 ]
             }
         ],
