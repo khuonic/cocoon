@@ -79,7 +79,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `DashboardController` : page d'accueil `/` — salutation personnalisée, mot doux partenaire, TodayWidget, blague
 - `SweetMessageController` : store (updateOrCreate — 1 message par user)
 - `BirthdayController` : CRUD complet — modal sur index, intègre ReminderService
-- `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total)
+- `ExpenseController` : CRUD dépenses + settle + history (mensuel/annuel/total) + changelog (activity log via spatie/laravel-activitylog)
 - `ShoppingListController` : CRUD + duplicate
 - `ShoppingItemController` : store, update, toggleCheck, destroy
 - `TodoListController` : show, store, update, destroy
@@ -142,13 +142,13 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Phase 20** : Calendrier (CalendarEvent, EventCategory, grille mensuelle, Day Modal, plugin rappels)
 - **Refonte UX multi-modules** :
   - Courses : FAB vocal flottant centré, category nullable, groupe "Sans catégorie", cards 3 colonnes, fond différent cochés
-  - Calendrier : style Google Agenda (bordures, cellules hautes, badges titres), barres multi-jours, sélecteur mois/année, swipe navigation, Switch toggles, bouton save dans header, FAB speed dial Événement/Anniversaire, BirthdayFormDialog inline
-  - Budget : description en premier, date+montant même ligne, "Vous êtes quittes" redesign, MonthYearPicker dans historique
+  - Calendrier : style Google Agenda (bordures, cellules hautes, badges titres), barres multi-jours, sélecteur mois/année, swipe navigation, Switch toggles, bouton save dans header, FAB speed dial Événement/Anniversaire, BirthdayFormDialog inline, date pré-remplie depuis clic sur jour
+  - Budget : description en premier, date+montant même ligne, "Vous êtes quittes" redesign, MonthYearPicker dans historique, changelog activité via spatie/laravel-activitylog, édition dépenses réglées (reset settled_at)
   - Notes : grille Google Keep (2 col, mixte), FAB speed dial Note/Liste, line-clamp-8, TodoList Enter=nouvelle tâche, drag & drop reorder
   - Dashboard : salutation personnalisée (heure), mot doux partenaire en bannière, FAB cœur pour édition
   - Global : DialogContent top-4 par défaut, dismiss clavier au tap, boutons redesign (rounded-lg, font-semibold, h-10)
   - Login : logo agrandi (size-36), suppression texte superflu
-- **218 tests passants**
+- **225 tests passants**
 
 ## Conventions de code
 
@@ -203,7 +203,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - `wayfinder-development` — Activates whenever referencing backend routes in frontend components. Use when importing from @/actions or @/routes, calling Laravel routes from TypeScript, or working with Wayfinder route functions.
 - `pest-testing` — Tests applications using the Pest 4 PHP framework. Activates when writing tests, creating unit or feature tests, adding assertions, testing Livewire components, browser testing, debugging test failures, working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion, coverage, or needs to verify functionality works.
-- `inertia-vue-development` — Develops Inertia.js v2 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
+- `inertia-vue-development` — Develops Inertia.js v2 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
 
 ## Conventions
@@ -239,19 +239,23 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
 
-## Artisan
+## Artisan Commands
 
-- Use the `list-artisan-commands` tool when you need to call an Artisan command to double-check the available parameters.
+- Run Artisan commands directly via the command line (e.g., `php artisan route:list`, `php artisan tinker --execute "..."`).
+- Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
 
 ## URLs
 
 - Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
 
-## Tinker / Debugging
+## Debugging
 
-- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
 - Use the `database-query` tool when you only need to read from the database.
 - Use the `database-schema` tool to inspect table structure before writing migrations or models.
+- To execute PHP code for debugging, run `php artisan tinker --execute "your code here"` directly.
+- To read configuration values, read the config files directly or run `php artisan config:show [key]`.
+- To inspect routes, run `php artisan route:list` directly.
+- To check environment variables, read the `.env` file directly.
 
 ## Reading Browser Logs With the `browser-logs` Tool
 
@@ -343,7 +347,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 # Do Things the Laravel Way
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
+- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
 - If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
@@ -357,7 +361,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ### Model Creation
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `list-artisan-commands` to check the available options to `php artisan make:model`.
+- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
 
 ### APIs & Eloquent Resources
 

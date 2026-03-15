@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\NativeImageController;
 use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\BirthdayController;
@@ -25,6 +26,9 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Native image upload (NativePHP camera/gallery → public storage)
+    Route::post('native-image', NativeImageController::class.'@store')->name('native-image.store');
 
     // Budget
     Route::post('expenses/settle', [ExpenseController::class, 'settle'])->name('expenses.settle');

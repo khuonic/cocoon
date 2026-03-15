@@ -2,10 +2,10 @@
 import { Head } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Camera, X } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
 import RecipeForm from '@/components/meals/RecipeForm.vue';
+import ImagePickerButton from '@/components/meals/ImagePickerButton.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import type { TagOption, MealTag } from '@/types/meal';
@@ -30,9 +30,7 @@ const form = useForm({
 
 const imagePreview = ref<string | null>(null);
 
-function handleImageChange(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+function handleImageChange(file: File): void {
     form.image = file;
     imagePreview.value = URL.createObjectURL(file);
 }
@@ -66,35 +64,12 @@ function submit(): void {
                 <!-- Image -->
                 <div class="space-y-2">
                     <Label>Photo</Label>
-                    <div v-if="imagePreview" class="relative">
-                        <img
-                            :src="imagePreview"
-                            class="h-48 w-full rounded-xl object-cover"
-                            alt=""
-                        />
-                        <button
-                            type="button"
-                            class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white"
-                            @click="removeImage"
-                        >
-                            <X :size="14" />
-                        </button>
-                    </div>
-                    <label
-                        v-else
-                        class="flex h-32 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/50"
-                    >
-                        <input
-                            type="file"
-                            accept="image/*"
-                            class="hidden"
-                            @change="handleImageChange"
-                        />
-                        <div class="text-center">
-                            <Camera :size="24" class="mx-auto mb-1 text-muted-foreground" />
-                            <span class="text-sm text-muted-foreground">Ajouter une photo</span>
-                        </div>
-                    </label>
+                    <ImagePickerButton
+                        :preview="imagePreview"
+                        label="Ajouter une photo"
+                        @change="handleImageChange"
+                        @remove="removeImage"
+                    />
                 </div>
 
                 <RecipeForm v-model:form="form" :available-tags="availableTags" />
