@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import { Camera, X, ImagePlus } from 'lucide-vue-next';
 
 const emit = defineEmits<{
