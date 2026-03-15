@@ -63,6 +63,10 @@ function allCheckedItems(): ShoppingItem[] {
     return Object.values(props.checkedItemsByCategory).flat();
 }
 
+function allUncheckedItems(): ShoppingItem[] {
+    return Object.values(props.uncheckedItemsByCategory).flat();
+}
+
 function goBack(): void {
     sessionStorage.setItem('shopping_no_redirect', '1');
     router.visit('/shopping-lists');
@@ -116,8 +120,8 @@ function goBack(): void {
             </template>
 
             <!-- Articles cochés groupés par catégorie -->
-            <div v-if="checkedCount() > 0" class="space-y-2">
-                <p class="px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div v-if="checkedCount() > 0" class="rounded-2xl bg-muted/30 p-3 space-y-2">
+                <p class="px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Cochés ({{ checkedCount() }})
                 </p>
                 <template v-for="(items, category) in checkedItemsByCategory" :key="`checked-${category}`">
@@ -141,6 +145,7 @@ function goBack(): void {
             :categories="categories"
             :item-suggestions="itemSuggestions"
             :checked-items="allCheckedItems()"
+            :unchecked-items="allUncheckedItems()"
         />
     </AppLayout>
 </template>

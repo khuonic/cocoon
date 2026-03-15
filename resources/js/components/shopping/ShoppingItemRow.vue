@@ -72,7 +72,7 @@ function handleEdit(): void {
         >
             <span
                 class="text-xs font-medium leading-snug break-words"
-                :class="item.is_checked ? 'text-muted-foreground line-through' : 'text-foreground'"
+                :class="item.is_checked ? 'text-muted-foreground/60' : 'text-foreground'"
             >
                 {{ item.name }}
             </span>
