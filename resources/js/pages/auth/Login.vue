@@ -15,8 +15,8 @@ defineProps<{
     status?: string;
 }>();
 
-onMounted(async () => {
-    if (await isNativePHP() && await hasSavedCredentials()) {
+onMounted(() => {
+    if (isNativePHP() && hasSavedCredentials()) {
         router.visit('/biometric-login');
     }
 });

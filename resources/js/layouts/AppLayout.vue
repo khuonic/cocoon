@@ -3,7 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import BottomNav from '@/components/BottomNav.vue';
 import UpdateDialog from '@/components/UpdateDialog.vue';
-import { getToken, getSyncToken, isNativePHP, saveCredentials, saveSyncToken } from '@/services/biometric-auth';
+import { clearCredentialsFlag, getToken, getSyncToken, isNativePHP, markCredentialsSaved, saveToken, saveSyncToken } from '@/services/biometric-auth';
 import { configureSyncClient, sync } from '@/services/sync-client';
 import { checkForUpdate } from '@/services/update-checker';
 
@@ -18,7 +18,7 @@ withDefaults(defineProps<Props>(), {
 const page = usePage<{
     syncApiUrl?: string;
     appVersionCode?: number;
-    flash?: { api_token?: string; sync_token?: string };
+    flash?: { api_token?: string; sync_token?: string; logged_out?: boolean };
     auth?: { user?: { id: number; name: string; email: string } };
 }>();
 
@@ -28,35 +28,36 @@ const updateInfo = ref<{ version: string; changelog?: string; downloadUrl: strin
 onMounted(async () => {
     const syncApiUrl = page.props.syncApiUrl;
 
+    // Nettoyer les credentials au logout
+    if (page.props.flash?.logged_out) {
+        clearCredentialsFlag();
+    }
+
     // Stocker le token cloud de sync si flashé au login
     const flashedSyncToken = page.props.flash?.sync_token;
     if (flashedSyncToken) {
-        await saveSyncToken(flashedSyncToken);
+        saveSyncToken(flashedSyncToken);
     }
 
     // Configurer le client de sync avec le token cloud persisté
     if (syncApiUrl) {
-        const syncToken = flashedSyncToken ?? (await getSyncToken());
+        const syncToken = flashedSyncToken ?? getSyncToken();
         if (syncToken) {
             configureSyncClient(syncApiUrl, syncToken);
         }
         sync();
     }
 
-    // Stocker le token local (biométrie)
+    // Stocker le token local dans localStorage (pour update checker + flag biométrie)
     const token = page.props.flash?.api_token;
-    const user = page.props.auth?.user;
-    if (token && user) {
-        saveCredentials(token, {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        });
+    if (token) {
+        saveToken(token);
+        markCredentialsSaved();
     }
 
     // Vérifier les mises à jour APK
-    if (syncApiUrl && (await isNativePHP())) {
-        const storedToken = await getToken();
+    if (syncApiUrl && isNativePHP()) {
+        const storedToken = getToken();
         if (storedToken) {
             const currentVersionCode = page.props.appVersionCode ?? 0;
             const result = await checkForUpdate(syncApiUrl, currentVersionCode, storedToken);

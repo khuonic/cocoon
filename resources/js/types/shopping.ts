@@ -1,4 +1,4 @@
-export type ShoppingItemCategory = 'fruits_legumes' | 'frais' | 'epicerie' | 'boissons' | 'hygiene' | 'maison' | 'autre';
+export type ShoppingItemCategory = 'fruits_legumes' | 'frais' | 'epicerie_salee' | 'epicerie_sucree' | 'boissons' | 'hygiene' | 'maison' | 'autre';
 
 export type ShoppingItem = {
     id: number;
@@ -29,4 +29,5 @@ export type ShoppingList = {
 export type CategoryOption = {
     value: ShoppingItemCategory;
     label: string;
+    icon: string;
 };

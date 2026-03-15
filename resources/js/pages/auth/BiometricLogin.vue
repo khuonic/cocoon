@@ -16,10 +16,10 @@ async function attemptBiometric() {
     attempting.value = true;
     error.value = '';
 
-    const result = await authenticate();
+    const success = await authenticate();
 
-    if (result) {
-        router.post(verify.url(), { token: result.token });
+    if (success) {
+        router.post(verify.url());
     } else {
         error.value = 'Authentification biométrique échouée.';
         attempting.value = false;

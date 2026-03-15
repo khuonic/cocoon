@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
+use Native\Mobile\Facades\SecureStorage;
 
 test('guest can view biometric login page', function () {
     $response = $this->get(route('biometric.login'));
@@ -18,50 +19,63 @@ test('authenticated user is redirected from biometric login', function () {
     $response->assertRedirect('/');
 });
 
-test('verify with valid token authenticates user', function () {
+test('verify with valid token from SecureStorage authenticates user', function () {
     $user = User::factory()->create();
     $token = $user->createToken('mobile')->plainTextToken;
 
-    $response = $this->post(route('biometric.verify'), [
-        'token' => $token,
-    ]);
+    SecureStorage::shouldReceive('get')
+        ->with('cocoon_auth_token')
+        ->andReturn($token);
+
+    $response = $this->post(route('biometric.verify'));
 
     $this->assertAuthenticatedAs($user);
     $response->assertRedirect('/');
 });
 
-test('verify with invalid token fails', function () {
-    $response = $this->post(route('biometric.verify'), [
-        'token' => 'invalid-token',
-    ]);
+test('verify with no SecureStorage token fails', function () {
+    SecureStorage::shouldReceive('get')
+        ->with('cocoon_auth_token')
+        ->andReturn(null);
+
+    $response = $this->post(route('biometric.verify'));
 
     $this->assertGuest();
-    $response->assertSessionHasErrors('token');
+    $response->assertSessionHasErrors('biometric');
 });
 
-test('verify with revoked token fails', function () {
+test('verify with invalid token in SecureStorage fails', function () {
+    SecureStorage::shouldReceive('get')
+        ->with('cocoon_auth_token')
+        ->andReturn('invalid-token');
+
+    $response = $this->post(route('biometric.verify'));
+
+    $this->assertGuest();
+    $response->assertSessionHasErrors('biometric');
+});
+
+test('verify with revoked token in SecureStorage fails', function () {
     $user = User::factory()->create();
     $token = $user->createToken('mobile')->plainTextToken;
-
     PersonalAccessToken::findToken($token)->delete();
 
-    $response = $this->post(route('biometric.verify'), [
-        'token' => $token,
-    ]);
+    SecureStorage::shouldReceive('get')
+        ->with('cocoon_auth_token')
+        ->andReturn($token);
+
+    $response = $this->post(route('biometric.verify'));
 
     $this->assertGuest();
-    $response->assertSessionHasErrors('token');
+    $response->assertSessionHasErrors('biometric');
 });
 
-test('verify requires token field', function () {
-    $response = $this->post(route('biometric.verify'), []);
-
-    $this->assertGuest();
-    $response->assertSessionHasErrors('token');
-});
-
-test('login flashes api token', function () {
+test('login flashes api token and saves to SecureStorage', function () {
     $user = User::factory()->create();
+
+    SecureStorage::shouldReceive('set')
+        ->with('cocoon_auth_token', \Mockery::type('string'))
+        ->andReturn(true);
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,

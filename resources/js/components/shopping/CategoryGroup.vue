@@ -9,6 +9,7 @@ import { ChevronDown } from 'lucide-vue-next';
 
 defineProps<{
     label: string;
+    icon?: string;
 }>();
 
 const isOpen = ref(true);
@@ -18,6 +19,7 @@ const isOpen = ref(true);
     <div>
         <Collapsible v-model:open="isOpen">
             <CollapsibleTrigger class="flex w-full items-center gap-2 px-2 py-2">
+                <span v-if="icon" class="text-base leading-none">{{ icon }}</span>
                 <span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     {{ label }}
                 </span>

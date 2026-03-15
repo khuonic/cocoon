@@ -106,7 +106,8 @@ test('show displays the list with items', function () {
             ->component('Shopping/Show')
             ->has('shoppingList')
             ->has('uncheckedItemsByCategory')
-            ->has('checkedItems')
+            ->has('checkedItemsByCategory')
+            ->has('itemSuggestions')
             ->has('categories')
         );
 });

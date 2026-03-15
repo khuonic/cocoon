@@ -5,6 +5,7 @@ namespace App\Http\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Native\Mobile\Facades\SecureStorage;
 use Symfony\Component\HttpFoundation\Response;
 
 class LoginResponse implements LoginResponseContract
@@ -14,6 +15,7 @@ class LoginResponse implements LoginResponseContract
         /** @var Request $request */
         $token = $request->user()->createToken('mobile')->plainTextToken;
 
+        SecureStorage::set('cocoon_auth_token', $token);
         session()->flash('api_token', $token);
 
         $this->flashSyncToken($request->input('email'), $request->input('password'));

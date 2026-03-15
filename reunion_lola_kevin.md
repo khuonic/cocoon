@@ -87,6 +87,19 @@
 - rédige un plan des que nécessaore/usa
 
 
-  
-  - voir si possibilité d'importer donnée tricount a l'initialisation dans le budget 
-  - debuger les toggle partout
+
+- regarder C:\Users\kevin\Herd\cocoon\PLAN_BIOMETRIC_FIX.md  ou alors https://nativephp.com/plugins/nativephp/mobile-biometrics  pour la biométrie car toujours non fonctionnelle
+    - modifier saisie courses
+      - enlever micro
+      - avoir une auto complétion sur les produits par rapport à ceux saisis
+        - pouvoir choisir un produit "coché" et que ca le remette automatiquement dans la liste (il faudrait un visuel dans l'autocomplétion qui permet de savoir si un produit est à cocher ou non)
+      - plutot une saisie en modal, sans que la modal ne se ferme apres un ajout
+      - préparer un seeder pour les courses pour une liste de course "Course appartement"
+      - spliter la catégorie épicerie en "épicerie salée" et "épicerie sucrée"
+
+  - calendrier:
+    - corriger affichage evenement sur plusieurs jours
+      - toujours afficher en premier dans un jour les evenements qui sont sur plusieurs jours, il ne faut pas que la ligne d'un évenement puisse être "cassée" 
+  - input file camera non fonctionnelle (recettes)(voir peut etre https://nativephp.com/plugins/nativephp/mobile-camera)
+
+

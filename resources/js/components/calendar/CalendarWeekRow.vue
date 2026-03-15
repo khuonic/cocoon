@@ -1,11 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { CalendarEvent, CalendarBirthday } from '@/types/calendar';
 
 type CalendarDay = { day: number | null; date: string | null; isOtherMonth?: boolean };
-
-type Badge =
-    | { kind: 'event'; event: CalendarEvent; isStart: boolean; isEnd: boolean; showTitle: boolean }
-    | { kind: 'birthday'; birthday: CalendarBirthday };
 
 const props = defineProps<{
     days: CalendarDay[];
@@ -20,33 +17,149 @@ defineEmits<{
     openEdit: [event: CalendarEvent];
 }>();
 
-const weekFirstDate = props.days.find(d => d.date)?.date ?? '';
+const MAX_LANES = 2;
 
-function badgesForDate(date: string | null): Badge[] {
-    if (!date) { return []; }
-    const result: Badge[] = [];
+const weekDates = props.days
+    .map(d => d.date)
+    .filter((d): d is string => d !== null);
 
-    if (props.activeCategory !== 'birthday') {
-        for (const e of props.events) {
-            const eStart = e.starts_at.slice(0, 10);
-            const eEnd = e.ends_at ? e.ends_at.slice(0, 10) : eStart;
-            if (date < eStart || date > eEnd) { continue; }
-            const isStart = date === eStart;
-            const isEnd = date === eEnd;
-            const showTitle = isStart || date === weekFirstDate;
-            result.push({ kind: 'event', event: e, isStart, isEnd, showTitle });
+const weekStart = weekDates[0] ?? '';
+const weekEnd = weekDates[weekDates.length - 1] ?? '';
+
+// ─── Events filtrés pour cette semaine ───────────────────────────────────────
+
+const weekEvents = computed(() => {
+    if (props.activeCategory === 'birthday') return [];
+    return props.events.filter(e => {
+        const s = e.starts_at.slice(0, 10);
+        const end = (e.ends_at ?? e.starts_at).slice(0, 10);
+        return s <= weekEnd && end >= weekStart;
+    });
+});
+
+const multiDayEvents = computed(() =>
+    weekEvents.value
+        .filter(e => {
+            const s = e.starts_at.slice(0, 10);
+            const end = (e.ends_at ?? e.starts_at).slice(0, 10);
+            return s !== end;
+        })
+        .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
+);
+
+const singleDayEvents = computed(() =>
+    weekEvents.value.filter(e => {
+        const s = e.starts_at.slice(0, 10);
+        const end = (e.ends_at ?? e.starts_at).slice(0, 10);
+        return s === end;
+    }),
+);
+
+// ─── Lane assignment (greedy) ─────────────────────────────────────────────────
+// Chaque event multi-jours reçoit une lane fixe pour toute la semaine.
+// Garantit que les barres ne sont jamais "cassées" entre les jours.
+
+const laneMap = computed(() => {
+    const map = new Map<number, number>(); // eventId → lane
+    const laneEnd: string[] = [];
+    for (const e of multiDayEvents.value) {
+        const s = e.starts_at.slice(0, 10);
+        const end = (e.ends_at ?? e.starts_at).slice(0, 10);
+        let lane = laneEnd.findIndex(le => le < s);
+        if (lane === -1) {
+            lane = laneEnd.length;
+            laneEnd.push(end);
+        } else {
+            laneEnd[lane] = end;
         }
+        map.set(e.id, lane);
     }
+    return map;
+});
 
-    if (props.activeCategory === 'all' || props.activeCategory === 'birthday') {
-        const day = parseInt(date.split('-')[2]);
-        for (const b of props.birthdays.filter(b => b.day === day)) {
-            result.push({ kind: 'birthday', birthday: b });
-        }
-    }
+const numLanes = computed(() =>
+    laneMap.value.size === 0 ? 0 : Math.max(...laneMap.value.values()) + 1,
+);
 
-    return result;
+// ─── Helpers par date ────────────────────────────────────────────────────────
+
+function eventForLane(date: string, lane: number): CalendarEvent | null {
+    return (
+        multiDayEvents.value.find(e => {
+            if (laneMap.value.get(e.id) !== lane) return false;
+            const s = e.starts_at.slice(0, 10);
+            const end = (e.ends_at ?? e.starts_at).slice(0, 10);
+            return date >= s && date <= end;
+        }) ?? null
+    );
 }
+
+function singlesForDate(date: string): CalendarEvent[] {
+    return singleDayEvents.value.filter(e => e.starts_at.slice(0, 10) === date);
+}
+
+function birthdaysForDate(date: string): CalendarBirthday[] {
+    if (props.activeCategory !== 'all' && props.activeCategory !== 'birthday') return [];
+    const day = parseInt(date.split('-')[2], 10);
+    return props.birthdays.filter(b => b.day === day);
+}
+
+function isEventStart(e: CalendarEvent, date: string): boolean {
+    return e.starts_at.slice(0, 10) === date;
+}
+
+function isEventEnd(e: CalendarEvent, date: string): boolean {
+    return (e.ends_at ?? e.starts_at).slice(0, 10) === date;
+}
+
+function showEventTitle(e: CalendarEvent, date: string): boolean {
+    return isEventStart(e, date) || date === weekStart;
+}
+
+// ─── Données précalculées par cellule ────────────────────────────────────────
+
+type Extra =
+    | { kind: 'event'; item: CalendarEvent }
+    | { kind: 'birthday'; item: CalendarBirthday };
+
+type CellData = {
+    lanes: Array<CalendarEvent | null>;
+    visibleExtras: Extra[];
+    overflow: number;
+};
+
+const cellsData = computed((): Array<CellData | null> => {
+    return props.days.map(cell => {
+        if (!cell.date) return null;
+        const date = cell.date;
+
+        // Lanes fixes pour les events multi-jours
+        const visLanes = Math.min(numLanes.value, MAX_LANES);
+        const lanes: Array<CalendarEvent | null> = Array.from(
+            { length: visLanes },
+            (_, i) => eventForLane(date, i),
+        );
+
+        // Events cachés (lanes > MAX_LANES) présents sur ce jour
+        let overflow = 0;
+        for (let i = MAX_LANES; i < numLanes.value; i++) {
+            if (eventForLane(date, i)) overflow++;
+        }
+
+        // Single-day events + anniversaires
+        const singles = singlesForDate(date);
+        const bdays = birthdaysForDate(date);
+        const extras: Extra[] = [
+            ...singles.map(e => ({ kind: 'event' as const, item: e })),
+            ...bdays.map(b => ({ kind: 'birthday' as const, item: b })),
+        ];
+
+        const visibleExtras = extras.slice(0, 1);
+        overflow += extras.length - visibleExtras.length;
+
+        return { lanes, visibleExtras, overflow };
+    });
+});
 </script>
 
 <template>
@@ -72,38 +185,55 @@ function badgesForDate(date: string | null): Badge[] {
                 {{ cell.day }}
             </span>
 
-            <!-- Badges -->
-            <template v-if="cell.date">
-                <template v-for="(badge, bi) in badgesForDate(cell.date).slice(0, 3)" :key="bi">
-                    <!-- Événement -->
+            <template v-if="cell.date && cellsData[i]">
+                <!-- Lanes multi-jours (positions fixes) -->
+                <div
+                    v-for="(evt, li) in cellsData[i]!.lanes"
+                    :key="`lane-${li}`"
+                    class="mb-px h-4"
+                >
                     <div
-                        v-if="badge.kind === 'event'"
-                        class="mb-px py-px text-[10px] font-medium leading-4 text-white"
+                        v-if="evt"
+                        class="h-full py-px text-[10px] font-medium leading-4 text-white"
                         :class="[
-                            badge.isStart ? 'rounded-l-sm pl-1' : '-ml-1 pl-0.5',
-                            badge.isEnd   ? 'rounded-r-sm pr-1' : '-mr-1 pr-0.5',
-                            badge.showTitle ? 'truncate' : '',
+                            isEventStart(evt, cell.date) ? 'rounded-l-sm pl-1' : '-ml-1 pl-0.5',
+                            isEventEnd(evt, cell.date)   ? 'rounded-r-sm pr-1' : '-mr-1 pr-0.5',
+                            showEventTitle(evt, cell.date) ? 'truncate' : '',
                         ]"
-                        :style="{ backgroundColor: badge.event.category_color }"
-                        @click.stop="$emit('openEdit', badge.event)"
+                        :style="{ backgroundColor: evt.category_color }"
+                        @click.stop="$emit('openEdit', evt)"
                     >
-                        <span v-if="badge.showTitle">{{ badge.event.title }}</span>
+                        <span v-if="showEventTitle(evt, cell.date)">{{ evt.title }}</span>
                         <span v-else>&nbsp;</span>
                     </div>
-                    <!-- Anniversaire -->
+                    <!-- Spacer invisible pour maintenir la position -->
+                </div>
+
+                <!-- Events single-day et anniversaires (1 max) -->
+                <template v-for="(extra, ei) in cellsData[i]!.visibleExtras" :key="`extra-${ei}`">
+                    <div
+                        v-if="extra.kind === 'event'"
+                        class="mb-px truncate rounded-sm px-1 py-px text-[10px] font-medium leading-4 text-white"
+                        :style="{ backgroundColor: extra.item.category_color }"
+                        @click.stop="$emit('openEdit', extra.item)"
+                    >
+                        {{ extra.item.title }}
+                    </div>
                     <div
                         v-else
                         class="mb-px truncate rounded-sm px-1 py-px text-[10px] font-medium leading-4 text-white"
                         style="background-color: #EC4899"
                     >
-                        🎂 {{ badge.birthday.name }}
+                        🎂 {{ extra.item.name }}
                     </div>
                 </template>
+
+                <!-- Overflow -->
                 <span
-                    v-if="badgesForDate(cell.date).length > 3"
+                    v-if="cellsData[i]!.overflow > 0"
                     class="text-[10px] text-muted-foreground"
                 >
-                    +{{ badgesForDate(cell.date).length - 3 }}
+                    +{{ cellsData[i]!.overflow }}
                 </span>
             </template>
         </div>

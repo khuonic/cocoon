@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ShoppingItemCategory;
 use App\Http\Requests\ShoppingList\StoreShoppingListRequest;
 use App\Http\Requests\ShoppingList\UpdateShoppingListRequest;
+use App\Models\ShoppingItem;
 use App\Models\ShoppingList;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -62,20 +63,32 @@ class ShoppingListController extends Controller
             )
             ->groupBy(fn ($item) => $item->category?->value ?? '');
 
-        $checkedItems = $shoppingList->items
+        $checkedItemsByCategory = $shoppingList->items
             ->where('is_checked', true)
-            ->values();
+            ->sortBy(fn ($item) => $item->category
+                ? array_search($item->category->value, $categoryOrder) + 1
+                : 0
+            )
+            ->groupBy(fn ($item) => $item->category?->value ?? '');
 
         $categories = collect(ShoppingItemCategory::cases())->map(fn (ShoppingItemCategory $c) => [
             'value' => $c->value,
             'label' => $c->label(),
+            'icon' => $c->icon(),
         ]);
+
+        $itemSuggestions = ShoppingItem::query()
+            ->select('name')
+            ->distinct()
+            ->orderBy('name')
+            ->pluck('name');
 
         return Inertia::render('Shopping/Show', [
             'shoppingList' => $shoppingList,
             'uncheckedItemsByCategory' => $uncheckedItems->map->values(),
-            'checkedItems' => $checkedItems,
+            'checkedItemsByCategory' => $checkedItemsByCategory->map->values(),
             'categories' => $categories,
+            'itemSuggestions' => $itemSuggestions,
         ]);
     }
 

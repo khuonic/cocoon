@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'syncApiUrl' => config('cocon.sync_api_url'),
             'flash' => [
                 'api_token' => $request->session()->get('api_token'),
+                'sync_token' => $request->session()->get('sync_token'),
                 'logged_out' => $request->session()->get('logged_out'),
             ],
             'appVersionCode' => (int) config('nativephp.version_code'),

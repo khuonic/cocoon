@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Sanctum\PersonalAccessToken;
+use Native\Mobile\Facades\SecureStorage;
 
 class BiometricController extends Controller
 {
@@ -19,15 +20,19 @@ class BiometricController extends Controller
 
     public function verify(Request $request): RedirectResponse
     {
-        $request->validate([
-            'token' => ['required', 'string'],
-        ]);
+        $token = SecureStorage::get('cocoon_auth_token');
 
-        $accessToken = PersonalAccessToken::findToken($request->input('token'));
+        if (! $token) {
+            return back()->withErrors([
+                'biometric' => 'Aucune session sauvegardée. Connectez-vous avec votre mot de passe.',
+            ]);
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
 
         if (! $accessToken || ! $accessToken->tokenable) {
             return back()->withErrors([
-                'token' => 'Token invalide ou expiré.',
+                'biometric' => 'Session expirée. Connectez-vous avec votre mot de passe.',
             ]);
         }
 
