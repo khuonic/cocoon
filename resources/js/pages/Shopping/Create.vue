@@ -4,13 +4,11 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import InputError from '@/components/InputError.vue';
 import { store } from '@/actions/App/Http/Controllers/ShoppingListController';
 
 const form = useForm({
     name: '',
-    is_template: false,
 });
 
 function submit(): void {
@@ -34,14 +32,6 @@ function submit(): void {
                     autofocus
                 />
                 <InputError :message="form.errors.name" />
-            </div>
-
-            <div class="flex items-center justify-between">
-                <Label for="is_template">Liste modèle</Label>
-                <Switch
-                    id="is_template"
-                    v-model="form.is_template"
-                />
             </div>
 
             <Button

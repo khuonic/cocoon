@@ -88,7 +88,7 @@ function goBack(): void {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem v-if="shoppingList.is_template" @click="handleDuplicate">
+                    <DropdownMenuItem @click="handleDuplicate">
                         <Copy :size="16" class="mr-2" />
                         Dupliquer
                     </DropdownMenuItem>

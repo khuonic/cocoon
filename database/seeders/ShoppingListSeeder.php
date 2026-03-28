@@ -20,29 +20,47 @@ class ShoppingListSeeder extends Seeder
 
         $list = ShoppingList::create([
             'name' => 'Course appartement',
-            'is_template' => true,
-            'is_active' => false,
+            'is_active' => true,
             'uuid' => Str::uuid(),
         ]);
 
-        $items = [
-            ['name' => 'Tomates', 'category' => ShoppingItemCategory::FruitsLegumes],
-            ['name' => 'Lait', 'category' => ShoppingItemCategory::Frais],
-            ['name' => 'Pâtes', 'category' => ShoppingItemCategory::EpicerieSalee],
-            ['name' => 'Chocolat noir', 'category' => ShoppingItemCategory::EpicerieSucree],
-            ['name' => 'Eau (pack)', 'category' => ShoppingItemCategory::Boissons],
-            ['name' => 'Shampooing', 'category' => ShoppingItemCategory::Hygiene],
-            ['name' => 'Papier toilette', 'category' => ShoppingItemCategory::Maison],
+        $itemsByCategory = [
+            ShoppingItemCategory::FruitsLegumes->value => [
+                'Tomates',
+            ],
+            ShoppingItemCategory::Frais->value => [
+                'Lait',
+            ],
+            ShoppingItemCategory::EpicerieSalee->value => [
+                'Pâtes',
+            ],
+            ShoppingItemCategory::EpicerieSucree->value => [
+                'Chocolat noir',
+            ],
+            ShoppingItemCategory::Boissons->value => [
+                'Eau (pack)',
+            ],
+            ShoppingItemCategory::Hygiene->value => [
+                'Shampooing',
+            ],
+            ShoppingItemCategory::Maison->value => [
+                'Papier toilette',
+            ],
+            ShoppingItemCategory::Autre->value => [
+                // ...
+            ],
         ];
 
-        foreach ($items as $item) {
-            $list->items()->create([
-                'name' => $item['name'],
-                'category' => $item['category'],
-                'is_checked' => false,
-                'added_by' => $user->id,
-                'uuid' => Str::uuid(),
-            ]);
+        foreach ($itemsByCategory as $categoryValue => $names) {
+            foreach ($names as $name) {
+                $list->items()->create([
+                    'name' => $name,
+                    'category' => $categoryValue,
+                    'is_checked' => false,
+                    'added_by' => $user->id,
+                    'uuid' => Str::uuid(),
+                ]);
+            }
         }
     }
 }

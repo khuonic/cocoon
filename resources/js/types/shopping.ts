@@ -15,7 +15,6 @@ export type ShoppingItem = {
 export type ShoppingList = {
     id: number;
     name: string;
-    is_template: boolean;
     is_active: boolean;
     uuid: string;
     created_at: string;

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\Syncable;
 use Carbon\CarbonImmutable;
+use Database\Factories\ShoppingListFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
- * @property bool $is_template
  * @property bool $is_active
  * @property string $uuid
  * @property CarbonImmutable|null $created_at
@@ -31,7 +31,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereIsTemplate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShoppingList whereUuid($value)
@@ -40,14 +39,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class ShoppingList extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShoppingListFactory> */
+    /** @use HasFactory<ShoppingListFactory> */
     use HasFactory;
 
     use Syncable;
 
     protected $fillable = [
         'name',
-        'is_template',
         'is_active',
         'uuid',
     ];
@@ -55,7 +53,6 @@ class ShoppingList extends Model
     protected function casts(): array
     {
         return [
-            'is_template' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

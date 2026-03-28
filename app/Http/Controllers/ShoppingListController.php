@@ -34,12 +34,9 @@ class ShoppingListController extends Controller
 
     public function store(StoreShoppingListRequest $request): RedirectResponse
     {
-        $isTemplate = $request->boolean('is_template');
-
         $shoppingList = ShoppingList::create([
             ...$request->validated(),
-            'is_template' => $isTemplate,
-            'is_active' => ! $isTemplate,
+            'is_active' => true,
             'uuid' => Str::uuid(),
         ]);
 
@@ -110,7 +107,6 @@ class ShoppingListController extends Controller
     {
         $newList = ShoppingList::create([
             'name' => $shoppingList->name,
-            'is_template' => false,
             'is_active' => true,
             'uuid' => Str::uuid(),
         ]);

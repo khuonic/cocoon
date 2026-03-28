@@ -122,44 +122,42 @@ function submit(): void {
                 <DialogTitle>Ajouter un article</DialogTitle>
             </DialogHeader>
 
-            <!-- Input + suggestions -->
-            <div class="relative">
-                <Input
-                    ref="inputRef"
-                    v-model="name"
-                    type="text"
-                    placeholder="Nom de l'article..."
-                    enterkeyhint="done"
-                    autocomplete="off"
-                    @focus="showSuggestions = true"
-                    @blur="setTimeout(() => (showSuggestions = false), 150)"
-                    @keydown.enter.prevent="submit"
-                />
+            <!-- Input -->
+            <Input
+                ref="inputRef"
+                v-model="name"
+                type="text"
+                placeholder="Nom de l'article..."
+                enterkeyhint="done"
+                autocomplete="off"
+                @focus="showSuggestions = true"
+                @blur="setTimeout(() => (showSuggestions = false), 150)"
+                @keydown.enter.prevent="submit"
+            />
 
-                <!-- Autocomplete dropdown -->
-                <div
-                    v-if="showSuggestions && filteredSuggestions.length > 0"
-                    class="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+            <!-- Suggestions (en flux, max-h + scroll) -->
+            <div
+                v-if="showSuggestions && filteredSuggestions.length > 0"
+                class="max-h-48 overflow-y-auto rounded-xl border border-border bg-card shadow-sm"
+            >
+                <button
+                    v-for="suggestion in filteredSuggestions"
+                    :key="suggestion.name"
+                    type="button"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm"
+                    :class="suggestion.kind === 'unchecked'
+                        ? 'cursor-default text-muted-foreground/50'
+                        : 'text-foreground transition-colors active:bg-muted'"
+                    @mousedown.prevent="selectSuggestion(suggestion)"
                 >
-                    <button
-                        v-for="suggestion in filteredSuggestions"
-                        :key="suggestion.name"
-                        type="button"
-                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm"
-                        :class="suggestion.kind === 'unchecked'
-                            ? 'cursor-default text-muted-foreground/50'
-                            : 'text-foreground transition-colors active:bg-muted'"
-                        @mousedown.prevent="selectSuggestion(suggestion)"
+                    <span class="flex-1">{{ suggestion.name }}</span>
+                    <span
+                        v-if="suggestion.kind === 'unchecked'"
+                        class="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
                     >
-                        <span class="flex-1">{{ suggestion.name }}</span>
-                        <span
-                            v-if="suggestion.kind === 'unchecked'"
-                            class="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                        >
-                            déjà listé
-                        </span>
-                    </button>
-                </div>
+                        déjà listé
+                    </span>
+                </button>
             </div>
 
             <!-- Catégorie -->

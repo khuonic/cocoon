@@ -5,7 +5,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Copy } from 'lucide-vue-next';
 import type { ShoppingList } from '@/types/shopping';
 import { create, show } from '@/routes/shopping-lists';
@@ -64,19 +63,13 @@ function handleDuplicate(list: ShoppingList): void {
                     </div>
 
                     <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
-                            <p class="truncate text-base font-medium text-foreground">{{ list.name }}</p>
-                            <Badge v-if="list.is_template" variant="secondary" class="shrink-0 text-xs">
-                                Modèle
-                            </Badge>
-                        </div>
+                        <p class="truncate text-base font-medium text-foreground">{{ list.name }}</p>
                         <p class="text-sm text-muted-foreground">
                             {{ list.checked_items_count }}/{{ list.items_count }} cochés
                         </p>
                     </div>
 
                     <Button
-                        v-if="list.is_template"
                         variant="ghost"
                         size="icon"
                         class="shrink-0"
