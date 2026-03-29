@@ -17,6 +17,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.9",
+        "league/flysystem-aws-s3-v3": "*",
         "nativephp/mobile": "~3.1.0",
         "nativephp/mobile-biometrics": "^1.0",
         "nativephp/mobile-camera": "^1.0",

@@ -51,8 +51,6 @@ APP_DEBUG=false
 
 # DB_* fournis automatiquement par Cloud (Postgres)
 DB_CONNECTION=pgsql
-
-SANCTUM_STATELESS_DOMAINS=*
 ```
 
 > `APP_KEY` doit être une clé distincte de celle du `.env` local.
@@ -70,6 +68,7 @@ Une fois déployé, lancer les migrations depuis le dashboard Cloud → **Artisa
 migrate --force
 db:seed --class=ExpenseCategorySeeder --force
 db:seed --class=JokeSeeder --force
+db:seed --class=ShoppingListSeeder --force
 ```
 
 ### 2d. Créer les comptes utilisateurs sur Cloud
