@@ -8,7 +8,6 @@ use App\Models\ExpenseCategory;
 use App\Models\User;
 use Database\Seeders\ExpenseCategorySeeder;
 use Database\Seeders\JokeSeeder;
-use Database\Seeders\ShoppingListSeeder;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -58,7 +57,6 @@ class SetupController extends Controller
             app()->make(Kernel::class);
             (new ExpenseCategorySeeder)->run();
             (new JokeSeeder)->run();
-            (new ShoppingListSeeder)->run();
         }
 
         Auth::login($currentUser);
