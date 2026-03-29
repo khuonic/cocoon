@@ -30,13 +30,18 @@ class LoginResponse implements LoginResponseContract
             return;
         }
 
-        $response = Http::timeout(5)->post("{$syncApiUrl}/api/login", [
-            'email' => $email,
-            'password' => $password,
-        ]);
+        try {
+            $response = Http::timeout(10)->acceptJson()->post("{$syncApiUrl}/api/login", [
+                'email' => $email,
+                'password' => $password,
+                'device_name' => 'cocoon-mobile',
+            ]);
 
-        if ($response->ok() && $response->json('token')) {
-            session()->flash('sync_token', $response->json('token'));
+            if ($response->ok() && $response->json('token')) {
+                session()->flash('sync_token', $response->json('token'));
+            }
+        } catch (\Exception $e) {
+            // Sync token non critique — la sync s'activera au prochain login
         }
     }
 }

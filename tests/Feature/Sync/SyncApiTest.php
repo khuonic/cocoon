@@ -174,7 +174,7 @@ it('pulls changes since a timestamp', function () {
 
     $note = Note::factory()->create(['created_by' => $this->user->id]);
 
-    $response = $this->getJson('/api/sync/pull?since=' . urlencode($since->toIso8601String()));
+    $response = $this->getJson('/api/sync/pull?since='.urlencode($since->toIso8601String()));
 
     $response->assertSuccessful()
         ->assertJsonStructure(['changes', 'server_time']);
@@ -198,7 +198,7 @@ it('pulls deleted records from sync log', function () {
         'payload' => null,
     ]);
 
-    $response = $this->getJson('/api/sync/pull?since=' . urlencode($since->toIso8601String()));
+    $response = $this->getJson('/api/sync/pull?since='.urlencode($since->toIso8601String()));
 
     $deletedChanges = collect($response->json('changes'))->where('action', 'deleted');
 
@@ -255,6 +255,86 @@ it('handles full sync with no client changes', function () {
         ->assertJsonPath('rejected', 0);
 
     expect($response->json('changes'))->toHaveCount(1);
+});
+
+it('rejects unauthenticated requests to pending', function () {
+    $this->getJson('/api/sync/pending')->assertUnauthorized();
+});
+
+it('rejects unauthenticated requests to acknowledge', function () {
+    $this->postJson('/api/sync/acknowledge', ['ids' => []])->assertUnauthorized();
+});
+
+it('returns pending changes', function () {
+    Sanctum::actingAs($this->user);
+
+    $note = Note::factory()->create(['created_by' => $this->user->id]);
+    SyncLog::query()->delete();
+
+    SyncLog::create([
+        'syncable_type' => Note::class,
+        'syncable_uuid' => $note->uuid,
+        'action' => 'created',
+        'payload' => $note->toArray(),
+    ]);
+
+    $response = $this->getJson('/api/sync/pending');
+
+    $response->assertSuccessful()
+        ->assertJsonStructure(['changes', 'ids']);
+
+    expect($response->json('changes'))->toHaveCount(1);
+    expect($response->json('changes.0.type'))->toBe('notes');
+    expect($response->json('changes.0.uuid'))->toBe((string) $note->uuid);
+    expect($response->json('ids'))->toHaveCount(1);
+});
+
+it('returns empty pending when all synced', function () {
+    Sanctum::actingAs($this->user);
+
+    $note = Note::factory()->create(['created_by' => $this->user->id]);
+    SyncLog::query()->delete();
+
+    SyncLog::create([
+        'syncable_type' => Note::class,
+        'syncable_uuid' => $note->uuid,
+        'action' => 'created',
+        'payload' => $note->toArray(),
+        'synced_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/sync/pending');
+
+    $response->assertSuccessful();
+    expect($response->json('changes'))->toHaveCount(0);
+    expect($response->json('ids'))->toHaveCount(0);
+});
+
+it('acknowledges pending changes', function () {
+    Sanctum::actingAs($this->user);
+
+    $note = Note::factory()->create(['created_by' => $this->user->id]);
+
+    $log = SyncLog::create([
+        'syncable_type' => Note::class,
+        'syncable_uuid' => $note->uuid,
+        'action' => 'created',
+        'payload' => $note->toArray(),
+    ]);
+
+    $this->assertNull($log->synced_at);
+
+    $this->postJson('/api/sync/acknowledge', ['ids' => [$log->id]])
+        ->assertSuccessful()
+        ->assertJsonPath('ok', true);
+
+    $this->assertNotNull($log->fresh()->synced_at);
+});
+
+it('validates acknowledge payload', function () {
+    Sanctum::actingAs($this->user);
+
+    $this->postJson('/api/sync/acknowledge', [])->assertUnprocessable();
 });
 
 it('pushes multiple changes in one request', function () {

@@ -14,6 +14,8 @@ Route::middleware(['auth:sanctum', RestrictToHousehold::class])->group(function 
     Route::post('sync/push', [SyncController::class, 'push']);
     Route::get('sync/pull', [SyncController::class, 'pull']);
     Route::post('sync/full', [SyncController::class, 'full']);
+    Route::get('sync/pending', [SyncController::class, 'pending']);
+    Route::post('sync/acknowledge', [SyncController::class, 'acknowledge']);
 
     Route::get('app/version', [AppVersionController::class, 'check']);
 });

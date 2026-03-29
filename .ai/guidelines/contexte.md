@@ -48,7 +48,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Joke | Blague du jour (seeder 50 blagues) |
 | Birthday | Anniversaire (nom, date, âge calculé, reminder_days_before) |
 | CalendarEvent | Événement calendrier (titre, catégorie colorée, dates, lieu, rappel en minutes, personnel) |
-| SyncLog | Journal de sync (queue locale, pending/synced) |
+| SyncLog | Journal de sync (queue locale, pending/synced — `synced_at` null = non encore pushé au Cloud) |
 
 ### Enums (app/Enums/)
 
@@ -57,12 +57,12 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand
 - `NoteColor` : Default, Yellow, Green, Blue, Pink, Purple
 - `EventCategory` : Conges, Pro, Loisir, Rdv (avec label() et color() hex)
-- `SyncAction` : actions de sync
+- `SyncAction` : actions de sync (Created, Updated, Deleted)
 
 ### Services (app/Services/)
 
 - `BalanceCalculator` : calcul de balance budget entre les 2 utilisateurs
-- `SyncService` : logique sync push/pull/full (last-write-wins, gestion recettes imbriquées)
+- `SyncService` : logique sync push/pull/full/pending/acknowledge (last-write-wins, gestion recettes imbriquées)
 - `ReminderService` : schedule/cancel rappels pour CalendarEvent et Birthday via LocalNotification facade
 
 ### Plugin local notifications (packages/cocoon/local-notifications)
@@ -87,7 +87,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MoreController` : page "Plus"
 - `Settings/ProfileController`, `Settings/PasswordController`
 - `Auth/SetupController`, `Auth/BiometricController`, `Auth/ApiLoginController`
-- `Api/SyncController` : push/pull/full
+- `Api/SyncController` : push / pull / full / pending / acknowledge
 - `Api/AppVersionController` : check (version + signed URL) + download (stream APK)
 
 ### Navigation (BottomNav)
@@ -120,6 +120,52 @@ Accueil | Budget | Calendrier | Notes | Plus
 - Frontend : drag natif HTML5 (`draggable`, `@dragstart/enter/end`) avec handle GripVertical
 - Réordonnancement local immédiat pour feedback visuel + sauvegarde serveur
 
+## Architecture de sync
+
+### Deux tokens distincts
+
+| Token | Clé localStorage | Usage |
+|-------|-----------------|-------|
+| `cocoon_auth_token` | local Sanctum | Authentifie les appels API **locaux** (`/api/sync/pending`, `/api/sync/acknowledge`) |
+| `cocoon_sync_token` | Cloud Sanctum | Authentifie les appels API **Cloud** (`push`, `pull`, `full`, `app/version`) |
+
+- `cocoon_auth_token` est flashé en session (`api_token`) au login et au setup, puis sauvé dans localStorage
+- `cocoon_sync_token` est obtenu via `POST {syncApiUrl}/api/login` au login/setup, puis sauvé dans localStorage
+
+### Flux push/pull
+
+```
+[Syncable trait] → SyncLog (synced_at = null)
+                         ↓
+[sync-client.ts::sync()]
+  ├─ fullSync() : GET /api/sync/pending (local) → POST {cloud}/api/sync/full → POST /api/sync/acknowledge (local)
+  └─ pushLocalChanges() + pull() : GET /api/sync/pending → POST {cloud}/api/sync/push → acknowledge → GET {cloud}/api/sync/pull
+```
+
+- `isSyncing = true` sur le modèle → skip `queueSync()` pour éviter les boucles infinies
+- Last-write-wins via `updated_at` (le plus récent gagne)
+- Recipes : ingrédients et étapes inclus dans le payload (delete+recreate à chaque sync)
+
+### Routes API locales (auth:sanctum local)
+
+- `GET /api/sync/pending` → retourne `{ changes: SyncChange[], ids: int[] }` (SyncLog non synced)
+- `POST /api/sync/acknowledge` → marque les SyncLog `ids` comme synced (`synced_at = now()`)
+
+### Routes API Cloud (auth:sanctum Cloud)
+
+- `POST /api/sync/push` → applique des changements entrants
+- `GET /api/sync/pull?since=` → retourne les changements depuis un timestamp
+- `POST /api/sync/full` → push + retourne toutes les données Cloud
+- `GET /api/app/version` → vérifie si une mise à jour APK est disponible
+
+## Déploiement production
+
+- **Backend Cloud** : Laravel Cloud (Serverless, Postgres, bucket S3 privé)
+- **APK** : signé avec keystore dans `credentials/`, distribué via `app:publish-release`
+- **Auto-update** : `latest.json` sur S3 consulté au lancement, `UpdateDialog` propose le téléchargement
+- **Build commands Cloud** : `composer config http-basic` + `composer install` sans `--prefer-dist` ni `npm run build`
+- **Windows SSL** : `AWS_VERIFY_SSL=false` dans `.env` local + `'http' => ['verify' => env('AWS_VERIFY_SSL', true)]` dans `config/filesystems.php` disk s3
+
 ## Phases terminées
 
 - **Phase 1-4** : Setup, auth, layout, settings
@@ -145,7 +191,8 @@ Accueil | Budget | Calendrier | Notes | Plus
   - Dashboard : salutation personnalisée (heure), mot doux partenaire en bannière, FAB cœur pour édition
   - Global : DialogContent top-4 par défaut, dismiss clavier au tap, boutons redesign (rounded-lg, font-semibold, h-10)
   - Login : logo agrandi (size-36), suppression texte superflu
-- **225 tests passants**
+- **Mise en prod** : Laravel Cloud déployé, APK signé, push sync implémenté (SyncLog → Cloud), biométrie opérationnelle
+- **231 tests passants**
 
 ## Conventions de code
 
@@ -156,9 +203,11 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Images** : `Storage::disk('public')`, symlink via `php artisan storage:link`, URL `/storage/{path}`
 - **mobilePut / mobilePatchForm** : workaround Android WebView pour PUT/PATCH (POST + _method spoofing) — utiliser ces helpers, jamais `form.put()` ou `form.patch()` directement
 - **$fillable** : toujours ajouter les nouvelles colonnes dans `$fillable` du modèle sinon silently ignored
+- **API routes sans statefulApi()** : `bootstrap/app.php` n'utilise pas `$middleware->statefulApi()` — les routes API sont purement Bearer token (pas de CSRF)
 
 ## Fichiers de référence
 
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth
 - `packages/cocoon/local-notifications/` : plugin rappels Android
+- `MISE_EN_PROD.md` : guide complet déploiement Laravel Cloud + build APK

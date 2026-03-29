@@ -278,6 +278,52 @@ class SyncService
     }
 
     /**
+     * Get pending local changes to push to the Cloud.
+     *
+     * @return array{changes: array<int, array{type: string, uuid: string, action: string, data: ?array, updated_at: string}>, ids: int[]}
+     */
+    public function getPendingChanges(): array
+    {
+        $logs = SyncLog::pending()->orderBy('id')->limit(100)->get();
+
+        $changes = [];
+        $ids = [];
+
+        foreach ($logs as $log) {
+            $type = $this->getTypeFromMorphClass($log->syncable_type);
+
+            if (! $type) {
+                continue;
+            }
+
+            $changes[] = [
+                'type' => $type,
+                'uuid' => $log->syncable_uuid,
+                'action' => $log->action->value,
+                'data' => $log->payload,
+                'updated_at' => $log->payload['updated_at'] ?? $log->created_at->toIso8601String(),
+            ];
+            $ids[] = $log->id;
+        }
+
+        return ['changes' => $changes, 'ids' => $ids];
+    }
+
+    /**
+     * Mark local sync log entries as synced after a successful push to Cloud.
+     *
+     * @param  int[]  $ids
+     */
+    public function acknowledgePending(array $ids): void
+    {
+        if (empty($ids)) {
+            return;
+        }
+
+        SyncLog::whereIn('id', $ids)->update(['synced_at' => now()]);
+    }
+
+    /**
      * Get the sync type string from a morph class.
      */
     private function getTypeFromMorphClass(string $morphClass): ?string

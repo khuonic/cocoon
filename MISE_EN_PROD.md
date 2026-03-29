@@ -17,6 +17,13 @@ La synchronisation entre les deux appareils passe par une **API déployée sur L
 > Le backend Cloud fait tourner la **même codebase** Laravel — seul `DB_CONNECTION=pgsql`
 > change par rapport au développement local en SQLite.
 
+**Flux de sync complet :**
+1. Chaque modification locale est enregistrée dans `SyncLog` (via le trait `Syncable`)
+2. Au lancement, `AppLayout` appelle `sync()` depuis `sync-client.ts`
+3. Si c'est la première sync : `fullSync()` — envoie les pending locaux + reçoit tout le Cloud
+4. Sinon : `pushLocalChanges()` pousse les pending locaux, puis `pull()` récupère les nouveautés
+5. Les entrées `SyncLog` sont marquées `synced_at` après un push réussi
+
 ---
 
 ## 1. Prérequis
@@ -54,11 +61,26 @@ DB_CONNECTION=pgsql
 ```
 
 > `APP_KEY` doit être une clé distincte de celle du `.env` local.
-> Générer : `php artisan key:generate --show`
 > `SESSION_DRIVER` n'est pas nécessaire — le Cloud ne sert que des endpoints
 > API stateless (Sanctum Bearer), jamais de sessions.
 
-### 2c. Premier déploiement
+### 2c. Build commands dans Cloud
+
+Dans **Settings → Build Commands**, remplacer les commandes par défaut par :
+
+```
+composer config http-basic.plugins.nativephp.com kevininc155@gmail.com TOKEN_NATIVEPHP
+composer install --no-dev --no-interaction --optimize-autoloader
+php artisan config:cache
+php artisan route:cache
+php artisan event:cache
+```
+
+> Le `TOKEN_NATIVEPHP` est le token d'accès NativePHP (voir `.env` local ou dashboard NativePHP).
+> `npm run build` n'est **pas** nécessaire sur Cloud — le serveur Cloud ne sert que l'API (pas de Vite manifest).
+> `--prefer-dist` doit être **absent** pour que le path package `cocoon/local-notifications` soit correctement résolu.
+
+### 2d. Premier déploiement
 
 Pousser sur la branche configurée (ou déclencher manuellement depuis le dashboard Cloud).
 
@@ -71,7 +93,7 @@ db:seed --class=JokeSeeder --force
 db:seed --class=ShoppingListSeeder --force
 ```
 
-### 2d. Créer les comptes utilisateurs sur Cloud
+### 2e. Créer les comptes utilisateurs sur Cloud
 
 Depuis **Dashboard Cloud → Tinker** (ou terminal Artisan) :
 
@@ -91,10 +113,13 @@ Depuis **Dashboard Cloud → Tinker** (ou terminal Artisan) :
 
 > Utiliser le **même mot de passe** que celui qui sera saisi lors du setup sur les téléphones.
 > L'app appelle automatiquement `POST {syncApiUrl}/api/login` au premier setup/login
-> pour obtenir le token cloud et le stocker dans le Secure Storage Android.
+> pour obtenir le token Cloud et le stocker en localStorage (`cocoon_sync_token`).
 > Ce token est ensuite réutilisé à chaque session (y compris les logins biométriques).
 
-### 2e. Récupérer l'URL du projet
+> **Après avoir créé les users**, relancer le seeder ShoppingList pour qu'il puisse s'associer aux users :
+> `db:seed --class=ShoppingListSeeder --force`
+
+### 2f. Récupérer l'URL du projet
 
 L'URL ressemble à `https://cocoon-xxxx.laravel.cloud`.
 C'est la valeur à mettre dans `SYNC_API_URL` côté APK (étape 3a).
@@ -114,7 +139,7 @@ NATIVEPHP_APP_ID=com.cocoon.app
 NATIVEPHP_APP_VERSION="1.0.0"
 NATIVEPHP_APP_VERSION_CODE=1   # entier, incrémenter à chaque release
 
-SYNC_API_URL=https://cocoon-xxxx.laravel.cloud   # URL récupérée à l'étape 2e
+SYNC_API_URL=https://cocoon-xxxx.laravel.cloud   # URL récupérée à l'étape 2f
 ```
 
 ### 3b. Générer les credentials de signature (une seule fois)
@@ -125,7 +150,9 @@ php artisan native:credentials android
 
 Cette commande génère un keystore et met à jour `.env` avec les credentials de signature.
 
-> **Important** : conserver le keystore généré — il est nécessaire pour toutes les mises à jour futures. Sans lui, Android refusera d'installer une mise à jour par-dessus l'app existante.
+> **Important** : conserver le keystore généré — il est nécessaire pour toutes les mises à jour futures.
+> Sans lui, Android refusera d'installer une mise à jour par-dessus l'app existante.
+> Le keystore se trouve dans `credentials/` à la racine du projet.
 
 ### 3c. Builder les assets frontend
 
@@ -137,13 +164,14 @@ npm run build -- --mode=android
 
 ```bash
 php artisan native:package android \
-    --keystore=/chemin/vers/keystore \
+    --keystore=C:\Users\kevin\Herd\cocoon\credentials\app-release-key.jks \
     --keystore-password=PASSWORD \
     --key-alias=ALIAS \
     --key-password=KEY_PASSWORD
 ```
 
-> Les valeurs `--keystore`, `--keystore-password`, `--key-alias`, `--key-password` sont celles générées à l'étape 3b et ajoutées dans `.env`.
+> Les valeurs `--keystore-password`, `--key-alias`, `--key-password` sont dans `.env`
+> sous les clés `NATIVEPHP_KEYSTORE_*` générées à l'étape 3b.
 
 L'APK se trouve dans :
 ```
@@ -165,12 +193,7 @@ AWS_DEFAULT_REGION=...
 AWS_BUCKET=...
 AWS_ENDPOINT=...
 AWS_USE_PATH_STYLE_ENDPOINT=true
-AWS_VERIFY_SSL=false         # nécessaire sur Windows (SSL cURL)
-```
-
-Et dans `config/filesystems.php`, disk `s3`, ajouter :
-```php
-'http' => ['verify' => env('AWS_VERIFY_SSL', true)],
+AWS_VERIFY_SSL=false         # nécessaire sur Windows (SSL cURL error 60 avec R2)
 ```
 
 **Lancer la commande :**
@@ -184,10 +207,12 @@ php artisan app:publish-release \
 **Après publication, remettre `.env` local :**
 ```env
 FILESYSTEM_DISK=local
-# Retirer AWS_VERIFY_SSL
+# Retirer les variables AWS_*
 ```
 
-> Le bucket Cloud (`FILESYSTEM_DISK=private` côté Cloud) et le disk `s3` local pointent vers le même bucket — c'est ce qui permet aux téléphones de télécharger l'APK via l'API Cloud.
+> Le bucket Cloud (`FILESYSTEM_DISK=private` côté Cloud) et le disk `s3` local pointent vers le même bucket.
+> `config/filesystems.php` → disk `s3` doit avoir `'http' => ['verify' => env('AWS_VERIFY_SSL', true)]`
+> pour que `AWS_VERIFY_SSL=false` soit respecté côté cURL.
 
 ---
 
@@ -205,14 +230,11 @@ FILESYSTEM_DISK=local
 adb install nativephp/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-Ou par transfert réseau :
-1. Copier l'APK sur le téléphone (partage réseau / cloud personnel)
-2. Ouvrir le fichier depuis le gestionnaire de fichiers
-3. Si bloqué : **Paramètres → Sécurité → Sources inconnues** → autoriser
+Si bloqué : **Paramètres → Sécurité → Sources inconnues** → autoriser
 
 ### Mises à jour suivantes — auto-update
 
-Une fois l'app installée, elle vérifie automatiquement les nouvelles versions.
+Une fois l'app installée, elle vérifie automatiquement les nouvelles versions au lancement.
 Il suffit de rebuilder et republier (voir étape 7).
 
 ---
@@ -224,8 +246,12 @@ Il suffit de rebuilder et republier (voir étape 7).
 Au tout premier lancement, l'app affiche l'écran `/setup` :
 
 1. Saisir l'**email** (`kevininc155@gmail.com` ou `lolavivant@hotmail.fr`)
-2. Saisir le **mot de passe** (le même que celui créé sur le Cloud à l'étape 2d)
+2. Saisir le **mot de passe** (le même que celui créé sur le Cloud à l'étape 2e)
 3. L'app crée le compte en base SQLite locale et ouvre le dashboard
+
+> Au setup, l'app appelle automatiquement `POST {syncApiUrl}/api/login` pour obtenir
+> le token Cloud (`cocoon_sync_token`) et le stocker en localStorage.
+> Elle crée aussi un token Sanctum local (`cocoon_auth_token`) pour authentifier les appels API locaux.
 
 ### 5b. Activer la biométrie
 
@@ -233,31 +259,33 @@ Dans **Paramètres** de l'app :
 - Activer l'authentification par empreinte/visage
 - Les credentials sont stockés dans le Secure Storage Android (Keystore)
 
+> La biométrie n'est disponible que si `cocoon_auth_token` est présent en localStorage
+> (flashé automatiquement au setup et au login email/mot de passe).
+
 ### 5c. Synchronisation
 
 La sync s'active automatiquement — aucune action manuelle :
 
-1. Au setup, l'app appelle `POST {syncApiUrl}/api/login` avec les credentials saisis
-2. Le token cloud obtenu est stocké dans le Secure Storage Android (`cocoon_sync_token`)
-3. À chaque lancement (y compris biométrique), AppLayout relit ce token et active la sync
-
-> Le mot de passe saisi au setup doit correspondre à celui créé sur le Cloud (étape 2d).
+1. Au setup/login, le token Cloud est stocké dans `cocoon_sync_token`
+2. À chaque lancement, `AppLayout` récupère ce token et configure `sync-client`
+3. Les modifications locales (via `Syncable` → `SyncLog`) sont poussées au Cloud
+4. Les nouveautés Cloud sont récupérées et appliquées localement (last-write-wins)
 
 ---
 
 ## 6. Checklist avant de donner l'app à Lola
 
-- [ ] Backend Cloud déployé et accessible (tester `https://cocoon-xxxx.laravel.cloud/api/user` avec le token)
+- [ ] Backend Cloud déployé et accessible (tester `https://cocoon-xxxx.laravel.cloud/up`)
 - [ ] Migrations Cloud OK
-- [ ] Seeders ExpenseCategory + Joke lancés sur Cloud
+- [ ] Seeders ExpenseCategory + Joke + ShoppingList lancés sur Cloud
+- [ ] Users Kevin + Lola créés sur Cloud
 - [ ] `.env` local mis à jour avec `SYNC_API_URL`
 - [ ] APK buildé en production (`NATIVEPHP_APP_VERSION="1.0.0"`, `VERSION_CODE=1`)
 - [ ] APK testé sur le téléphone de Kevin (setup + biométrie + sync)
+- [ ] Sync testée (créer une dépense → sync → visible sur Cloud)
 - [ ] APK installé sur le téléphone de Lola
 - [ ] Compte Lola créé via `/setup` sur son téléphone
-- [ ] Sync configurée sur les deux appareils
-- [ ] Sync testée dans les deux sens (créer une dépense sur Kevin → sync → visible sur Lola)
-- [ ] Notifications testées (créer un anniversaire → rappel reçu)
+- [ ] Sync testée dans les deux sens (Kevin → Cloud → Lola et inversement)
 
 ---
 
@@ -265,7 +293,7 @@ La sync s'active automatiquement — aucune action manuelle :
 
 ### APP_ID différent pour coexistence debug/prod
 
-Pour avoir l'app debug et l'app prod sur le même téléphone simultanément, utiliser un `APP_ID` différent en développement :
+Pour avoir l'app debug et l'app prod sur le même téléphone simultanément :
 
 **`.env` local (dev) :**
 ```env
@@ -279,13 +307,12 @@ NATIVEPHP_APP_ID=com.cocoon.app
 APP_NAME="Cocoon"
 ```
 
-Android considère les deux apps comme distinctes → installation sans conflit, pas besoin de désinstaller entre les deux.
+Android considère les deux apps comme distinctes → installation sans conflit.
 
 ### Idées pour distinguer visuellement debug vs prod
 
 - **Header rouge** : conditionner la couleur du header sur `APP_ENV=local` via une prop Inertia
-- **Icône différente** : remplacer `ic_launcher` dans `nativephp/android/app/src/debug/res/` (dossier debug Android Studio)
-- **Splash screen différent** : idem, variante dans le dossier debug
+- **Icône différente** : remplacer `ic_launcher` dans `nativephp/android/app/src/debug/res/`
 
 ---
 
@@ -299,55 +326,43 @@ php artisan test --compact
 #    NATIVEPHP_APP_VERSION="1.1.0"
 #    NATIVEPHP_APP_VERSION_CODE=2    ← toujours un entier qui monte
 
-# 3. Builder
+# 3. Builder les assets
 npm run build -- --mode=android
+
+# 4. Packager l'APK signé
 php artisan native:package android \
-    --keystore=/chemin/vers/keystore \
+    --keystore=C:\Users\kevin\Herd\cocoon\credentials\app-release-key.jks \
     --keystore-password=PASSWORD \
     --key-alias=ALIAS \
     --key-password=KEY_PASSWORD
 
-# 4. Publier (met à jour latest.json sur Cloud via storage)
+# 5. Configurer .env local avec les variables AWS_ (voir étape 3e)
+
+# 6. Publier (met à jour latest.json sur Cloud via storage)
 php artisan app:publish-release \
     nativephp/android/app/build/outputs/apk/release/app-release.apk \
     --changelog="Ce qui a changé"
 
-# 5. Pousser le code sur GitHub → Cloud redéploie automatiquement
+# 7. Remettre FILESYSTEM_DISK=local et retirer les AWS_*
+
+# 8. Pousser le code sur GitHub → Cloud redéploie automatiquement
 
 # Les deux téléphones verront la mise à jour au prochain lancement
 ```
 
 ---
 
-## 8. Dépannage
+## 9. Dépannage
 
 | Problème | Solution |
 |----------|----------|
 | App bloquée sur `/setup` | L'email n'est pas dans la whitelist `config/cocon.php` |
-| Sync échoue (401) | Token cloud invalide — se déconnecter et se reconnecter avec email+password pour le renouveler |
+| Sync échoue (401) | Token Cloud invalide — se déconnecter et se reconnecter avec email+password pour le renouveler |
 | Sync échoue (réseau) | Vérifier `SYNC_API_URL` dans les paramètres de l'app |
 | APK refusé à l'installation | Activer "Sources inconnues" dans Paramètres Android |
-| Biométrie inactive | Désactiver puis réactiver dans les Paramètres de l'app |
+| Biométrie inactive | Se déconnecter et se reconnecter avec email+password (génère un nouveau `cocoon_auth_token`) |
 | Auto-update ne détecte pas la MAJ | Vérifier que `NATIVEPHP_APP_VERSION_CODE` a bien été incrémenté |
-| `latest.json` introuvable | Vérifier que `storage:link` est fait et que le volume Cloud est configuré |
-
-
-remplacement build commands : 
-from
-
-```
-composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
-npm ci --audit false
-npm run build
-```
-
-to
-```
-composer config http-basic.plugins.nativephp.com kevininc155@gmail.com 6e68dc831d3729cc1ffe961ffefec2cfa53494e0d576d5b770acc7fb88cde25a                                                  
-composer install --no-dev --no-interaction --optimize-autoloader                                                                                                                         
-php artisan config:cache                                                                                                                                                                 
-php artisan route:cache                                                                                                                                                                  
-php artisan event:cache
-
-```
+| `latest.json` introuvable | Vérifier que le volume Cloud est configuré et que `app:publish-release` a réussi |
+| Erreur SSL cURL lors de publish-release | Ajouter `AWS_VERIFY_SSL=false` dans `.env` local + vérifier `config/filesystems.php` disk s3 |
+| Build Cloud échoue (path package) | Vérifier que `--prefer-dist` est absent des build commands + que `composer config http-basic` est présent |
+| Setup échoue avec 500 | Cold start Cloud trop long — réessayer ; le `flashSyncToken` a un timeout de 10s et est non-bloquant |

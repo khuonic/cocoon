@@ -141,7 +141,7 @@ class ShoppingListSeeder extends Seeder
                 $list->items()->create([
                     'name' => $name,
                     'category' => $categoryValue,
-                    'is_checked' => false,
+                    'is_checked' => true,
                     'added_by' => $user->id,
                     'uuid' => Str::uuid(),
                 ]);

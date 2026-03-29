@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/vue3';
+import { getToken } from './biometric-auth';
 
 type SyncChange = {
     type: string;
@@ -21,6 +22,11 @@ type PullResponse = {
 
 type FullResponse = PushResponse & {
     changes: SyncChange[];
+};
+
+type PendingResponse = {
+    changes: SyncChange[];
+    ids: number[];
 };
 
 let syncApiUrl = '';
@@ -73,6 +79,36 @@ async function fetchApi<T>(
     }
 }
 
+async function fetchLocal<T>(
+    path: string,
+    options: RequestInit = {},
+): Promise<T | null> {
+    const token = getToken();
+    if (!token) return null;
+
+    try {
+        const response = await fetch(path, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                Authorization: `Bearer ${token}`,
+                ...(options.headers ?? {}),
+            },
+        });
+
+        if (!response.ok) {
+            console.warn(`[Sync] Local ${path} failed:`, response.status);
+            return null;
+        }
+
+        return (await response.json()) as T;
+    } catch (error) {
+        console.warn('[Sync] Local network error:', error);
+        return null;
+    }
+}
+
 export async function push(changes: SyncChange[]): Promise<PushResponse | null> {
     if (changes.length === 0) return null;
 
@@ -102,14 +138,25 @@ export async function pull(): Promise<PullResponse | null> {
 }
 
 export async function fullSync(): Promise<FullResponse | null> {
+    const pending = await fetchLocal<PendingResponse>('/api/sync/pending');
+    const pendingChanges = pending?.changes ?? [];
+    const pendingIds = pending?.ids ?? [];
+
     const result = await fetchApi<FullResponse>('/api/sync/full', {
         method: 'POST',
-        body: JSON.stringify({ changes: [] }),
+        body: JSON.stringify({ changes: pendingChanges }),
     });
 
     if (result) {
         lastSyncedAt = result.server_time;
         localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
+
+        if (pendingIds.length > 0) {
+            await fetchLocal('/api/sync/acknowledge', {
+                method: 'POST',
+                body: JSON.stringify({ ids: pendingIds }),
+            });
+        }
 
         if (result.changes.length > 0) {
             router.reload();
@@ -117,6 +164,21 @@ export async function fullSync(): Promise<FullResponse | null> {
     }
 
     return result;
+}
+
+async function pushLocalChanges(): Promise<void> {
+    if (!isSyncEnabled()) return;
+
+    const pending = await fetchLocal<PendingResponse>('/api/sync/pending');
+    if (!pending || pending.changes.length === 0) return;
+
+    const result = await push(pending.changes);
+    if (result !== null) {
+        await fetchLocal('/api/sync/acknowledge', {
+            method: 'POST',
+            body: JSON.stringify({ ids: pending.ids }),
+        });
+    }
 }
 
 export async function sync(): Promise<void> {
@@ -128,6 +190,7 @@ export async function sync(): Promise<void> {
         if (!lastSyncedAt) {
             await fullSync();
         } else {
+            await pushLocalChanges();
             await pull();
         }
     } finally {

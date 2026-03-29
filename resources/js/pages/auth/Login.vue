@@ -27,7 +27,7 @@ onMounted(() => {
         <Head title="Connexion" />
 
         <div class="mb-8 flex flex-col items-center">
-            <img src="/icon.png" alt="Cocoon" class="size-36" />
+            <img src="/icon_login.png" alt="Cocoon" class="size-36" />
         </div>
 
         <div

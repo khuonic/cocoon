@@ -74,6 +74,29 @@ class SyncController extends Controller
     }
 
     /**
+     * Return pending local changes queued for Cloud push.
+     */
+    public function pending(): JsonResponse
+    {
+        return response()->json($this->syncService->getPendingChanges());
+    }
+
+    /**
+     * Mark pending local changes as synced after a successful Cloud push.
+     */
+    public function acknowledge(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer'],
+        ]);
+
+        $this->syncService->acknowledgePending($request->input('ids'));
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * Full sync: receive all client data + return all server data.
      */
     public function full(Request $request): JsonResponse

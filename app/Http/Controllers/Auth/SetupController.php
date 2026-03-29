@@ -62,6 +62,9 @@ class SetupController extends Controller
 
         Auth::login($currentUser);
 
+        $token = $currentUser->createToken('mobile')->plainTextToken;
+        session()->flash('api_token', $token);
+
         $this->flashSyncToken($validated['email'], $validated['password']);
 
         return redirect('/');

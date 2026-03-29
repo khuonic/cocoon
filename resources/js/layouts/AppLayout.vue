@@ -57,7 +57,7 @@ onMounted(async () => {
 
     // Vérifier les mises à jour APK
     if (syncApiUrl && isNativePHP()) {
-        const storedToken = getToken();
+        const storedToken = getSyncToken();
         if (storedToken) {
             const currentVersionCode = page.props.appVersionCode ?? 0;
             const result = await checkForUpdate(syncApiUrl, currentVersionCode, storedToken);
