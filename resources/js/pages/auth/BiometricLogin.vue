@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { authenticate } from '@/services/biometric-auth';
 import { Fingerprint } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { verify } from '@/routes/biometric';
+
+const page = usePage<{ errors?: { biometric?: string } }>();
+const serverError = computed(() => page.props.errors?.biometric ?? '');
 
 const error = ref('');
 const attempting = ref(false);
@@ -47,8 +50,8 @@ onMounted(() => {
                 <Fingerprint class="h-12 w-12" />
             </button>
 
-            <p v-if="error" class="text-center text-sm text-destructive">
-                {{ error }}
+            <p v-if="error || serverError" class="text-center text-sm text-destructive">
+                {{ error || serverError }}
             </p>
 
             <Button variant="ghost" as-child class="text-muted-foreground">

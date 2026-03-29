@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
+use Native\Mobile\Facades\SecureStorage;
 
 class SetupController extends Controller
 {
@@ -63,6 +64,7 @@ class SetupController extends Controller
         Auth::login($currentUser);
 
         $token = $currentUser->createToken('mobile')->plainTextToken;
+        SecureStorage::set('cocoon_auth_token', $token);
         session()->flash('api_token', $token);
 
         $this->flashSyncToken($validated['email'], $validated['password']);
