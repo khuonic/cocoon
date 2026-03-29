@@ -21,6 +21,7 @@
         "nativephp/mobile": "~3.1.0",
         "nativephp/mobile-biometrics": "^1.0",
         "nativephp/mobile-camera": "^1.0",
+        "nativephp/mobile-secure-storage": "*",
         "spatie/laravel-activitylog": "^4.12"
     },
     "require-dev": {

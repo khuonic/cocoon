@@ -2,13 +2,21 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { authenticate } from '@/services/biometric-auth';
+import { authenticate, clearCredentialsFlag } from '@/services/biometric-auth';
 import { Fingerprint } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { verify } from '@/routes/biometric';
 
 const page = usePage<{ errors?: { biometric?: string } }>();
 const serverError = computed(() => page.props.errors?.biometric ?? '');
+
+// Si le serveur indique que la session est invalide, effacer le flag biométrie
+// pour que Login.vue ne redirige plus vers cette page
+watch(serverError, (msg) => {
+    if (msg) {
+        clearCredentialsFlag();
+    }
+});
 
 const error = ref('');
 const attempting = ref(false);

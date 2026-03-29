@@ -37,7 +37,7 @@ class NativeServiceProvider extends ServiceProvider
             \Cocoon\LocalNotifications\LocalNotificationsServiceProvider::class,
             \Native\Mobile\Providers\BiometricsServiceProvider::class,
             \Native\Mobile\Providers\CameraServiceProvider::class,
-
+            \Native\Mobile\Providers\SecureStorageServiceProvider::class,
         ];
     }
 }

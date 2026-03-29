@@ -42,13 +42,10 @@ onMounted(async () => {
     // Configurer le client de sync avec le token cloud persisté
     if (syncApiUrl) {
         const syncToken = flashedSyncToken ?? getSyncToken();
-        console.warn('[AppLayout] syncApiUrl=' + syncApiUrl + ', syncToken=' + (syncToken ? 'present' : 'missing'));
         if (syncToken) {
             configureSyncClient(syncApiUrl, syncToken);
         }
         sync();
-    } else {
-        console.warn('[AppLayout] syncApiUrl missing from props');
     }
 
     // Stocker le token local dans localStorage (pour update checker + flag biométrie)

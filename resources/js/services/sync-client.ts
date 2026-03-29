@@ -182,18 +182,9 @@ async function pushLocalChanges(): Promise<void> {
 }
 
 export async function sync(): Promise<void> {
-    if (isSyncing) {
-        console.warn('[Sync] Skipped: already syncing');
-        return;
-    }
-
-    if (!isSyncEnabled()) {
-        console.warn('[Sync] Skipped: not enabled (apiUrl=' + syncApiUrl + ', token=' + (authToken ? 'present' : 'missing') + ')');
-        return;
-    }
+    if (isSyncing || !isSyncEnabled()) return;
 
     isSyncing = true;
-    console.warn('[Sync] Starting sync, lastSyncedAt=' + lastSyncedAt);
 
     try {
         if (!lastSyncedAt) {
@@ -204,6 +195,5 @@ export async function sync(): Promise<void> {
         }
     } finally {
         isSyncing = false;
-        console.warn('[Sync] Done');
     }
 }
