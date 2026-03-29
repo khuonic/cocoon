@@ -75,9 +75,10 @@ class SetupController extends Controller
         }
 
         try {
-            $response = Http::timeout(10)->post("{$syncApiUrl}/api/login", [
+            $response = Http::timeout(10)->acceptJson()->post("{$syncApiUrl}/api/login", [
                 'email' => $email,
                 'password' => $password,
+                'device_name' => 'cocoon-mobile',
             ]);
 
             if ($response->ok() && $response->json('token')) {
