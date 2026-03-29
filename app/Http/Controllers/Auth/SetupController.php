@@ -7,6 +7,9 @@ use App\Http\Requests\Auth\SetupRequest;
 use App\Models\ExpenseCategory;
 use App\Models\User;
 use Database\Seeders\ExpenseCategorySeeder;
+use Database\Seeders\JokeSeeder;
+use Database\Seeders\ShoppingListSeeder;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -51,8 +54,10 @@ class SetupController extends Controller
         }
 
         if (ExpenseCategory::query()->doesntExist()) {
-            app()->make(\Illuminate\Contracts\Console\Kernel::class);
+            app()->make(Kernel::class);
             (new ExpenseCategorySeeder)->run();
+            (new JokeSeeder)->run();
+            (new ShoppingListSeeder)->run();
         }
 
         Auth::login($currentUser);
@@ -69,13 +74,17 @@ class SetupController extends Controller
             return;
         }
 
-        $response = Http::timeout(5)->post("{$syncApiUrl}/api/login", [
-            'email' => $email,
-            'password' => $password,
-        ]);
+        try {
+            $response = Http::timeout(10)->post("{$syncApiUrl}/api/login", [
+                'email' => $email,
+                'password' => $password,
+            ]);
 
-        if ($response->ok() && $response->json('token')) {
-            session()->flash('sync_token', $response->json('token'));
+            if ($response->ok() && $response->json('token')) {
+                session()->flash('sync_token', $response->json('token'));
+            }
+        } catch (\Exception $e) {
+            // Sync token non critique au setup — l'app se synchronisera au prochain lancement
         }
     }
 }

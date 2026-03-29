@@ -117,40 +117,77 @@ NATIVEPHP_APP_VERSION_CODE=1   # entier, incrémenter à chaque release
 SYNC_API_URL=https://cocoon-xxxx.laravel.cloud   # URL récupérée à l'étape 2e
 ```
 
-### 3b. Builder les assets frontend
+### 3b. Générer les credentials de signature (une seule fois)
 
 ```bash
-npm run build
+php artisan native:credentials android
 ```
 
-### 3c. Builder l'APK
+Cette commande génère un keystore et met à jour `.env` avec les credentials de signature.
+
+> **Important** : conserver le keystore généré — il est nécessaire pour toutes les mises à jour futures. Sans lui, Android refusera d'installer une mise à jour par-dessus l'app existante.
+
+### 3c. Builder les assets frontend
 
 ```bash
-php artisan native:build android
+npm run build -- --mode=android
 ```
+
+### 3d. Packager l'APK signé
+
+```bash
+php artisan native:package android \
+    --keystore=/chemin/vers/keystore \
+    --keystore-password=PASSWORD \
+    --key-alias=ALIAS \
+    --key-password=KEY_PASSWORD
+```
+
+> Les valeurs `--keystore`, `--keystore-password`, `--key-alias`, `--key-password` sont celles générées à l'étape 3b et ajoutées dans `.env`.
 
 L'APK se trouve dans :
 ```
-android/app/build/outputs/apk/debug/app-debug.apk
+nativephp/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-> Pour éviter le warning "application non signée" sur Android, on peut utiliser
-> `--release` avec un keystore, mais le debug APK fonctionne parfaitement en usage privé.
+### 3e. Publier la release (système d'auto-update)
 
-### 3d. Publier la release (système d'auto-update)
-
-Cette commande copie l'APK dans `storage/app/releases/` et génère `latest.json`.
+Cette commande upload l'APK sur le bucket Cloud S3 et génère `latest.json`.
 Les téléphones consultent ce fichier pour détecter les mises à jour.
+
+**Avant de lancer, configurer `.env` local pour pointer vers le bucket Cloud :**
+
+```env
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=...        # depuis Dashboard Cloud → Resources → Storage
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=...
+AWS_BUCKET=...
+AWS_ENDPOINT=...
+AWS_USE_PATH_STYLE_ENDPOINT=true
+AWS_VERIFY_SSL=false         # nécessaire sur Windows (SSL cURL)
+```
+
+Et dans `config/filesystems.php`, disk `s3`, ajouter :
+```php
+'http' => ['verify' => env('AWS_VERIFY_SSL', true)],
+```
+
+**Lancer la commande :**
 
 ```bash
 php artisan app:publish-release \
-    android/app/build/outputs/apk/debug/app-debug.apk \
+    nativephp/android/app/build/outputs/apk/release/app-release.apk \
     --changelog="Version initiale"
 ```
 
-> **Stockage persistant requis** : Laravel Cloud serverless a un disque local éphémère.
-> Configurer **Cloudflare R2** dans les settings du projet Cloud (gratuit : 10 Go + 1M ops/mois)
-> et ajouter `FILESYSTEM_DISK=r2` dans les variables d'env Cloud — les APK et `latest.json` y seront stockés.
+**Après publication, remettre `.env` local :**
+```env
+FILESYSTEM_DISK=local
+# Retirer AWS_VERIFY_SSL
+```
+
+> Le bucket Cloud (`FILESYSTEM_DISK=private` côté Cloud) et le disk `s3` local pointent vers le même bucket — c'est ce qui permet aux téléphones de télécharger l'APK via l'API Cloud.
 
 ---
 
@@ -158,13 +195,18 @@ php artisan app:publish-release \
 
 ### Première installation — transfert direct
 
+**Option A — Transfert manuel (recommandé, plus simple) :**
+1. Brancher le téléphone en USB, choisir **Transfert de fichiers** (MTP)
+2. Copier `nativephp/android/app/build/outputs/apk/release/app-release.apk` sur le téléphone
+3. Ouvrir le fichier depuis le gestionnaire de fichiers du téléphone
+
+**Option B — ADB (USB + débogage USB activé sur le téléphone) :**
 ```bash
-# Via ADB (USB + débogage USB activé sur le téléphone)
-adb install android/app/build/outputs/apk/debug/app-debug.apk
+adb install nativephp/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-Ou par transfert manuel :
-1. Copier l'APK sur le téléphone (câble USB ou partage réseau)
+Ou par transfert réseau :
+1. Copier l'APK sur le téléphone (partage réseau / cloud personnel)
 2. Ouvrir le fichier depuis le gestionnaire de fichiers
 3. Si bloqué : **Paramètres → Sécurité → Sources inconnues** → autoriser
 
@@ -258,12 +300,16 @@ php artisan test --compact
 #    NATIVEPHP_APP_VERSION_CODE=2    ← toujours un entier qui monte
 
 # 3. Builder
-npm run build
-php artisan native:build android
+npm run build -- --mode=android
+php artisan native:package android \
+    --keystore=/chemin/vers/keystore \
+    --keystore-password=PASSWORD \
+    --key-alias=ALIAS \
+    --key-password=KEY_PASSWORD
 
 # 4. Publier (met à jour latest.json sur Cloud via storage)
 php artisan app:publish-release \
-    android/app/build/outputs/apk/debug/app-debug.apk \
+    nativephp/android/app/build/outputs/apk/release/app-release.apk \
     --changelog="Ce qui a changé"
 
 # 5. Pousser le code sur GitHub → Cloud redéploie automatiquement
@@ -284,3 +330,24 @@ php artisan app:publish-release \
 | Biométrie inactive | Désactiver puis réactiver dans les Paramètres de l'app |
 | Auto-update ne détecte pas la MAJ | Vérifier que `NATIVEPHP_APP_VERSION_CODE` a bien été incrémenté |
 | `latest.json` introuvable | Vérifier que `storage:link` est fait et que le volume Cloud est configuré |
+
+
+remplacement build commands : 
+from
+
+```
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+npm ci --audit false
+npm run build
+```
+
+to
+```
+composer config http-basic.plugins.nativephp.com kevininc155@gmail.com 6e68dc831d3729cc1ffe961ffefec2cfa53494e0d576d5b770acc7fb88cde25a                                                  
+composer install --no-dev --no-interaction --optimize-autoloader                                                                                                                         
+php artisan config:cache                                                                                                                                                                 
+php artisan route:cache                                                                                                                                                                  
+php artisan event:cache
+
+```

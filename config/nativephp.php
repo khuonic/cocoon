@@ -137,6 +137,10 @@ return [
         'emulator_path' => env('ANDROID_EMULATOR'),
         '7zip-location' => env('NATIVEPHP_7ZIP_LOCATION', 'C:\\Program Files\\7-Zip\\7z.exe'),
 
+        'compile_sdk' => env('NATIVEPHP_ANDROID_COMPILE_SDK', 36),
+        'min_sdk' => env('NATIVEPHP_ANDROID_MIN_SDK', 33),
+        'target_sdk' => env('NATIVEPHP_ANDROID_TARGET_SDK', 36),
+
         /*
         |--------------------------------------------------------------------------
         | Status Bar Style

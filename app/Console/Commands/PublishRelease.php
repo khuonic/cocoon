@@ -28,7 +28,9 @@ class PublishRelease extends Command
         $destination = "releases/{$filename}";
 
         Storage::makeDirectory('releases');
-        Storage::put($destination, file_get_contents($apkPath));
+        $stream = fopen($apkPath, 'rb');
+        Storage::put($destination, $stream);
+        fclose($stream);
 
         $release = [
             'version' => $version,
