@@ -103,3 +103,7 @@
   - input file camera non fonctionnelle (recettes)(voir peut etre https://nativephp.com/plugins/nativephp/mobile-camera)
 
 
+Probleme sur syncro
+
+Pas de récupération de la liste de course une fois connecté
+Probleme de check via timezone ??

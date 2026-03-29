@@ -366,3 +366,11 @@ php artisan app:publish-release \
 | Erreur SSL cURL lors de publish-release | Ajouter `AWS_VERIFY_SSL=false` dans `.env` local + vérifier `config/filesystems.php` disk s3 |
 | Build Cloud échoue (path package) | Vérifier que `--prefer-dist` est absent des build commands + que `composer config http-basic` est présent |
 | Setup échoue avec 500 | Cold start Cloud trop long — réessayer ; le `flashSyncToken` a un timeout de 10s et est non-bloquant |
+
+Attention a l'utilisation de native:install --force qui supprime les binaries
+Pour récuperer les binaries important : 
+https://d23y5k23b3lz91.cloudfront.net/android/android/jniLibs.zip
+Ensuite mettre "arm64-v8a" ici :
+C:\Users\kevin\Herd\cocoon\nativephp\android\app\src\main\staticLibs\
+
+Sinon voir ici https://bin.nativephp.com/main/versions.json
