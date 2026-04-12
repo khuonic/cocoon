@@ -56,19 +56,24 @@ onMounted(async () => {
         sync();
     }
 
-    // Vérifier les mises à jour APK
+    // Vérifier les mises à jour APK (max 1 fois par heure)
     if (syncApiUrl && page.props.isNativePHP) {
         const storedToken = getSyncToken();
         if (storedToken) {
-            const currentVersionCode = page.props.appVersionCode ?? 0;
-            const result = await checkForUpdate(syncApiUrl, currentVersionCode, storedToken);
-            if (result.available && result.version && result.downloadUrl) {
-                updateInfo.value = {
-                    version: result.version,
-                    changelog: result.changelog,
-                    downloadUrl: result.downloadUrl,
-                };
-                updateDialogOpen.value = true;
+            const lastCheck = localStorage.getItem('cocoon_last_update_check');
+            const oneHour = 60 * 60 * 1000;
+            if (!lastCheck || Date.now() - parseInt(lastCheck) > oneHour) {
+                localStorage.setItem('cocoon_last_update_check', String(Date.now()));
+                const currentVersionCode = page.props.appVersionCode ?? 0;
+                const result = await checkForUpdate(syncApiUrl, currentVersionCode, storedToken);
+                if (result.available && result.version && result.downloadUrl) {
+                    updateInfo.value = {
+                        version: result.version,
+                        changelog: result.changelog,
+                        downloadUrl: result.downloadUrl,
+                    };
+                    updateDialogOpen.value = true;
+                }
             }
         }
     }
