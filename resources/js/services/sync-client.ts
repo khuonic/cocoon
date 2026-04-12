@@ -122,9 +122,8 @@ export async function push(changes: SyncChange[]): Promise<PushResponse | null> 
 export async function pull(): Promise<PullResponse | null> {
     if (!lastSyncedAt) return null;
 
-    const sinceWithBuffer = new Date(new Date(lastSyncedAt).getTime() - 1000).toISOString();
     const result = await fetchApi<PullResponse>(
-        `/api/sync/pull?since=${encodeURIComponent(sinceWithBuffer)}`,
+        `/api/sync/pull?since=${encodeURIComponent(lastSyncedAt)}`,
     );
 
     if (result) {

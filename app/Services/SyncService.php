@@ -241,8 +241,19 @@ class SyncService
             return false;
         }
 
+        $morphClass = $existing->getMorphClass();
+        $uuid = $existing->uuid;
+
         $existing->isSyncing = true;
         $existing->delete();
+
+        SyncLog::create([
+            'syncable_type' => $morphClass,
+            'syncable_uuid' => $uuid,
+            'action' => SyncAction::Deleted,
+            'payload' => null,
+            'synced_at' => now(),
+        ]);
 
         return true;
     }
