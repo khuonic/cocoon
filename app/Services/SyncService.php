@@ -72,7 +72,7 @@ class SyncService
             $table = $instance->getTable();
 
             $records = $modelClass::query()
-                ->where('updated_at', '>', $since)
+                ->where('updated_at', '>=', $since)
                 ->get();
 
             foreach ($records as $record) {
@@ -89,7 +89,7 @@ class SyncService
         // Also include deletes from sync_logs since that timestamp
         $deleteLogs = SyncLog::query()
             ->where('action', SyncAction::Deleted)
-            ->where('created_at', '>', $since)
+            ->where('created_at', '>=', $since)
             ->get();
 
         foreach ($deleteLogs as $log) {

@@ -3,7 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import BottomNav from '@/components/BottomNav.vue';
 import UpdateDialog from '@/components/UpdateDialog.vue';
-import { clearCredentialsFlag, getToken, getSyncToken, markCredentialsSaved, saveToken, saveSyncToken } from '@/services/biometric-auth';
+import { clearCredentialsFlag, getSyncToken, markCredentialsSaved, saveToken, saveSyncToken } from '@/services/biometric-auth';
 import { configureSyncClient, sync } from '@/services/sync-client';
 import { checkForUpdate } from '@/services/update-checker';
 
