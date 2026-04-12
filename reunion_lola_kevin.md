@@ -107,3 +107,27 @@ Probleme sur syncro
 
 Pas de récupération de la liste de course une fois connecté
 Probleme de check via timezone ??
+
+Post mise en prod
+
+Probleme dates anniversaires, stock j-1 par rapport a ce qu'on envoie
+Ensuite affiche j-2
+
+Probleme sweet messages recu de l'autre
+bien stocké en bdd mais affiche toujours le premier stocké en base (pas le plus récent)
+
+Calendrier/evenements:
+- Apres un ajout/remplissage/modification, les input ne sont pas vidés
+- date de fin, partir de la date de début minimum
+- Probleme d'enregistrement sur les dates (ca stocke en base h-2 donc souvent j-1)
+- et du coup probleme en front a l'affichage des heures (ex, j'ai mis evenement le 12 à 10h, ca stock 8h en base, et quand je retourne sur l'évenement, ca affiche le 12 à 4h)
+- filtre sur kévin / lola, possible de mettre par défaut sur la page le filtre kévin pour kévin, et le filtre lola pour lola ?
+
+Budget :
+- input date, pas de confirmation pour changer la date 
+- pareil probleme de date, saisie le 12, ca stocke le 11, et ca affiche le 10 en front
+
+Todos:
+- sync des todos list fonctionnelles mais pas des todo a l'intérieur
+- SQLSTATE[23503]: Foreign key violation: 7 ERROR: insert or update on table "todos" violates foreign key constraint "todos_todo_list_id_foreign" DETAIL: Key (todo_list_id)=(1) is not present in table "todo_lists". (Connection: pgsql, Host: ep-calm-dust-a2pexugv.aws-eu-central-1.pg.laravel.cloud, Port: 5432, Database: main, SQL: insert into "todos" ("title", "uuid", "todo_list_id", "updated_at", "created_at") values (Assurance habitation + juridique + auto, 68c107c7-17aa-44cb-88ff-beeefaad4542, 1, 2026-04-12 20:50:47, 2026-04-12 20:50:47) returning "id")
+- la todo en local a été créée avec l'id 1, cependant en bdd ca a inséré a 2 car dans le passé j'avais déjà fait un test et supprimé l'id , que peut on faire pour ça ?
