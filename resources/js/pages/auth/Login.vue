@@ -16,10 +16,12 @@ defineProps<{
     status?: string;
 }>();
 
-const nativePHP = ref(isNativePHP());
+const nativePHP = ref(false);
 
 onMounted(async () => {
     if (!isNativePHP()) return;
+
+    nativePHP.value = true;
 
     if (hasSavedCredentials()) {
         router.visit('/biometric-login');
