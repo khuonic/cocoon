@@ -56,6 +56,8 @@ class BiometricController extends Controller
 
         $request->session()->regenerate();
 
+        session()->flash('api_token', $token);
+
         return redirect()->intended(config('fortify.home'));
     }
 }
