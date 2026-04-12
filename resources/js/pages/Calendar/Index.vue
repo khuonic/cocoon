@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/AppLayout.vue';
+import SyncButton from '@/components/SyncButton.vue';
 import type { CalendarBirthday, CalendarEvent, CalendarUser } from '@/types/calendar';
 
 const DAYS_SHORT = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
@@ -217,6 +218,9 @@ function onTouchEnd(e: TouchEvent): void {
     <Head title="Calendrier" />
 
     <AppLayout title="Calendrier">
+        <template #header-right>
+            <SyncButton />
+        </template>
         <div class="flex flex-col gap-3 p-4 pb-6 pb-safe">
             <!-- Navigation mois -->
             <div class="relative flex items-center justify-between">

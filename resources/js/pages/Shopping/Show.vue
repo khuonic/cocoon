@@ -13,6 +13,7 @@ import AddItemForm from '@/components/shopping/AddItemForm.vue';
 import CategoryGroup from '@/components/shopping/CategoryGroup.vue';
 import ShoppingItemRow from '@/components/shopping/ShoppingItemRow.vue';
 import { MoreVertical, Trash2, Copy, ArrowLeft } from 'lucide-vue-next';
+import SyncButton from '@/components/SyncButton.vue';
 import type { ShoppingList, ShoppingItem, CategoryOption } from '@/types/shopping';
 import { destroy, duplicate } from '@/actions/App/Http/Controllers/ShoppingListController';
 
@@ -81,6 +82,7 @@ function goBack(): void {
             </Button>
         </template>
         <template #header-right>
+            <SyncButton />
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>
                     <Button variant="ghost" size="icon-xl">

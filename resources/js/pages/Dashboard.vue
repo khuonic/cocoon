@@ -7,6 +7,7 @@ import SweetMessageWidget from '@/components/dashboard/SweetMessageWidget.vue';
 import TodayWidget from '@/components/dashboard/TodayWidget.vue';
 import InputError from '@/components/InputError.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import SyncButton from '@/components/SyncButton.vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -59,6 +60,9 @@ function submit(): void {
     <Head title="Accueil" />
 
     <AppLayout title="Cocon">
+        <template #header-right>
+            <SyncButton />
+        </template>
         <div class="space-y-4 p-4 pb-28">
             <SweetMessageWidget :sweet-message="sweetMessage" />
 

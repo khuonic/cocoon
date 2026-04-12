@@ -4,6 +4,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { Trash2, MoreVertical, ChevronDown, GripVertical } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BackButton from '@/components/BackButton.vue';
+import SyncButton from '@/components/SyncButton.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -111,6 +112,7 @@ function onDragEnd(): void {
         </template>
 
         <template #header-right>
+            <SyncButton />
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>
                     <Button variant="ghost" size="icon-xl">

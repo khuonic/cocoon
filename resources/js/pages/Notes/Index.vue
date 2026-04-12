@@ -3,6 +3,7 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref, onMounted, watch } from 'vue';
 import { StickyNote, ListTodo, Pin, Trash2, Pencil, Plus, ChevronRight } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
+import SyncButton from '@/components/SyncButton.vue';
 import NoteFormDialog from '@/components/notes/NoteFormDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -212,6 +213,9 @@ function onDragEnd(): void {
 
 <template>
     <AppLayout title="Notes">
+        <template #header-right>
+            <SyncButton />
+        </template>
         <Head title="Notes" />
 
         <div class="p-4 pb-28">

@@ -4,6 +4,7 @@ import { Wallet } from 'lucide-vue-next';
 import type { Expense, BalanceData } from '@/types/budget';
 import type { User } from '@/types/auth';
 import AppLayout from '@/layouts/AppLayout.vue';
+import SyncButton from '@/components/SyncButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import FloatingActionButton from '@/components/FloatingActionButton.vue';
 import BalanceBanner from '@/components/budget/BalanceBanner.vue';
@@ -20,6 +21,9 @@ defineProps<{
 
 <template>
     <AppLayout title="Budget">
+        <template #header-right>
+            <SyncButton />
+        </template>
         <Head title="Budget" />
 
         <div class="space-y-4 p-4">
