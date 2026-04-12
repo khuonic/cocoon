@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { hasSavedCredentials, isNativePHP } from '@/services/biometric-auth';
+import { hasSavedCredentials, isNativePHP, markCredentialsSaved } from '@/services/biometric-auth';
 import { store } from '@/routes/login';
 import { onMounted } from 'vue';
 
@@ -15,9 +16,28 @@ defineProps<{
     status?: string;
 }>();
 
-onMounted(() => {
-    if (isNativePHP() && hasSavedCredentials()) {
+const nativePHP = ref(isNativePHP());
+
+onMounted(async () => {
+    if (!isNativePHP()) return;
+
+    if (hasSavedCredentials()) {
         router.visit('/biometric-login');
+        return;
+    }
+
+    // Fallback : localStorage effacé mais SecureStorage a peut-être encore le token
+    try {
+        const res = await fetch('/biometric-available', { headers: { Accept: 'application/json' } });
+        if (res.ok) {
+            const { available } = (await res.json()) as { available: boolean };
+            if (available) {
+                markCredentialsSaved();
+                router.visit('/biometric-login');
+            }
+        }
+    } catch {
+        // ignore — l'utilisateur reste sur le login classique
     }
 });
 </script>
@@ -73,7 +93,7 @@ onMounted(() => {
                     <InputError :message="errors.password" />
                 </div>
 
-                <div class="flex items-center justify-between">
+                <div v-if="!nativePHP" class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
                         <Checkbox id="remember" name="remember" :tabindex="3" />
                         <span>Se souvenir de moi</span>

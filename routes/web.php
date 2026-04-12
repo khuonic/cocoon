@@ -22,6 +22,7 @@ Route::middleware('guest')->group(function () {
     Route::post('setup', [SetupController::class, 'store']);
     Route::get('biometric-login', [BiometricController::class, 'show'])->name('biometric.login');
     Route::post('biometric-login', [BiometricController::class, 'verify'])->name('biometric.verify');
+    Route::get('biometric-available', [BiometricController::class, 'available'])->name('biometric.available');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,21 @@ use Native\Mobile\Facades\SecureStorage;
 
 class BiometricController extends Controller
 {
+    public function available(): JsonResponse
+    {
+        $token = SecureStorage::get('cocoon_auth_token');
+
+        if (! $token) {
+            return response()->json(['available' => false]);
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        return response()->json([
+            'available' => $accessToken && $accessToken->tokenable,
+        ]);
+    }
+
     public function show(): Response
     {
         return Inertia::render('auth/BiometricLogin');

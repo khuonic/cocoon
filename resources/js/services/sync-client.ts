@@ -130,6 +130,10 @@ export async function pull(): Promise<PullResponse | null> {
         localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
 
         if (result.changes.length > 0) {
+            await fetchLocal('/api/sync/push', {
+                method: 'POST',
+                body: JSON.stringify({ changes: result.changes }),
+            });
             router.reload();
         }
     }
@@ -159,6 +163,10 @@ export async function fullSync(): Promise<FullResponse | null> {
         }
 
         if (result.changes.length > 0) {
+            await fetchLocal('/api/sync/push', {
+                method: 'POST',
+                body: JSON.stringify({ changes: result.changes }),
+            });
             router.reload();
         }
     }
