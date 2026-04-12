@@ -186,7 +186,8 @@ Les téléphones consultent ce fichier pour détecter les mises à jour.
 **Avant de lancer, configurer `.env` local pour pointer vers le bucket Cloud :**
 
 ```env
-FILESYSTEM_DISK=s3
+FILESYSTEM_DISK=s3          # important
+
 AWS_ACCESS_KEY_ID=...        # depuis Dashboard Cloud → Resources → Storage
 AWS_SECRET_ACCESS_KEY=...
 AWS_DEFAULT_REGION=...

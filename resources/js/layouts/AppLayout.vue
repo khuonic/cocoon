@@ -39,6 +39,13 @@ onMounted(async () => {
         saveSyncToken(flashedSyncToken);
     }
 
+    // Stocker le token local dans localStorage (pour fetchLocal dans sync-client)
+    const token = page.props.flash?.api_token;
+    if (token) {
+        saveToken(token);
+        markCredentialsSaved();
+    }
+
     // Configurer le client de sync avec le token cloud persisté
     if (syncApiUrl) {
         const syncToken = flashedSyncToken ?? getSyncToken();
@@ -46,13 +53,6 @@ onMounted(async () => {
             configureSyncClient(syncApiUrl, syncToken);
         }
         sync();
-    }
-
-    // Stocker le token local dans localStorage (pour update checker + flag biométrie)
-    const token = page.props.flash?.api_token;
-    if (token) {
-        saveToken(token);
-        markCredentialsSaved();
     }
 
     // Vérifier les mises à jour APK
