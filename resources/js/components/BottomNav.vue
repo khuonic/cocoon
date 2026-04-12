@@ -5,6 +5,7 @@ import {
     Wallet,
     CalendarDays,
     StickyNote,
+    ShoppingCart,
     MoreHorizontal,
 } from 'lucide-vue-next';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
@@ -16,6 +17,7 @@ const tabs = [
     { label: 'Budget', href: '/expenses', icon: Wallet },
     { label: 'Calendrier', href: '/calendar', icon: CalendarDays },
     { label: 'Notes', href: '/notes', icon: StickyNote },
+    { label: 'Courses', href: '/shopping-lists', icon: ShoppingCart },
     { label: 'Plus', href: '/more', icon: MoreHorizontal },
 ];
 
@@ -34,13 +36,12 @@ function isActive(href: string): boolean {
                 v-for="tab in tabs"
                 :key="tab.href"
                 :href="tab.href"
-                class="flex flex-1 flex-col items-center gap-1 py-3 text-sm transition-colors"
+                class="flex flex-1 items-center justify-center py-3 transition-colors"
                 :class="isActive(tab.href)
                     ? 'text-primary'
                     : 'text-muted-foreground'"
             >
                 <component :is="tab.icon" :size="24" :stroke-width="isActive(tab.href) ? 2.5 : 2" />
-                <span class="font-medium">{{ tab.label }}</span>
             </Link>
         </div>
     </nav>

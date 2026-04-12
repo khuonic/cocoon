@@ -2,7 +2,6 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     UtensilsCrossed,
-    ShoppingCart,
     Cake,
     Settings,
     ChevronRight,
@@ -10,7 +9,6 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const menuItems = [
-    { label: 'Courses', href: '/shopping-lists', icon: ShoppingCart, description: 'Listes de courses' },
     { label: 'Repas', href: '/recipes', icon: UtensilsCrossed, description: 'Recettes et idées' },
     { label: 'Anniversaires', href: '/birthdays', icon: Cake, description: 'Gestion des anniversaires' },
     { label: 'Paramètres', href: '/settings/profile', icon: Settings, description: 'Profil et préférences' },
