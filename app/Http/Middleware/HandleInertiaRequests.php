@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'logged_out' => $request->session()->get('logged_out'),
             ],
             'appVersionCode' => (int) config('nativephp.version_code'),
+            'isNativePHP' => function_exists('nativephp_call'),
         ];
     }
 }
