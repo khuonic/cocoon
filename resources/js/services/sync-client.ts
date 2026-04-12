@@ -63,6 +63,7 @@ async function fetchApi<T>(
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
                 Authorization: `Bearer ${authToken}`,
+                'Cache-Control': 'no-cache',
                 ...(options.headers ?? {}),
             },
         });
