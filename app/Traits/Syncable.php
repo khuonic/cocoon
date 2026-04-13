@@ -4,10 +4,19 @@ namespace App\Traits;
 
 use App\Enums\SyncAction;
 use App\Models\SyncLog;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 trait Syncable
 {
     public bool $isSyncing = false;
+
+    protected function serializeDate(CarbonInterface|\DateTimeInterface $date): string
+    {
+        return Carbon::instance($date)
+            ->setTimezone(config('app.timezone'))
+            ->toIso8601String();
+    }
 
     public static function bootSyncable(): void
     {

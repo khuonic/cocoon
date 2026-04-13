@@ -153,6 +153,11 @@ class SyncService
     {
         $payload = $record->toArray();
 
+        if ($type === 'todos') {
+            /** @var Todo $record */
+            $payload['todo_list_uuid'] = $record->todoList?->uuid;
+        }
+
         if ($type === 'recipes') {
             /** @var Recipe $record */
             $payload['ingredients'] = $record->ingredients->toArray();
@@ -180,6 +185,17 @@ class SyncService
 
         $fillable = (new $modelClass)->getFillable();
         $attributes = array_intersect_key($data, array_flip($fillable));
+
+        // Resolve todo_list FK from UUID to avoid cross-device ID mismatch
+        if ($modelClass === Todo::class && isset($data['todo_list_uuid'])) {
+            $todoList = TodoList::query()->where('uuid', $data['todo_list_uuid'])->first();
+
+            if (! $todoList) {
+                return false;
+            }
+
+            $attributes['todo_list_id'] = $todoList->id;
+        }
 
         /** @var Model $model */
         $model = new $modelClass;
@@ -218,6 +234,17 @@ class SyncService
 
         $fillable = $existing->getFillable();
         $attributes = array_intersect_key($data, array_flip($fillable));
+
+        // Resolve todo_list FK from UUID to avoid cross-device ID mismatch
+        if ($modelClass === Todo::class && isset($data['todo_list_uuid'])) {
+            $todoList = TodoList::query()->where('uuid', $data['todo_list_uuid'])->first();
+
+            if (! $todoList) {
+                return false;
+            }
+
+            $attributes['todo_list_id'] = $todoList->id;
+        }
 
         $existing->isSyncing = true;
         $existing->fill($attributes);

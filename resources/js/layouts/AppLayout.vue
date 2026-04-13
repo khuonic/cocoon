@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import BottomNav from '@/components/BottomNav.vue';
 import UpdateDialog from '@/components/UpdateDialog.vue';
 import { clearCredentialsFlag, getSyncToken, markCredentialsSaved, saveToken, saveSyncToken } from '@/services/biometric-auth';
 import { configureSyncClient, sync } from '@/services/sync-client';
 import { checkForUpdate } from '@/services/update-checker';
+import { rescheduleReminders } from '@/actions/App/Http/Controllers/BirthdayController';
 
 type Props = {
     title?: string;
@@ -54,6 +55,11 @@ onMounted(async () => {
             configureSyncClient(syncApiUrl, syncToken);
         }
         sync();
+    }
+
+    // Replanifier les rappels anniversaires (chaque lancement, NativePHP uniquement)
+    if (page.props.isNativePHP) {
+        router.post(rescheduleReminders.url(), {}, { preserveState: true, preserveScroll: true });
     }
 
     // Vérifier les mises à jour APK (max 1 fois par heure)

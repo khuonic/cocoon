@@ -23,8 +23,11 @@ class NoteController extends Controller
                 'item_type' => 'note',
             ]);
 
+        $userId = auth()->id();
+
         $todoLists = TodoList::query()
             ->with(['todos' => fn ($q) => $q->oldest('created_at')])
+            ->where(fn ($q) => $q->where('is_personal', false)->orWhere('user_id', $userId))
             ->get()
             ->map(fn (TodoList $t) => [
                 ...$t->toArray(),

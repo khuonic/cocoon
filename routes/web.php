@@ -80,6 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Divers
     Route::post('sweet-messages', [SweetMessageController::class, 'store'])->name('sweet-messages.store');
+    Route::post('birthdays/reschedule-reminders', [BirthdayController::class, 'rescheduleReminders'])->name('birthdays.reschedule-reminders');
     Route::resource('birthdays', BirthdayController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('more', MoreController::class)->name('more');
 });

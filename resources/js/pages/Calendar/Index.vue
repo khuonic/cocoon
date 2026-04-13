@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, ref, nextTick } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import CalendarWeekRow from '@/components/calendar/CalendarWeekRow.vue';
 import EventFormDialog from '@/components/calendar/EventFormDialog.vue';
 import MonthYearPicker from '@/components/calendar/MonthYearPicker.vue';
@@ -55,8 +56,9 @@ function navigate(direction: -1 | 1): void {
 const showMonthPicker = ref(false);
 
 // ─── Filtres ───────────────────────────────────────────────────────────────
+const page = usePage<{ auth: { user: { id: number } } }>();
 const activeCategory = ref('all');
-const activeUserIds = ref<number[]>([]); // empty = tous visibles
+const activeUserIds = ref<number[]>([page.props.auth.user.id]); // par défaut : utilisateur courant seulement
 
 function toggleUser(userId: number): void {
     const idx = activeUserIds.value.indexOf(userId);

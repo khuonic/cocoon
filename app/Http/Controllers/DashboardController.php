@@ -17,6 +17,7 @@ class DashboardController extends Controller
 
         $sweetMessage = SweetMessage::query()
             ->where('user_id', '!=', $userId)
+            ->latest()
             ->first();
 
         $mySweetMessage = SweetMessage::query()

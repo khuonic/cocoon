@@ -111,12 +111,12 @@ function submit(): void {
     if (isEditMode() && props.event) {
         mobilePatchForm(form, update.url(props.event.id), {
             preserveScroll: true,
-            onSuccess: () => { isOpen.value = false; },
+            onSuccess: () => { form.reset(); isOpen.value = false; },
         });
     } else {
         form.post(store.url(), {
             preserveScroll: true,
-            onSuccess: () => { isOpen.value = false; },
+            onSuccess: () => { form.reset(); isOpen.value = false; },
         });
     }
 }
@@ -209,6 +209,7 @@ function handleDelete(): void {
                         id="event-ends-at"
                         v-model="form.ends_at"
                         :type="form.all_day ? 'date' : 'datetime-local'"
+                        :min="form.starts_at || undefined"
                     />
                     <InputError :message="form.errors.ends_at" />
                 </div>

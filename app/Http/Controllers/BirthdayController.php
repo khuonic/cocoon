@@ -6,6 +6,7 @@ use App\Http\Requests\Birthday\StoreBirthdayRequest;
 use App\Http\Requests\Birthday\UpdateBirthdayRequest;
 use App\Models\Birthday;
 use App\Services\ReminderService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -57,5 +58,14 @@ class BirthdayController extends Controller
         $birthday->delete();
 
         return to_route('birthdays.index');
+    }
+
+    public function rescheduleReminders(ReminderService $reminders): JsonResponse
+    {
+        Birthday::query()
+            ->whereNotNull('reminder_days_before')
+            ->each(fn (Birthday $b) => $reminders->scheduleForBirthday($b));
+
+        return response()->json(['ok' => true]);
     }
 }
