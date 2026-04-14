@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
 import { Heart, Send } from 'lucide-vue-next';
 import JokeWidget from '@/components/dashboard/JokeWidget.vue';
 import SweetMessageWidget from '@/components/dashboard/SweetMessageWidget.vue';
@@ -18,6 +18,7 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import { store } from '@/actions/App/Http/Controllers/SweetMessageController';
+import { rescheduleReminders } from '@/actions/App/Http/Controllers/BirthdayController';
 import type { SweetMessage } from '@/types/sweet-message';
 
 type TodayItem = {
@@ -37,6 +38,14 @@ const props = defineProps<{
 }>();
 
 const showSweetForm = ref(false);
+
+const page = usePage<{ isNativePHP?: boolean }>();
+
+onMounted(() => {
+    if (page.props.isNativePHP) {
+        router.post(rescheduleReminders.url(), {}, { preserveState: true, preserveScroll: true });
+    }
+});
 
 const form = useForm({
     content: props.mySweetMessage?.content ?? '',

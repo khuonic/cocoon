@@ -19,7 +19,7 @@ class SyncController extends Controller
     public function push(Request $request): JsonResponse
     {
         $request->validate([
-            'changes' => ['required', 'array', 'max:100'],
+            'changes' => ['required', 'array', 'max:500'],
             'changes.*.type' => ['required', 'string'],
             'changes.*.uuid' => ['required', 'string'],
             'changes.*.action' => ['required', 'string', 'in:created,updated,deleted'],

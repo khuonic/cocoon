@@ -127,15 +127,17 @@ export async function pull(): Promise<PullResponse | null> {
     );
 
     if (result) {
-        lastSyncedAt = result.server_time;
-        localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
-
         if (result.changes.length > 0) {
-            await fetchLocal('/api/sync/push', {
-                method: 'POST',
-                body: JSON.stringify({ changes: result.changes }),
-            });
-            router.reload();
+            const applied = await applyChangesLocally(result.changes);
+            if (applied) {
+                lastSyncedAt = result.server_time;
+                localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
+                router.reload();
+            }
+            // Si le push local échoue, lastSyncedAt reste inchangé → retry au prochain sync
+        } else {
+            lastSyncedAt = result.server_time;
+            localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
         }
     }
 
@@ -153,9 +155,6 @@ export async function fullSync(): Promise<FullResponse | null> {
     });
 
     if (result) {
-        lastSyncedAt = result.server_time;
-        localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
-
         if (pendingIds.length > 0) {
             await fetchLocal('/api/sync/acknowledge', {
                 method: 'POST',
@@ -164,15 +163,35 @@ export async function fullSync(): Promise<FullResponse | null> {
         }
 
         if (result.changes.length > 0) {
-            await fetchLocal('/api/sync/push', {
-                method: 'POST',
-                body: JSON.stringify({ changes: result.changes }),
-            });
-            router.reload();
+            const applied = await applyChangesLocally(result.changes);
+            if (applied) {
+                lastSyncedAt = result.server_time;
+                localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
+                router.reload();
+            }
+            // Si le push local échoue, lastSyncedAt reste null → fullSync retenté au prochain lancement
+        } else {
+            lastSyncedAt = result.server_time;
+            localStorage.setItem(LAST_SYNCED_KEY, result.server_time);
         }
     }
 
     return result;
+}
+
+async function applyChangesLocally(changes: SyncChange[]): Promise<boolean> {
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < changes.length; i += BATCH_SIZE) {
+        const batch = changes.slice(i, i + BATCH_SIZE);
+        const result = await fetchLocal('/api/sync/push', {
+            method: 'POST',
+            body: JSON.stringify({ changes: batch }),
+        });
+        if (result === null) {
+            return false;
+        }
+    }
+    return true;
 }
 
 async function pushLocalChanges(): Promise<void> {
