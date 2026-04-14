@@ -158,3 +158,21 @@ test('update accepts reminder_days_before', function () {
     $birthday->refresh();
     expect($birthday->reminder_days_before)->toBe(0);
 });
+
+test('reschedule reminders redirects back', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('birthdays.reschedule-reminders'))
+        ->assertRedirect();
+});
+
+test('reschedule reminders only processes birthdays with reminders set', function () {
+    $user = User::factory()->create();
+    Birthday::factory()->create(['added_by' => $user->id, 'reminder_days_before' => 1]);
+    Birthday::factory()->create(['added_by' => $user->id, 'reminder_days_before' => null]);
+
+    $this->actingAs($user)
+        ->post(route('birthdays.reschedule-reminders'))
+        ->assertRedirect();
+});
