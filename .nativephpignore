@@ -1,0 +1,5 @@
+storage/app/private/releases/
+storage/app/native-build/
+node_modules/
+.git/
+tests/
