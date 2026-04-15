@@ -43,17 +43,18 @@ const props = defineProps<{
 }>();
 
 // ─── Navigation ────────────────────────────────────────────────────────────
-// Lire currentMonth depuis usePage() qui est toujours réactif aux navigations Inertia
-const currentMonth = computed(() => (page.props.currentMonth as string) ?? props.currentMonth);
-const year = computed(() => parseInt(currentMonth.value.split('-')[0]));
-const month = computed(() => parseInt(currentMonth.value.split('-')[1]) - 1); // 0-indexed
+// Simples const : le composant se remonte à chaque navigation (preserveState: false)
+// donc year/month sont toujours réinitialisés depuis les props frais du serveur.
+const [yearStr, monthStr] = props.currentMonth.split('-');
+const year = parseInt(yearStr);
+const month = parseInt(monthStr) - 1; // 0-indexed
 
 const monthLabel = computed(() =>
-    new Date(year.value, month.value, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+    new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
 );
 
 function navigate(direction: -1 | 1): void {
-    const d = new Date(year.value, month.value + direction, 1);
+    const d = new Date(year, month + direction, 1);
     const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     router.get('/calendar', { month: newMonth }, { preserveState: false });
 }
@@ -82,17 +83,17 @@ function isUserActive(userId: number): boolean {
 }
 
 // ─── Grille mensuelle ──────────────────────────────────────────────────────
-const daysInMonth = computed(() => new Date(year.value, month.value + 1, 0).getDate());
+const daysInMonth = computed(() => new Date(year, month + 1, 0).getDate());
 const firstDayOfWeek = computed(() => {
-    const day = new Date(year.value, month.value, 1).getDay();
+    const day = new Date(year, month, 1).getDay();
     return (day + 6) % 7; // 0=Mon, 6=Sun
 });
 
 type CalendarDay = { day: number | null; date: string | null; isOtherMonth?: boolean };
 
 const calendarGrid = computed<CalendarDay[]>(() => {
-    const y = year.value;
-    const m = month.value;
+    const y = year;
+    const m = month;
     const cells: CalendarDay[] = [];
 
     // Jours du mois précédent
@@ -251,7 +252,7 @@ function onTouchEnd(e: TouchEvent): void {
 
                 <MonthYearPicker
                     v-model:open="showMonthPicker"
-                    :current-month="currentMonth"
+                    :current-month="props.currentMonth"
                 />
             </div>
 
