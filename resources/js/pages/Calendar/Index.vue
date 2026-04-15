@@ -39,16 +39,16 @@ const props = defineProps<{
 }>();
 
 // ─── Navigation ────────────────────────────────────────────────────────────
-const [yearStr, monthStr] = props.currentMonth.split('-');
-const year = parseInt(yearStr);
-const month = parseInt(monthStr) - 1; // 0-indexed
+// Réactifs sur props.currentMonth pour fonctionner avec preserveState: true
+const year = computed(() => parseInt(props.currentMonth.split('-')[0]));
+const month = computed(() => parseInt(props.currentMonth.split('-')[1]) - 1); // 0-indexed
 
 const monthLabel = computed(() => {
-    return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return new Date(year.value, month.value, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 });
 
 function navigate(direction: -1 | 1): void {
-    const d = new Date(year, month + direction, 1);
+    const d = new Date(year.value, month.value + direction, 1);
     const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     router.get('/calendar', { month: newMonth }, { preserveState: true });
 }
@@ -74,36 +74,38 @@ function isUserActive(userId: number): boolean {
 }
 
 // ─── Grille mensuelle ──────────────────────────────────────────────────────
-const daysInMonth = computed(() => new Date(year, month + 1, 0).getDate());
+const daysInMonth = computed(() => new Date(year.value, month.value + 1, 0).getDate());
 const firstDayOfWeek = computed(() => {
-    const day = new Date(year, month, 1).getDay();
+    const day = new Date(year.value, month.value, 1).getDay();
     return (day + 6) % 7; // 0=Mon, 6=Sun
 });
 
 type CalendarDay = { day: number | null; date: string | null; isOtherMonth?: boolean };
 
 const calendarGrid = computed<CalendarDay[]>(() => {
+    const y = year.value;
+    const m = month.value;
     const cells: CalendarDay[] = [];
 
     // Jours du mois précédent
-    const prevMonthLastDay = new Date(year, month, 0);
+    const prevMonthLastDay = new Date(y, m, 0);
     for (let i = firstDayOfWeek.value - 1; i >= 0; i--) {
         const d = prevMonthLastDay.getDate() - i;
-        const pm = month === 0 ? 12 : month;
-        const py = month === 0 ? year - 1 : year;
+        const pm = m === 0 ? 12 : m;
+        const py = m === 0 ? y - 1 : y;
         cells.push({ day: d, date: `${py}-${String(pm).padStart(2, '0')}-${String(d).padStart(2, '0')}`, isOtherMonth: true });
     }
 
     // Jours du mois courant
     for (let d = 1; d <= daysInMonth.value; d++) {
-        const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const date = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         cells.push({ day: d, date, isOtherMonth: false });
     }
 
     // Jours du mois suivant pour atteindre 42 cases
     let nd = 1;
-    const nm = month === 11 ? 1 : month + 2;
-    const ny = month === 11 ? year + 1 : year;
+    const nm = m === 11 ? 1 : m + 2;
+    const ny = m === 11 ? y + 1 : y;
     while (cells.length < 42) {
         cells.push({ day: nd, date: `${ny}-${String(nm).padStart(2, '0')}-${String(nd).padStart(2, '0')}`, isOtherMonth: true });
         nd++;

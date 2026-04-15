@@ -154,7 +154,9 @@ const cellsData = computed((): Array<CellData | null> => {
             ...bdays.map(b => ({ kind: 'birthday' as const, item: b })),
         ];
 
-        const visibleExtras = extras.slice(0, 1);
+        // Max 2 items visibles au total, multi-jours en priorité
+        const remainingSlots = Math.max(0, 2 - visLanes);
+        const visibleExtras = extras.slice(0, remainingSlots);
         overflow += extras.length - visibleExtras.length;
 
         return { lanes, visibleExtras, overflow };
@@ -167,7 +169,7 @@ const cellsData = computed((): Array<CellData | null> => {
         <div
             v-for="(cell, i) in days"
             :key="i"
-            class="relative min-h-[96px] cursor-pointer overflow-hidden border-b border-r border-border p-1 last:border-r-0"
+            class="relative min-h-[108px] cursor-pointer overflow-hidden border-b border-r border-border p-1 last:border-r-0"
             :class="[
                 cell.isOtherMonth ? 'bg-muted/20' : '',
                 cell.date === todayStr ? 'bg-primary/5' : '',
@@ -196,8 +198,8 @@ const cellsData = computed((): Array<CellData | null> => {
                         v-if="evt"
                         class="h-full py-px text-[10px] font-medium leading-4 text-white"
                         :class="[
-                            isEventStart(evt, cell.date) ? 'rounded-l pl-1' : '-ml-px pl-0.5',
-                            isEventEnd(evt, cell.date)   ? 'rounded-r pr-1' : '-mr-px pr-0.5',
+                            isEventStart(evt, cell.date) ? 'rounded-l-sm pl-1' : '-ml-1 pl-0.5',
+                            isEventEnd(evt, cell.date)   ? 'rounded-r-sm pr-1' : '-mr-1 pr-0.5',
                             showEventTitle(evt, cell.date) ? 'truncate' : '',
                         ]"
                         :style="{ backgroundColor: evt.category_color }"
@@ -209,11 +211,11 @@ const cellsData = computed((): Array<CellData | null> => {
                     <!-- Spacer invisible pour maintenir la position -->
                 </div>
 
-                <!-- Events single-day et anniversaires (1 max) -->
+                <!-- Events single-day et anniversaires (2 max) -->
                 <template v-for="(extra, ei) in cellsData[i]!.visibleExtras" :key="`extra-${ei}`">
                     <div
                         v-if="extra.kind === 'event'"
-                        class="mb-px truncate rounded-sm px-1 py-px text-[10px] font-medium leading-4 text-white"
+                        class="-mx-1 mb-px truncate rounded px-1 py-px text-[10px] font-medium leading-4 text-white"
                         :style="{ backgroundColor: extra.item.category_color }"
                         @click.stop="$emit('openEdit', extra.item)"
                     >
@@ -221,7 +223,7 @@ const cellsData = computed((): Array<CellData | null> => {
                     </div>
                     <div
                         v-else
-                        class="mb-px truncate rounded-sm px-1 py-px text-[10px] font-medium leading-4 text-white"
+                        class="-mx-1 mb-px truncate rounded px-1 py-px text-[10px] font-medium leading-4 text-white"
                         style="background-color: #EC4899"
                     >
                         🎂 {{ extra.item.name }}
