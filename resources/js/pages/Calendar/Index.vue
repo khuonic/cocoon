@@ -43,13 +43,14 @@ const props = defineProps<{
 }>();
 
 // ─── Navigation ────────────────────────────────────────────────────────────
-// Réactifs sur props.currentMonth pour fonctionner avec preserveState: true
-const year = computed(() => parseInt(props.currentMonth.split('-')[0]));
-const month = computed(() => parseInt(props.currentMonth.split('-')[1]) - 1); // 0-indexed
+// Lire currentMonth depuis usePage() qui est toujours réactif aux navigations Inertia
+const currentMonth = computed(() => (page.props.currentMonth as string) ?? props.currentMonth);
+const year = computed(() => parseInt(currentMonth.value.split('-')[0]));
+const month = computed(() => parseInt(currentMonth.value.split('-')[1]) - 1); // 0-indexed
 
-const monthLabel = computed(() => {
-    return new Date(year.value, month.value, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-});
+const monthLabel = computed(() =>
+    new Date(year.value, month.value, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+);
 
 function navigate(direction: -1 | 1): void {
     const d = new Date(year.value, month.value + direction, 1);
@@ -60,7 +61,7 @@ function navigate(direction: -1 | 1): void {
 const showMonthPicker = ref(false);
 
 // ─── Filtres ───────────────────────────────────────────────────────────────
-const page = usePage<{ auth: { user: { id: number } } }>();
+const page = usePage();
 const activeCategory = ref(_savedCategory);
 const activeUserIds = ref<number[]>(_savedUserIds.length > 0 ? [..._savedUserIds] : [page.props.auth.user.id]);
 
