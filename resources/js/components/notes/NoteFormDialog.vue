@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import type { NoteColor } from '@/types/note';
 import { store } from '@/actions/App/Http/Controllers/NoteController';
 
@@ -21,6 +22,7 @@ const isOpen = defineModel<boolean>('open');
 const form = useForm({
     title: '',
     color: null as NoteColor | null,
+    is_personal: false,
 });
 
 function submit(): void {
@@ -58,6 +60,11 @@ function submit(): void {
                 <div class="space-y-2">
                     <Label>Couleur</Label>
                     <ColorPicker v-model="form.color" />
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <Label for="note-personal">Note personnelle</Label>
+                    <Switch id="note-personal" v-model="form.is_personal" />
                 </div>
 
                 <DialogFooter>

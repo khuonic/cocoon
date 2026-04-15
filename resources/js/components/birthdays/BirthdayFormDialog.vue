@@ -58,12 +58,12 @@ function submit(): void {
     if (isEditMode() && props.birthday) {
         mobilePut(form, update.url(props.birthday.id), {
             preserveScroll: true,
-            onSuccess: () => { isOpen.value = false; },
+            onSuccess: () => { form.reset(); isOpen.value = false; },
         });
     } else {
         form.post(store.url(), {
             preserveScroll: true,
-            onSuccess: () => { isOpen.value = false; },
+            onSuccess: () => { form.reset(); isOpen.value = false; },
         });
     }
 }

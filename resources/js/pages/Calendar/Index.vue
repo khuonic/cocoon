@@ -50,7 +50,7 @@ const monthLabel = computed(() => {
 function navigate(direction: -1 | 1): void {
     const d = new Date(year, month + direction, 1);
     const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    router.get('/calendar', { month: newMonth }, { preserveState: false });
+    router.get('/calendar', { month: newMonth }, { preserveState: true });
 }
 
 const showMonthPicker = ref(false);

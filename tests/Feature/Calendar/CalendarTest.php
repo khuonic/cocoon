@@ -67,15 +67,17 @@ test('index filters by month query param', function () {
 });
 
 test('store creates a shared event', function () {
+    $startsAt = now()->addWeek();
+
     $this->actingAs($this->user)
         ->post(route('calendar.store'), [
             'title' => 'Fête de famille',
             'category' => 'Loisir',
-            'starts_at' => now()->addWeek()->format('Y-m-d H:i:s'),
+            'starts_at' => $startsAt->format('Y-m-d H:i:s'),
             'all_day' => true,
             'is_personal' => false,
         ])
-        ->assertRedirect(route('calendar.index'));
+        ->assertRedirect(route('calendar.index', ['month' => $startsAt->format('Y-m')]));
 
     $this->assertDatabaseHas('calendar_events', [
         'title' => 'Fête de famille',
@@ -86,15 +88,17 @@ test('store creates a shared event', function () {
 });
 
 test('store creates a personal event', function () {
+    $startsAt = now()->addWeek();
+
     $this->actingAs($this->user)
         ->post(route('calendar.store'), [
             'title' => 'Rendez-vous médecin',
             'category' => 'Rdv',
-            'starts_at' => now()->addWeek()->format('Y-m-d H:i:s'),
+            'starts_at' => $startsAt->format('Y-m-d H:i:s'),
             'all_day' => true,
             'is_personal' => true,
         ])
-        ->assertRedirect(route('calendar.index'));
+        ->assertRedirect(route('calendar.index', ['month' => $startsAt->format('Y-m')]));
 
     $this->assertDatabaseHas('calendar_events', [
         'title' => 'Rendez-vous médecin',
@@ -137,7 +141,7 @@ test('update modifies an event', function () {
             'all_day' => false,
             'is_personal' => false,
         ])
-        ->assertRedirect(route('calendar.index'));
+        ->assertRedirect(route('calendar.index', ['month' => $event->starts_at->format('Y-m')]));
 
     $event->refresh();
     expect($event->title)->toBe('Nouveau titre');
@@ -145,11 +149,14 @@ test('update modifies an event', function () {
 });
 
 test('destroy deletes an event', function () {
-    $event = CalendarEvent::factory()->create(['user_id' => $this->user->id]);
+    $event = CalendarEvent::factory()->create([
+        'starts_at' => now()->startOfMonth()->addDays(5),
+        'user_id' => $this->user->id,
+    ]);
 
     $this->actingAs($this->user)
         ->delete(route('calendar.destroy', $event))
-        ->assertRedirect(route('calendar.index'));
+        ->assertRedirect(route('calendar.index', ['month' => $event->starts_at->format('Y-m')]));
 
     $this->assertDatabaseMissing('calendar_events', ['id' => $event->id]);
 });
@@ -186,16 +193,18 @@ test('index includes multi-day events spanning the month boundary', function () 
 });
 
 test('store creates a multi-day all-day event', function () {
+    $startsAt = now()->addWeek();
+
     $this->actingAs($this->user)
         ->post(route('calendar.store'), [
             'title' => 'Vacances',
             'category' => 'Conges',
-            'starts_at' => now()->addWeek()->format('Y-m-d'),
+            'starts_at' => $startsAt->format('Y-m-d'),
             'ends_at' => now()->addWeeks(2)->format('Y-m-d'),
             'all_day' => true,
             'is_personal' => false,
         ])
-        ->assertRedirect(route('calendar.index'));
+        ->assertRedirect(route('calendar.index', ['month' => $startsAt->format('Y-m')]));
 
     $this->assertDatabaseHas('calendar_events', [
         'title' => 'Vacances',

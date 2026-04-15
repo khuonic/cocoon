@@ -146,9 +146,9 @@ const cellsData = computed((): Array<CellData | null> => {
             if (eventForLane(date, i)) overflow++;
         }
 
-        // Single-day events + anniversaires
+        // Single-day events + anniversaires (pas sur les cases des mois adjacents)
         const singles = singlesForDate(date);
-        const bdays = birthdaysForDate(date);
+        const bdays = cell.isOtherMonth ? [] : birthdaysForDate(date);
         const extras: Extra[] = [
             ...singles.map(e => ({ kind: 'event' as const, item: e })),
             ...bdays.map(b => ({ kind: 'birthday' as const, item: b })),
@@ -167,7 +167,7 @@ const cellsData = computed((): Array<CellData | null> => {
         <div
             v-for="(cell, i) in days"
             :key="i"
-            class="relative min-h-[78px] cursor-pointer overflow-hidden border-b border-r border-border p-1 last:border-r-0"
+            class="relative min-h-[96px] cursor-pointer overflow-hidden border-b border-r border-border p-1 last:border-r-0"
             :class="[
                 cell.isOtherMonth ? 'bg-muted/20' : '',
                 cell.date === todayStr ? 'bg-primary/5' : '',
@@ -196,8 +196,8 @@ const cellsData = computed((): Array<CellData | null> => {
                         v-if="evt"
                         class="h-full py-px text-[10px] font-medium leading-4 text-white"
                         :class="[
-                            isEventStart(evt, cell.date) ? 'rounded-l-sm pl-1' : '-ml-1 pl-0.5',
-                            isEventEnd(evt, cell.date)   ? 'rounded-r-sm pr-1' : '-mr-1 pr-0.5',
+                            isEventStart(evt, cell.date) ? 'rounded-l pl-1' : '-ml-px pl-0.5',
+                            isEventEnd(evt, cell.date)   ? 'rounded-r pr-1' : '-mr-px pr-0.5',
                             showEventTitle(evt, cell.date) ? 'truncate' : '',
                         ]"
                         :style="{ backgroundColor: evt.category_color }"
@@ -231,7 +231,7 @@ const cellsData = computed((): Array<CellData | null> => {
                 <!-- Overflow -->
                 <span
                     v-if="cellsData[i]!.overflow > 0"
-                    class="text-[10px] text-muted-foreground"
+                    class="text-[11px] font-semibold text-foreground"
                 >
                     +{{ cellsData[i]!.overflow }}
                 </span>

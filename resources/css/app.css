@@ -145,4 +145,12 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    /* Force le thème clair sur les pickers natifs Android pour éviter les boutons
+       "Annuler"/"Définir" noirs sur fond sombre en mode sombre. */
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"] {
+        color-scheme: light;
+    }
 }

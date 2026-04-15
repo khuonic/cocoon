@@ -72,7 +72,7 @@ class CalendarController extends Controller
 
         $reminders->scheduleForCalendarEvent($event);
 
-        return to_route('calendar.index');
+        return to_route('calendar.index', ['month' => Carbon::parse($request->validated()['starts_at'])->format('Y-m')]);
     }
 
     public function update(UpdateCalendarEventRequest $request, CalendarEvent $calendarEvent, ReminderService $reminders): RedirectResponse
@@ -86,14 +86,15 @@ class CalendarController extends Controller
 
         $reminders->scheduleForCalendarEvent($calendarEvent->fresh());
 
-        return to_route('calendar.index');
+        return to_route('calendar.index', ['month' => Carbon::parse($request->validated()['starts_at'])->format('Y-m')]);
     }
 
     public function destroy(CalendarEvent $calendarEvent, ReminderService $reminders): RedirectResponse
     {
+        $month = $calendarEvent->starts_at->format('Y-m');
         $reminders->cancelForCalendarEvent($calendarEvent);
         $calendarEvent->delete();
 
-        return to_route('calendar.index');
+        return to_route('calendar.index', ['month' => $month]);
     }
 }

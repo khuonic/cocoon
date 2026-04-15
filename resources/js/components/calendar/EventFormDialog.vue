@@ -82,15 +82,21 @@ function resetForm(): void {
     nextTick(() => { isResetting.value = false; });
 }
 
-watch(() => form.all_day, (val) => {
+watch(() => form.all_day, async (val) => {
     if (isResetting.value) { return; }
+    // Capturer les valeurs avant que le changement de type d'input (date ↔ datetime-local)
+    // ne provoque un effacement via v-model sur Android WebView
+    const savedStart = form.starts_at;
+    const savedEnd = form.ends_at;
+    await nextTick();
     if (val) {
         // Retirer l'heure : garder juste la date
-        form.starts_at = form.starts_at ? form.starts_at.slice(0, 10) : '';
-        form.ends_at = form.ends_at ? form.ends_at.slice(0, 10) : '';
+        form.starts_at = savedStart ? savedStart.split('T')[0] : '';
+        form.ends_at = savedEnd ? savedEnd.split('T')[0] : '';
     } else {
         // Ajouter heure par défaut, vider la fin
-        form.starts_at = form.starts_at ? `${form.starts_at.slice(0, 10)}T09:00` : '';
+        const datePart = savedStart ? savedStart.split('T')[0] : '';
+        form.starts_at = datePart ? `${datePart}T09:00` : '';
         form.ends_at = '';
     }
 });

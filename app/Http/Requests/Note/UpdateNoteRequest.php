@@ -22,6 +22,7 @@ class UpdateNoteRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:10000'],
             'is_pinned' => ['boolean'],
+            'is_personal' => ['boolean'],
             'color' => ['nullable', 'string', Rule::in(array_column(NoteColor::cases(), 'value'))],
         ];
     }

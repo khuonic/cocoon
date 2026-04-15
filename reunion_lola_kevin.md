@@ -136,3 +136,22 @@ Todos:
 A voir:
 - reminders: pour les anniversaires, il faut les remettre tous les ans
 - est ce que le scheduler est mis à jour si on modifie l'heure/date de l'event pourlequel on l'avait set ?
+
+
+- Calendrier : 
+  - Augmenter la hauteur pour aller tout en bas, pas grave si le plus est par dessus, il sera presque toujours sur une case du mois d'apres, ca permettra d'afficher au moins deux event par case
+  - Augmenter la largeur des event dans le calendrier pour aller jusqu'au bord d'une case, et réduire le border radius
+  - Augmenter la visibilité des +x
+  - Il faut que sur le mois en cours, on puisse voir dans les jours des mois précédents et suivants qui sont visibles leurs evenements, actuellement un il y a un bug, ex: si un anniversaire est le 2avril, la case du 2mai visible en bas affiche l'anniversaire du 2 avril (pas ses propres évenements),
+  - Lorsqu'on change de mois, les filtres se reset (il faut les garder)
+  - Lorsqu'on modifie/supprime/enregistre un event sur le mois suivant par exemple, apres l'action les evenements visibles sur le mois ne sont pas les bons du tout
+  - Saisie d'un evenement :
+    - si on a saisi une date avec une heure, lorsqu'on clique sur journée entiere, il ne faudrait pas reset la date mais juste retirer l'heure 
+- Probleme general :
+  - les input natifs de saisie de date lorsque le téléphone est en mode sombre, les liens comme "annuler" ou "définir" sont noirs sur fond sombre on ne les voit presque pas
+- Anniversaires
+  - mettre une modal de confirmation pour la suppression
+  - vider le formulaire apres une saisie, ce n'est pas le cas actuellement
+- Notes/todos:
+  - possible d'ajouter la notion de note personnelle ? comme pour les todos ?
+  - Il faudrait pouvoir modifier la couleur d'une note/todo si on le souhaite

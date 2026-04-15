@@ -20,7 +20,7 @@ function select(monthIndex: number): void {
     const m = `${pickerYear.value}-${String(monthIndex + 1).padStart(2, '0')}`;
     isOpen.value = false;
     const target = props.navigateTo ?? '/calendar';
-    router.get(target, { month: m, ...(props.navigateParams ?? {}) }, { preserveState: false });
+    router.get(target, { month: m, ...(props.navigateParams ?? {}) }, { preserveState: true });
 }
 
 function isSelected(monthIndex: number): boolean {

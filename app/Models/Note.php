@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\NoteColor;
 use App\Traits\Syncable;
 use Carbon\CarbonImmutable;
+use Database\Factories\NoteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $title
  * @property string|null $content
  * @property bool $is_pinned
+ * @property bool $is_personal
+ * @property int|null $user_id
  * @property int $created_by
  * @property string $uuid
  * @property CarbonImmutable|null $created_at
@@ -39,7 +42,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Note extends Model
 {
-    /** @use HasFactory<\Database\Factories\NoteFactory> */
+    /** @use HasFactory<NoteFactory> */
     use HasFactory;
 
     use Syncable;
@@ -48,6 +51,8 @@ class Note extends Model
         'title',
         'content',
         'is_pinned',
+        'is_personal',
+        'user_id',
         'color',
         'created_by',
         'uuid',
@@ -57,6 +62,7 @@ class Note extends Model
     {
         return [
             'is_pinned' => 'boolean',
+            'is_personal' => 'boolean',
             'color' => NoteColor::class,
         ];
     }
@@ -64,5 +70,10 @@ class Note extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

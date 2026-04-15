@@ -15,15 +15,16 @@ class NoteController extends Controller
 {
     public function index(): Response
     {
+        $userId = auth()->id();
+
         $notes = Note::query()
             ->with('creator')
+            ->where(fn ($q) => $q->where('is_personal', false)->orWhere('user_id', $userId))
             ->get()
             ->map(fn (Note $n) => [
                 ...$n->toArray(),
                 'item_type' => 'note',
             ]);
-
-        $userId = auth()->id();
 
         $todoLists = TodoList::query()
             ->with(['todos' => fn ($q) => $q->oldest('created_at')])
@@ -57,6 +58,7 @@ class NoteController extends Controller
             ...$request->validated(),
             'uuid' => Str::uuid(),
             'created_by' => auth()->id(),
+            'user_id' => $request->boolean('is_personal') ? auth()->id() : null,
         ]);
 
         return to_route('notes.show', $note);
@@ -64,7 +66,10 @@ class NoteController extends Controller
 
     public function update(UpdateNoteRequest $request, Note $note): RedirectResponse
     {
-        $note->update($request->validated());
+        $note->update([
+            ...$request->validated(),
+            'user_id' => $request->boolean('is_personal') ? auth()->id() : null,
+        ]);
 
         return back();
     }
