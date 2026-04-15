@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref, nextTick } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import CalendarWeekRow from '@/components/calendar/CalendarWeekRow.vue';
 import EventFormDialog from '@/components/calendar/EventFormDialog.vue';
@@ -19,6 +19,10 @@ import SyncButton from '@/components/SyncButton.vue';
 import type { CalendarBirthday, CalendarEvent, CalendarUser } from '@/types/calendar';
 
 const DAYS_SHORT = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+// État des filtres persisté entre navigations (module-level, survit au remontage du composant)
+let _savedCategory = 'all';
+let _savedUserIds: number[] = [];
 
 const CATEGORIES = [
     { value: 'all', label: 'Tout' },
@@ -50,15 +54,18 @@ const monthLabel = computed(() => {
 function navigate(direction: -1 | 1): void {
     const d = new Date(year.value, month.value + direction, 1);
     const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    router.get('/calendar', { month: newMonth }, { preserveState: true });
+    router.get('/calendar', { month: newMonth }, { preserveState: false });
 }
 
 const showMonthPicker = ref(false);
 
 // ─── Filtres ───────────────────────────────────────────────────────────────
 const page = usePage<{ auth: { user: { id: number } } }>();
-const activeCategory = ref('all');
-const activeUserIds = ref<number[]>([page.props.auth.user.id]); // par défaut : utilisateur courant seulement
+const activeCategory = ref(_savedCategory);
+const activeUserIds = ref<number[]>(_savedUserIds.length > 0 ? [..._savedUserIds] : [page.props.auth.user.id]);
+
+watch(activeCategory, (val) => { _savedCategory = val; });
+watch(activeUserIds, (val) => { _savedUserIds = [...val]; }, { deep: true });
 
 function toggleUser(userId: number): void {
     const idx = activeUserIds.value.indexOf(userId);
