@@ -367,7 +367,7 @@ it('pushes multiple changes in one request', function () {
                 'data' => [
                     'title' => 'Todo 1',
                     'is_done' => false,
-                    'todo_list_id' => $list->id,
+                    'todo_list_uuid' => $list->uuid,
                     'uuid' => $uuid2,
                 ],
                 'updated_at' => now()->toIso8601String(),

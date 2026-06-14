@@ -186,8 +186,15 @@ class SyncService
         $fillable = (new $modelClass)->getFillable();
         $attributes = array_intersect_key($data, array_flip($fillable));
 
-        // Resolve todo_list FK from UUID to avoid cross-device ID mismatch
-        if ($modelClass === Todo::class && isset($data['todo_list_uuid'])) {
+        // Resolve todo_list FK from UUID to avoid cross-device ID mismatch.
+        // Always strip the raw todo_list_id (meaningless cross-device) and require todo_list_uuid.
+        if ($modelClass === Todo::class) {
+            unset($attributes['todo_list_id']);
+
+            if (! isset($data['todo_list_uuid'])) {
+                return false;
+            }
+
             $todoList = TodoList::query()->where('uuid', $data['todo_list_uuid'])->first();
 
             if (! $todoList) {
@@ -235,8 +242,15 @@ class SyncService
         $fillable = $existing->getFillable();
         $attributes = array_intersect_key($data, array_flip($fillable));
 
-        // Resolve todo_list FK from UUID to avoid cross-device ID mismatch
-        if ($modelClass === Todo::class && isset($data['todo_list_uuid'])) {
+        // Resolve todo_list FK from UUID to avoid cross-device ID mismatch.
+        // Always strip the raw todo_list_id (meaningless cross-device) and require todo_list_uuid.
+        if ($modelClass === Todo::class) {
+            unset($attributes['todo_list_id']);
+
+            if (! isset($data['todo_list_uuid'])) {
+                return false;
+            }
+
             $todoList = TodoList::query()->where('uuid', $data['todo_list_uuid'])->first();
 
             if (! $todoList) {

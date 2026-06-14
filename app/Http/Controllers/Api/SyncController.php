@@ -31,13 +31,17 @@ class SyncController extends Controller
         $rejected = 0;
 
         foreach ($request->input('changes') as $change) {
-            $success = $this->syncService->applyChange(
-                type: $change['type'],
-                uuid: $change['uuid'],
-                action: SyncAction::from($change['action']),
-                data: $change['data'] ?? null,
-                updatedAt: Carbon::parse($change['updated_at']),
-            );
+            try {
+                $success = $this->syncService->applyChange(
+                    type: $change['type'],
+                    uuid: $change['uuid'],
+                    action: SyncAction::from($change['action']),
+                    data: $change['data'] ?? null,
+                    updatedAt: Carbon::parse($change['updated_at']),
+                );
+            } catch (\Throwable) {
+                $success = false;
+            }
 
             if ($success) {
                 $applied++;
@@ -114,13 +118,17 @@ class SyncController extends Controller
         $rejected = 0;
 
         foreach ($request->input('changes', []) as $change) {
-            $success = $this->syncService->applyChange(
-                type: $change['type'],
-                uuid: $change['uuid'],
-                action: SyncAction::from($change['action']),
-                data: $change['data'] ?? null,
-                updatedAt: Carbon::parse($change['updated_at']),
-            );
+            try {
+                $success = $this->syncService->applyChange(
+                    type: $change['type'],
+                    uuid: $change['uuid'],
+                    action: SyncAction::from($change['action']),
+                    data: $change['data'] ?? null,
+                    updatedAt: Carbon::parse($change['updated_at']),
+                );
+            } catch (\Throwable) {
+                $success = false;
+            }
 
             if ($success) {
                 $applied++;

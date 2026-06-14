@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Traits\Syncable;
+use Carbon\CarbonImmutable;
+use Database\Factories\TodoFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,10 +16,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $todo_list_id
  * @property string $title
  * @property bool $is_done
- * @property \Carbon\CarbonImmutable|null $completed_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\TodoList $todoList
+ * @property CarbonImmutable|null $completed_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read TodoList $todoList
  *
  * @method static Builder<static>|Todo done()
  * @method static \Database\Factories\TodoFactory factory($count = null, $state = [])
@@ -38,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Todo extends Model
 {
-    /** @use HasFactory<\Database\Factories\TodoFactory> */
+    /** @use HasFactory<TodoFactory> */
     use HasFactory;
 
     use Syncable;
@@ -63,6 +65,16 @@ class Todo extends Model
     public function todoList(): BelongsTo
     {
         return $this->belongsTo(TodoList::class);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSyncArray(): array
+    {
+        return array_merge($this->toArray(), [
+            'todo_list_uuid' => $this->todoList?->uuid,
+        ]);
     }
 
     /** @param Builder<Todo> $query */

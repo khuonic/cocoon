@@ -33,6 +33,17 @@ trait Syncable
         });
     }
 
+    /**
+     * Return the array payload to store in the sync log.
+     * Models can override this to add UUID-based foreign keys.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSyncArray(): array
+    {
+        return $this->toArray();
+    }
+
     protected function queueSync(SyncAction $action): void
     {
         if ($this->isSyncing) {
@@ -43,7 +54,7 @@ trait Syncable
             'syncable_type' => $this->getMorphClass(),
             'syncable_uuid' => $this->uuid,
             'action' => $action,
-            'payload' => $action === SyncAction::Deleted ? null : $this->toArray(),
+            'payload' => $action === SyncAction::Deleted ? null : $this->toSyncArray(),
         ]);
     }
 }
