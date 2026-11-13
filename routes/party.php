@@ -9,7 +9,6 @@ use App\Http\Controllers\Party\PartyRunController;
 use App\Http\Middleware\EnsurePartyAccess;
 use App\Http\Middleware\EnsurePartyEnabled;
 use App\Http\Middleware\EnsurePartyPlayer;
-use App\Party\GameRegistry;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,8 +19,6 @@ use Illuminate\Support\Facades\Route;
 | Public (sans auth Cocoon) mais réservé aux invités : clé QR ou mot de passe.
 |
 */
-
-Route::bind('game', fn (string $slug) => app(GameRegistry::class)->findOrFail($slug));
 
 Route::middleware(EnsurePartyEnabled::class)
     ->prefix('fete')

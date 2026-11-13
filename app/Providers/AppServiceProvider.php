@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -29,14 +30,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-        $this->configurePartyRateLimiting();
+        $this->configureParty();
     }
 
     /**
-     * Rate limiting du mini-site de la fête (/fete).
+     * Mini-site de la fête (/fete) : binding {game} et rate limiting.
+     *
+     * Le binding doit vivre ici (et non dans routes/party.php) pour survivre au route:cache.
      */
-    protected function configurePartyRateLimiting(): void
+    protected function configureParty(): void
     {
+        Route::bind('game', fn (string $slug) => $this->app->make(GameRegistry::class)->findOrFail($slug));
+
         RateLimiter::for('party-password', fn (Request $request) => Limit::perMinute(10)->by('party-password|'.$request->ip()));
 
         RateLimiter::for('party', fn (Request $request) => Limit::perMinute(60)->by(
