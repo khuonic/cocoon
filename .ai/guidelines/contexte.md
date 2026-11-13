@@ -1,6 +1,6 @@
 
 
-``# Contexte Cocoon
+# Contexte Cocoon
 
 > **IMPORTANT : Ce fichier doit être mis à jour à chaque fois qu'une phase ou fonctionnalité majeure est terminée.**
 
@@ -194,7 +194,23 @@ Accueil | Budget | Calendrier | Notes | Plus
   - Global : DialogContent top-4 par défaut, dismiss clavier au tap, boutons redesign (rounded-lg, font-semibold, h-10)
   - Login : logo agrandi (size-36), suppression texte superflu
 - **Mise en prod** : Laravel Cloud déployé, APK signé, push sync implémenté (SyncLog → Cloud), biométrie opérationnelle
-- **231 tests passants**
+- **Mini-site « La Fête » (/fete)** : mini-jeux pour l'anniversaire d'Antoine (voir section dédiée)
+- **265 tests passants**
+
+## Mini-site « La Fête » (/fete)
+
+Mini-site web invités, **isolé de Cocoon** (pas d'auth Fortify, pas de Syncable, props Inertia Cocoon non partagées).
+
+- **Activation** : `PARTY_ENABLED=true` uniquement sur Cloud (middleware `EnsurePartyEnabled` → 404 sinon, + `X-Robots-Tag: noindex`). Ne jamais le mettre dans le `.env` qui part dans l'APK.
+- **Accès** : `EnsurePartyAccess` — `?k=PARTY_ACCESS_KEY` (QR code) ou mot de passe `PARTY_PASSWORD` sur `/fete/entrer` → cookie chiffré `party_access` (30 j, révoqué si clé/mot de passe change)
+- **Joueur** : `EnsurePartyPlayer` — cookie `party_player` (uuid, 1 an) → `App\Models\Party\Player` (pseudo unique insensible à la casse)
+- **Jeux** : `config('party.games')` → `App\Party\GameRegistry` (singleton). Contrats `App\Party\Contracts\PartyGame` / `QuizGame`. Contenu en dur dans la classe du jeu (ex: `App\Party\Games\VoieDeLaSagesse::steps()`)
+- **Parties** : `App\Models\Party\GameRun` (score + `duration_ms` génériques). `QuizRunService` valide côté serveur (étape en cours, 1 réponse/étape, chrono serveur). Réponses en JSON (`partyPost` dans `components/party/party-api.ts`)
+- **Classement** : `Leaderboard` — meilleure partie terminée par joueur, tri score desc puis durée asc
+- **Fermeture** : après `party.closes_at` (30/01/2027) → lecture seule (403 sur start/answer)
+- **Front** : vue racine `party.blade.php`, `layouts/PartyLayout.vue`, pages `pages/Party/*`, styles `resources/css/party.css` (Press Start 2P + Pixelify Sans)
+- **Pixel art** : sprites en grilles de caractères dans `components/party/sprites.ts` (rendus en SVG par `PixelSprite.vue`), décors par étape dans `components/party/scenes/` (repère 180×150 agrandi par `SceneStage.vue`, prop `action` = image bonne réponse)
+- **Tests** : `tests/Feature/Party/*`, helpers `enableParty()` / `asPartyGuest()` dans `tests/Pest.php`
 
 ## Conventions de code
 

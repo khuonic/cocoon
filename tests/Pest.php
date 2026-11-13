@@ -1,5 +1,10 @@
 <?php
 
+use App\Models\Party\Player;
+use App\Party\PartyEvent;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -11,8 +16,8 @@
 |
 */
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -44,4 +49,32 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Active le mini-site de la fête avec des secrets de test.
+ */
+function enableParty(array $overrides = []): void
+{
+    config([
+        'party.enabled' => true,
+        'party.access_key' => 'cle-du-qr',
+        'party.password' => 'gateau',
+        'party.closes_at' => now()->addMonth()->toDateTimeString(),
+        ...$overrides,
+    ]);
+}
+
+/**
+ * Requêtes d'un invité ayant passé l'accès, et optionnellement identifié par son pseudo.
+ */
+function asPartyGuest(?Player $player = null): TestCase
+{
+    $test = test()->withCredentials()->withCookie(PartyEvent::ACCESS_COOKIE, PartyEvent::accessToken());
+
+    if ($player !== null) {
+        $test->withCookie(PartyEvent::PLAYER_COOKIE, $player->uuid);
+    }
+
+    return $test;
 }

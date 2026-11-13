@@ -1,0 +1,239 @@
+/*
+ * Mini-site de la fête : direction pixel art.
+ * Palette : encre #1B1B2F, nuit #22223B, parchemin #F4EBD0, or #F2B134,
+ * corail #E4572E, sarcelle #2A9D8F, prune #6D597A, ciel #8ECAE6.
+ */
+
+.party {
+    --px-ink: #1b1b2f;
+    --px-night: #22223b;
+    --px-paper: #f4ebd0;
+    --px-cream: #fff8e7;
+    --px-gold: #f2b134;
+    --px-gold-dark: #d99a1e;
+    --px-coral: #e4572e;
+    --px-teal: #2a9d8f;
+    --px-plum: #6d597a;
+    --px-sky: #8ecae6;
+    --px-muted: #c9c3b0;
+
+    font-family: 'Pixelify Sans', ui-sans-serif, sans-serif;
+    background: var(--px-night);
+    color: var(--px-paper);
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.font-pixel {
+    font-family: 'Press Start 2P', ui-monospace, monospace;
+    letter-spacing: 0.02em;
+}
+
+.px-border {
+    box-shadow:
+        0 -4px 0 var(--px-ink),
+        0 4px 0 var(--px-ink),
+        -4px 0 0 var(--px-ink),
+        4px 0 0 var(--px-ink);
+}
+
+.px-btn {
+    font-family: 'Press Start 2P', ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 14px 18px;
+    border: 0;
+    cursor: pointer;
+    color: var(--px-ink);
+    text-decoration: none;
+    text-align: center;
+    box-shadow:
+        0 -4px 0 var(--px-ink),
+        0 4px 0 var(--px-ink),
+        -4px 0 0 var(--px-ink),
+        4px 0 0 var(--px-ink),
+        inset 0 -6px 0 rgb(0 0 0 / 0.15);
+    transition: transform 80ms ease;
+}
+
+.px-btn:active:not(:disabled) {
+    transform: translateY(3px);
+}
+
+.px-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.px-btn:focus-visible,
+.px-choice:focus-visible,
+.px-input:focus-visible {
+    outline: 3px solid var(--px-sky);
+    outline-offset: 6px;
+}
+
+.px-btn-gold {
+    background: var(--px-gold);
+}
+
+.px-btn-cream {
+    background: var(--px-cream);
+}
+
+.px-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 14px 10px 10px;
+    border: 0;
+    text-align: left;
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1.25;
+    color: var(--px-ink);
+    background: var(--px-cream);
+    cursor: pointer;
+    box-shadow:
+        0 -4px 0 var(--px-ink),
+        0 4px 0 var(--px-ink),
+        -4px 0 0 var(--px-ink),
+        4px 0 0 var(--px-ink),
+        inset 0 -6px 0 #e3d7b6;
+}
+
+.px-choice:disabled {
+    cursor: default;
+}
+
+.px-choice-letter {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', ui-monospace, monospace;
+    font-size: 13px;
+}
+
+.px-dialog {
+    position: relative;
+    background: var(--px-ink);
+    color: var(--px-paper);
+    padding: 24px 16px 16px;
+    box-shadow:
+        0 -4px 0 var(--px-gold),
+        0 4px 0 var(--px-gold),
+        -4px 0 0 var(--px-gold),
+        4px 0 0 var(--px-gold);
+}
+
+.px-dialog-tag {
+    position: absolute;
+    top: -14px;
+    left: 14px;
+    max-width: calc(100% - 28px);
+    background: var(--px-gold);
+    color: var(--px-ink);
+    font-family: 'Press Start 2P', ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 6px 8px;
+}
+
+.px-input {
+    width: 100%;
+    min-height: 52px;
+    padding: 10px 14px;
+    border: 0;
+    font-family: inherit;
+    font-size: 20px;
+    color: var(--px-ink);
+    background: var(--px-cream);
+    box-shadow:
+        0 -4px 0 var(--px-ink),
+        0 4px 0 var(--px-ink),
+        -4px 0 0 var(--px-ink),
+        4px 0 0 var(--px-ink);
+}
+
+.px-error {
+    color: #ffb4a2;
+    font-size: 17px;
+}
+
+@keyframes px-walk-in {
+    0% {
+        transform: translateY(-40px);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(4px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes px-bounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes px-pop {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes px-blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.px-walk-in {
+    animation: px-walk-in 600ms steps(6) both;
+}
+
+.px-bounce {
+    animation: px-bounce 900ms steps(3) infinite;
+}
+
+.px-pop {
+    animation: px-pop 350ms steps(4) both;
+}
+
+.px-blink {
+    animation: px-blink 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .px-walk-in,
+    .px-bounce,
+    .px-pop,
+    .px-blink {
+        animation: none;
+    }
+}

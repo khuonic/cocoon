@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Party\PartyEvent;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -27,6 +28,14 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Le mini-site de la fête a sa propre vue racine (police pixel, noindex).
+     */
+    public function rootView(Request $request): string
+    {
+        return $this->isPartyRequest($request) ? 'party' : $this->rootView;
+    }
+
+    /**
      * Define the props that are shared by default.
      *
      * @see https://inertiajs.com/shared-data
@@ -35,6 +44,10 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        if ($this->isPartyRequest($request)) {
+            return $this->sharePartyProps($request);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -51,5 +64,27 @@ class HandleInertiaRequests extends Middleware
             'appVersionCode' => (int) config('nativephp.version_code'),
             'isNativePHP' => function_exists('nativephp_call'),
         ];
+    }
+
+    /**
+     * Props partagées du mini-site : aucune donnée Cocoon n'y est exposée.
+     *
+     * @return array<string, mixed>
+     */
+    private function sharePartyProps(Request $request): array
+    {
+        return [
+            ...parent::share($request),
+            'party' => [
+                'title' => config('party.title'),
+                'isClosed' => PartyEvent::isClosed(),
+                'player' => ($player = EnsurePartyPlayer::resolve($request)) ? ['pseudo' => $player->pseudo] : null,
+            ],
+        ];
+    }
+
+    private function isPartyRequest(Request $request): bool
+    {
+        return $request->routeIs('party.*');
     }
 }

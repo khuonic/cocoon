@@ -6,29 +6,19 @@ metadata:
   author: laravel
 ---
 
-# Inertia Vue Development
-
-## When to Apply
-
-Activate this skill when:
-
-- Creating or modifying Vue page components for Inertia
-- Working with forms in Vue (using `<Form>` or `useForm`)
-- Implementing client-side navigation with `<Link>` or `router`
-- Using v2 features: deferred props, prefetching, or polling
-- Building Vue-specific features with the Inertia protocol
+# Inertia Vue development
 
 ## Documentation
 
 Use `search-docs` for detailed Inertia v2 Vue patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Page Components Location
+### Page components location
 
-Vue page components should be placed in the `resources/js/pages` directory.
+Place Vue page components in the `resources/js/pages` directory.
 
-### Page Component Structure
+### Page component structure
 
 Important: Vue components must have a single root element.
 
@@ -52,11 +42,11 @@ defineProps({
 </template>
 ```
 
-## Client-Side Navigation
+## Client-side navigation
 
-### Basic Link Component
+### Basic Link component
 
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
+Use `<Link>` for client-side navigation instead of `<a>` tags:
 
 <!-- Inertia Vue Navigation -->
 ```vue
@@ -73,7 +63,7 @@ import { Link } from '@inertiajs/vue3'
 </template>
 ```
 
-### Link with Method
+### Link with method
 
 <!-- Link with POST Method -->
 ```vue
@@ -105,7 +95,7 @@ import { Link } from '@inertiajs/vue3'
 </template>
 ```
 
-### Programmatic Navigation
+### Programmatic navigation
 
 <!-- Router Visit -->
 ```vue
@@ -132,9 +122,9 @@ function createUser() {
 </template>
 ```
 
-## Form Handling
+## Form handling
 
-### Form Component (Recommended)
+### Form component (recommended)
 
 The recommended way to build forms is with the `<Form>` component:
 
@@ -161,7 +151,7 @@ import { Form } from '@inertiajs/vue3'
 </template>
 ```
 
-### Form Component With All Props
+### Form component with all props
 
 <!-- Form Component Full Example -->
 ```vue
@@ -205,15 +195,15 @@ import { Form } from '@inertiajs/vue3'
 </template>
 ```
 
-### Form Component Reset Props
+### Form component reset props
 
 The `<Form>` component supports automatic resetting:
 
-- `resetOnError` - Reset form data when the request fails
-- `resetOnSuccess` - Reset form data when the request succeeds
-- `setDefaultsOnSuccess` - Update default values on success
+- `resetOnError`: reset form data when the request fails
+- `resetOnSuccess`: reset form data when the request succeeds
+- `setDefaultsOnSuccess`: update default values on success
 
-Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
+For details, run the `search-docs` tool with the query `form component resetting`.
 
 <!-- Form with Reset Props -->
 ```vue
@@ -239,9 +229,9 @@ import { Form } from '@inertiajs/vue3'
 </template>
 ```
 
-Forms can also be built using the `useForm` composable for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
+For more programmatic control, you can also build forms with the `useForm` composable. For guidance, run the `search-docs` tool with the query `useForm helper`.
 
-### `useForm` Composable
+### `useForm` composable
 
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 
@@ -281,11 +271,11 @@ function submit() {
 </template>
 ```
 
-## Inertia v2 Features
+## Inertia v2 features
 
-### Deferred Props
+### Deferred props
 
-Use deferred props to load data after initial page render:
+Use deferred props to load data after the initial page render:
 
 <!-- Deferred Props with Empty State -->
 ```vue
@@ -313,7 +303,7 @@ defineProps({
 
 ### Polling
 
-Use the `usePoll` composable to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
+Use the `usePoll` composable to refresh data automatically at intervals. The composable cleans up on unmount and throttles polling when the browser tab is inactive.
 
 <!-- Basic Polling -->
 ```vue
@@ -368,12 +358,12 @@ const { start, stop } = usePoll(5000, {
 </template>
 ```
 
-- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
-- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
+- `autoStart` (default `true`): set to `false` to start polling manually with the returned `start()` function
+- `keepAlive` (default `false`): set to `true` to prevent throttling when the browser tab is inactive
 
-### WhenVisible (Infinite Scroll)
+### WhenVisible (infinite scroll)
 
-Load more data when user scrolls to a specific element:
+Load more data when the user scrolls to a specific element:
 
 <!-- Infinite Scroll with WhenVisible -->
 ```vue
@@ -404,15 +394,15 @@ defineProps({
 </template>
 ```
 
-## Server-Side Patterns
+## Server-side patterns
 
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
+The inertia-laravel guidelines cover server-side patterns such as Inertia::render, props, and middleware.
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
 - Forgetting that Vue components must have a single root element
 - Forgetting to add loading states (skeleton screens) when using deferred props
 - Not handling the `undefined` state of deferred props before data loads
-- Using `<form>` without preventing default submission (use `<Form>` component or `@submit.prevent`)
-- Forgetting to check if `<Form>` component is available in your Inertia version
+- Using `<form>` without preventing default submission (use the `<Form>` component or `@submit.prevent`)
+- Forgetting to check whether the `<Form>` component is available in your Inertia version

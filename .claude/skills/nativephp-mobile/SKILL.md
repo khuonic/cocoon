@@ -19,9 +19,7 @@ Never auto-run these commands. Always tell the user to run them manually:
 
 ```bash
 npm run build -- --mode=ios      # or --mode=android
-
 php artisan native:run ios       # or android
-
 php artisan native:watch
 ./native open
 ./native watch
@@ -42,9 +40,7 @@ Set in `.env` before `php artisan native:install`:
 NATIVEPHP_APP_ID=com.yourcompany.yourapp
 NATIVEPHP_APP_VERSION="DEBUG"
 NATIVEPHP_APP_VERSION_CODE="1"
-
 # Optional for iOS:
-
 NATIVEPHP_DEVELOPMENT_TEAM=XXXXXXXXXX
 ```
 

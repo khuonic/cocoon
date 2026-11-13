@@ -51,7 +51,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 | Joke | Blague du jour (seeder 50 blagues) |
 | Birthday | Anniversaire (nom, date, âge calculé, reminder_days_before) |
 | CalendarEvent | Événement calendrier (titre, catégorie colorée, dates, lieu, rappel en minutes, personnel) |
-| SyncLog | Journal de sync (queue locale, pending/synced) |
+| SyncLog | Journal de sync (queue locale, pending/synced — `synced_at` null = non encore pushé au Cloud) |
 
 ### Enums (app/Enums/)
 
@@ -60,12 +60,12 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MealTag` : Rapide, Vege, Comfort, Leger, Gourmand
 - `NoteColor` : Default, Yellow, Green, Blue, Pink, Purple
 - `EventCategory` : Conges, Pro, Loisir, Rdv (avec label() et color() hex)
-- `SyncAction` : actions de sync
+- `SyncAction` : actions de sync (Created, Updated, Deleted)
 
 ### Services (app/Services/)
 
 - `BalanceCalculator` : calcul de balance budget entre les 2 utilisateurs
-- `SyncService` : logique sync push/pull/full (last-write-wins, gestion recettes imbriquées)
+- `SyncService` : logique sync push/pull/full/pending/acknowledge (last-write-wins, gestion recettes imbriquées)
 - `ReminderService` : schedule/cancel rappels pour CalendarEvent et Birthday via LocalNotification facade
 
 ### Plugin local notifications (packages/cocoon/local-notifications)
@@ -90,7 +90,7 @@ App mobile de couple (Kevin + Lola) pour centraliser l'organisation quotidienne.
 - `MoreController` : page "Plus"
 - `Settings/ProfileController`, `Settings/PasswordController`
 - `Auth/SetupController`, `Auth/BiometricController`, `Auth/ApiLoginController`
-- `Api/SyncController` : push/pull/full
+- `Api/SyncController` : push / pull / full / pending / acknowledge
 - `Api/AppVersionController` : check (version + signed URL) + download (stream APK)
 
 ### Navigation (BottomNav)
@@ -123,6 +123,52 @@ Accueil | Budget | Calendrier | Notes | Plus
 - Frontend : drag natif HTML5 (`draggable`, `@dragstart/enter/end`) avec handle GripVertical
 - Réordonnancement local immédiat pour feedback visuel + sauvegarde serveur
 
+## Architecture de sync
+
+### Deux tokens distincts
+
+| Token | Clé localStorage | Usage |
+|-------|-----------------|-------|
+| `cocoon_auth_token` | local Sanctum | Authentifie les appels API **locaux** (`/api/sync/pending`, `/api/sync/acknowledge`) |
+| `cocoon_sync_token` | Cloud Sanctum | Authentifie les appels API **Cloud** (`push`, `pull`, `full`, `app/version`) |
+
+- `cocoon_auth_token` est flashé en session (`api_token`) au login et au setup, puis sauvé dans localStorage
+- `cocoon_sync_token` est obtenu via `POST {syncApiUrl}/api/login` au login/setup, puis sauvé dans localStorage
+
+### Flux push/pull
+
+```
+[Syncable trait] → SyncLog (synced_at = null)
+                         ↓
+[sync-client.ts::sync()]
+  ├─ fullSync() : GET /api/sync/pending (local) → POST {cloud}/api/sync/full → POST /api/sync/acknowledge (local)
+  └─ pushLocalChanges() + pull() : GET /api/sync/pending → POST {cloud}/api/sync/push → acknowledge → GET {cloud}/api/sync/pull
+```
+
+- `isSyncing = true` sur le modèle → skip `queueSync()` pour éviter les boucles infinies
+- Last-write-wins via `updated_at` (le plus récent gagne)
+- Recipes : ingrédients et étapes inclus dans le payload (delete+recreate à chaque sync)
+
+### Routes API locales (auth:sanctum local)
+
+- `GET /api/sync/pending` → retourne `{ changes: SyncChange[], ids: int[] }` (SyncLog non synced)
+- `POST /api/sync/acknowledge` → marque les SyncLog `ids` comme synced (`synced_at = now()`)
+
+### Routes API Cloud (auth:sanctum Cloud)
+
+- `POST /api/sync/push` → applique des changements entrants
+- `GET /api/sync/pull?since=` → retourne les changements depuis un timestamp
+- `POST /api/sync/full` → push + retourne toutes les données Cloud
+- `GET /api/app/version` → vérifie si une mise à jour APK est disponible
+
+## Déploiement production
+
+- **Backend Cloud** : Laravel Cloud (Serverless, Postgres, bucket S3 privé)
+- **APK** : signé avec keystore dans `credentials/`, distribué via `app:publish-release`
+- **Auto-update** : `latest.json` sur S3 consulté au lancement, `UpdateDialog` propose le téléchargement
+- **Build commands Cloud** : `composer config http-basic` + `composer install` sans `--prefer-dist` ni `npm run build`
+- **Windows SSL** : `AWS_VERIFY_SSL=false` dans `.env` local + `'http' => ['verify' => env('AWS_VERIFY_SSL', true)]` dans `config/filesystems.php` disk s3
+
 ## Phases terminées
 
 - **Phase 1-4** : Setup, auth, layout, settings
@@ -148,7 +194,8 @@ Accueil | Budget | Calendrier | Notes | Plus
   - Dashboard : salutation personnalisée (heure), mot doux partenaire en bannière, FAB cœur pour édition
   - Global : DialogContent top-4 par défaut, dismiss clavier au tap, boutons redesign (rounded-lg, font-semibold, h-10)
   - Login : logo agrandi (size-36), suppression texte superflu
-- **225 tests passants**
+- **Mise en prod** : Laravel Cloud déployé, APK signé, push sync implémenté (SyncLog → Cloud), biométrie opérationnelle
+- **231 tests passants**
 
 ## Conventions de code
 
@@ -159,53 +206,30 @@ Accueil | Budget | Calendrier | Notes | Plus
 - **Images** : `Storage::disk('public')`, symlink via `php artisan storage:link`, URL `/storage/{path}`
 - **mobilePut / mobilePatchForm** : workaround Android WebView pour PUT/PATCH (POST + _method spoofing) — utiliser ces helpers, jamais `form.put()` ou `form.patch()` directement
 - **$fillable** : toujours ajouter les nouvelles colonnes dans `$fillable` du modèle sinon silently ignored
+- **API routes sans statefulApi()** : `bootstrap/app.php` n'utilise pas `$middleware->statefulApi()` — les routes API sont purement Bearer token (pas de CSRF)
 
 ## Fichiers de référence
 
 - `config/cocon.php` : whitelist emails autorisés
 - `config/fortify.php` : features auth
 - `packages/cocoon/local-notifications/` : plugin rappels Android
+- `MISE_EN_PROD.md` : guide complet déploiement Laravel Cloud + build APK
 
 === foundation rules ===
 
 # Laravel Boost Guidelines
 
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
-
 ## Foundational Context
 
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+This application is a Laravel application running on PHP 8.4. Always use the APIs that match the installed major version of each package — do not assume a version.
 
-- php - 8.4.0
-- inertiajs/inertia-laravel (INERTIA_LARAVEL) - v2
-- laravel/fortify (FORTIFY) - v1
-- laravel/framework (LARAVEL) - v13
-- laravel/prompts (PROMPTS) - v0
-- laravel/sanctum (SANCTUM) - v4
-- laravel/wayfinder (WAYFINDER) - v0
-- laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
-- laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/vue3 (INERTIA_VUE) - v2
-- tailwindcss (TAILWINDCSS) - v4
-- vue (VUE) - v3
-- @laravel/vite-plugin-wayfinder (WAYFINDER_VITE) - v0
-- eslint (ESLINT) - v9
-- prettier (PRETTIER) - v3
+Before relying on a package's API, confirm its installed version:
+- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
+- JS packages: check `package.json` for the installed versions.
 
 ## Skills Activation
 
-This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-- `wayfinder-development` — Activates whenever referencing backend routes in frontend components. Use when importing from @/actions or @/routes, calling Laravel routes from TypeScript, or working with Wayfinder route functions.
-- `pest-testing` — Tests applications using the Pest 4 PHP framework. Activates when writing tests, creating unit or feature tests, adding assertions, testing Livewire components, browser testing, debugging test failures, working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion, coverage, or needs to verify functionality works.
-- `inertia-vue-development` — Develops Inertia.js v2 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
-- `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
-- `nativephp-mobile` — Builds native iOS and Android apps with PHP & Larvel. Activate when using native device APIs (camera, dialog, biometrics, scanner, geolocation, push notifications), EDGE components (bottom-nav, top-bar, side-nav), `#nativephp` JavaScript imports, native mobile events, NativePHP Artisan commands (native:run, native:install, native:watch), deep links, secure storage, or mobile app deployment.
+This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 ## Conventions
 
@@ -224,110 +248,88 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 ## Frontend Bundling
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
+- If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
 ## Documentation Files
 
 - You must only create documentation files if explicitly requested by the user.
 
-## Replies
-
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
-
 === boost rules ===
 
 # Laravel Boost
 
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+## Tools
 
-## Artisan Commands
+- Laravel Boost is an MCP server with tools designed specifically for this application. Prefer Boost tools over manual alternatives like shell commands or file reads.
+- Use `database-query` to run read-only queries against the database instead of writing raw SQL in tinker.
+- Use `database-schema` to inspect table structure before writing migrations or models.
+- Use `get-absolute-url` to resolve the correct scheme, domain, and port for project URLs. Always use this before sharing a URL with the user.
+- Use `browser-logs` to read browser logs, errors, and exceptions. Only recent logs are useful, ignore old entries.
 
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`, `php artisan tinker --execute "..."`).
-- Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
+## Searching Documentation (IMPORTANT)
 
-## URLs
+- Use `search-docs` before changes that depend on Laravel ecosystem APIs, behavior, configuration, or version-specific syntax. Skip it for copy-only edits and other changes where package documentation is irrelevant. Reuse sufficient results already in context instead of searching again.
+- Pass a `packages` array to scope results when you know which packages are relevant.
+- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`. Expect the most relevant results first.
+- Do not add package names to queries because package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
 
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
+### Search Syntax
 
-## Debugging
+1. Use words for auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
+2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
+3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
+4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
 
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
-- To execute PHP code for debugging, run `php artisan tinker --execute "your code here"` directly.
-- To read configuration values, read the config files directly or run `php artisan config:show [key]`.
-- To inspect routes, run `php artisan route:list` directly.
-- To check environment variables, read the `.env` file directly.
+## Project Rules
 
-## Reading Browser Logs With the `browser-logs` Tool
+- This project contains committed, area-grouped rules in `.ai/rules` when that directory exists, including path-scoped framework guidelines under `.ai/rules/boost`. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule. If `.ai/rules` does not exist, continue without it.
 
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
+## Artisan
 
-## Searching Documentation (Critically Important)
+- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
+- Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
+- Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
 
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
+## Tinker
 
-### Available Search Syntax
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
+- Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
+- Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
+  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
 # PHP
 
 - Always use curly braces for control structures, even for single-line bodies.
+- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
+- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
+- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
+- Use array shape type definitions in PHPDoc blocks.
 
-## Constructors
+=== deployments rules ===
 
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - `public function __construct(public GitHub $github) { }`
-- Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
+# Deployment
 
-## Type Declarations
-
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<!-- Explicit Return Types and Method Params -->
-```php
-protected function isAccessible(User $user, ?string $path = null): bool
-{
-    ...
-}
-```
-
-## Enums
-
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
-
-## Comments
-
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
-
-## PHPDoc Blocks
-
-- Add useful array shape type definitions when appropriate.
+- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+- Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
 
 === herd rules ===
 
 # Laravel Herd
 
-- The application is served by Laravel Herd and will be available at: `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs for the user.
-- You must not run any commands to make the site available via HTTP(S). It is always available through Laravel Herd.
+- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
+- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
 
 === tests rules ===
 
 # Test Enforcement
 
-- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
+- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
+- Pure copy, styling, and layout-only changes do not require new or updated tests.
+- When test coverage applies, run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
 
 === inertia-laravel/core rules ===
 
@@ -352,42 +354,17 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
-## Database
-
-- Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
-- Use Eloquent models and relationships before suggesting raw database queries.
-- Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
-- Generate code that prevents N+1 query problems by using eager loading.
-- Use Laravel's query builder for very complex database operations.
-
 ### Model Creation
 
 - When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
 
-### APIs & Eloquent Resources
+## APIs & Eloquent Resources
 
 - For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
-
-## Controllers & Validation
-
-- Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
-- Check sibling Form Requests to see if the application uses array or string based validation rules.
-
-## Authentication & Authorization
-
-- Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
 
 ## URL Generation
 
 - When generating links to other pages, prefer named routes and the `route()` function.
-
-## Queues
-
-- Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
-
-## Configuration
-
-- Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
 
 ## Testing
 
@@ -395,21 +372,11 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
-## Vite Error
-
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
-
 === wayfinder/core rules ===
 
 # Laravel Wayfinder
 
-Wayfinder generates TypeScript functions for Laravel routes. Import from `@/actions/` (controllers) or `@/routes/` (named routes).
-
-- IMPORTANT: Activate `wayfinder-development` skill whenever referencing backend routes in frontend components.
-- Invokable Controllers: `import StorePost from '@/actions/.../StorePostController'; StorePost()`.
-- Parameter Binding: Detects route keys (`{post:slug}`) — `show({ slug: "my-post" })`.
-- Query Merging: `show(1, { mergeQuery: { page: 2, sort: null } })` merges with current URL, `null` removes params.
-- Inertia: Use `.form()` with `<Form>` component or `form.submit(store())` with useForm.
+Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `@/actions/` (controllers) or `@/routes/` (named routes).
 
 === pint/core rules ===
 
@@ -420,13 +387,18 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 
 === pest/core rules ===
 
-## Pest
+# Pest
 
-- This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
-- Do NOT delete tests without approval.
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Pest documentation and updated code examples.
-- IMPORTANT: Activate `pest-testing` every time you're working with a Pest or testing-related task.
+- This project uses Pest. Create tests with `php artisan make:test --pest {name}`.
+- Do not include the test suite directory in `{name}`. Use `SomeFeatureTest`, not `Feature/SomeFeatureTest`.
+- Read the `testing-best-practices` skill for guidance on coverage, naming, structure, dependency isolation, and review.
+- Do not delete tests or test files without approval. They are part of the application.
+
+## Running Tests
+
+- Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
+- Rerun a test after each change to it.
+- Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 
 === inertia-vue/core rules ===
 
@@ -435,15 +407,7 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
-=== tailwindcss/core rules ===
-
-# Tailwind CSS
-
-- Always use existing Tailwind conventions; check project patterns before adding new ones.
-- IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
-- IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
-
-=== nativephp/mobile rules ===
+=== nativephp/mobile/core rules ===
 
 ## NativePHP Mobile
 
@@ -468,6 +432,603 @@ Vue components must have a single root element.
 **Always ask which platform before giving any build or run command.** If the user hasn't specified iOS or Android, ask: "Which platform do you want to build/test on — iOS or Android?" Never assume a platform.
 
 When the platform is confirmed, give the relevant command(s) above and tell the user to run it in their terminal. Do not run it yourself.
+</laravel-boost-guidelines>
+
+=== nativephp/mobile-biometrics/core rules ===
+
+## nativephp/biometrics
+
+Biometric authentication plugin for NativePHP Mobile (Face ID, Touch ID, Fingerprint).
+
+### PHP Usage (Livewire/Blade)
+
+Use the `Biometrics` facade:
+
+<code-snippet name="Using Biometrics Facade" lang="php">
+use Native\Mobile\Facades\Biometrics;
+
+// Prompt for biometric authentication
+Biometrics::prompt();
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Using Biometrics in JavaScript" lang="javascript">
+import { biometric } from '#nativephp';
+
+// Basic usage
+await biometric.prompt();
+
+// With identifier for tracking
+await biometric.prompt().id('secure-action-auth');
+</code-snippet>
+
+### Handling Biometric Events
+
+#### PHP
+
+<code-snippet name="Listening for Biometric Events in PHP" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Biometric\Completed;
+
+#[OnNative(Completed::class)]
+public function handleBiometric(bool $success)
+{
+    if ($success) {
+        $this->unlockSecureFeature();
+    } else {
+        $this->showErrorMessage();
+    }
+}
+</code-snippet>
+
+#### Vue
+
+<code-snippet name="Listening for Biometric Events in Vue" lang="javascript">
+import { biometric, on, off, Events } from '#nativephp';
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const handleBiometricComplete = (payload) => {
+    if (payload.success) {
+        isAuthenticated.value = true;
+    } else {
+        showErrorMessage();
+    }
+};
+
+onMounted(() => {
+    on(Events.Biometric.Completed, handleBiometricComplete);
+});
+
+onUnmounted(() => {
+    off(Events.Biometric.Completed, handleBiometricComplete);
+});
+</code-snippet>
+
+### Platform Support
+
+- **iOS**: Face ID, Touch ID
+- **Android**: Fingerprint, face unlock, other biometric methods
+- **Fallback**: System authentication (PIN, password, pattern)
+
+=== nativephp/mobile-camera/core rules ===
+
+## nativephp/camera
+
+Camera plugin for NativePHP Mobile providing photo capture, video recording, and gallery picker functionality.
+
+### PHP Usage (Livewire/Blade)
+
+<code-snippet name="Taking Photos" lang="php">
+use Native\Mobile\Facades\Camera;
+
+// Take a photo
+Camera::getPhoto();
+</code-snippet>
+
+<code-snippet name="Recording Videos" lang="php">
+use Native\Mobile\Facades\Camera;
+
+// Using fluent API
+Camera::recordVideo()
+    ->maxDuration(60)
+    ->id('my-video-123')
+    ->start();
+</code-snippet>
+
+<code-snippet name="Picking Media from Gallery" lang="php">
+use Native\Mobile\Facades\Camera;
+
+// Pick multiple images
+Camera::pickImages('images', true);
+
+// Pick any media type
+Camera::pickImages('all', true);
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Camera in JavaScript" lang="javascript">
+import { camera } from '#nativephp';
+
+// Take a photo with identifier
+await camera.getPhoto().id('profile-pic');
+
+// Record video with max duration
+await camera.recordVideo()
+    .maxDuration(30)
+    .id('my-video-123');
+
+// Pick multiple images from gallery
+await camera.pickImages()
+    .images()
+    .multiple()
+    .maxItems(5);
+</code-snippet>
+
+### Handling Camera Events
+
+#### PHP
+
+<code-snippet name="Photo Events" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Camera\PhotoTaken;
+
+#[OnNative(PhotoTaken::class)]
+public function handlePhotoTaken(string $path)
+{
+    $this->processPhoto($path);
+}
+</code-snippet>
+
+<code-snippet name="Video Events" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Camera\VideoRecorded;
+
+#[OnNative(VideoRecorded::class)]
+public function handleVideoRecorded(string $path, string $mimeType, ?string $id = null)
+{
+    $this->processVideo($path);
+}
+</code-snippet>
+
+<code-snippet name="Gallery Events" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Gallery\MediaSelected;
+
+#[OnNative(MediaSelected::class)]
+public function handleMediaSelected(array $media)
+{
+    foreach ($media as $file) {
+        $this->processMedia($file);
+    }
+}
+</code-snippet>
+
+### Events
+
+- `Native\Mobile\Events\Camera\PhotoTaken` - Photo captured (payload: `string $path`)
+- `Native\Mobile\Events\Camera\VideoRecorded` - Video recorded (payload: `string $path`, `string $mimeType`, `?string $id`)
+- `Native\Mobile\Events\Camera\VideoCancelled` - Recording cancelled
+- `Native\Mobile\Events\Gallery\MediaSelected` - Media selected (payload: `array $media`)
+
+### Capture Date and Location
+
+`PhotoTaken` and each file in `MediaSelected` may additionally carry `takenAt` (ISO-8601 UTC string), `latitude` and `longitude` (decimal degrees). Keys are omitted when unavailable. `takenAt` is read from EXIF and needs no permissions. Pass `includeLocation: true` to actively recover GPS coordinates; this prompts for location / photo library access (iOS) or `ACCESS_MEDIA_LOCATION` (Android). Default is `false`, so no new prompts are shown.
+
+<code-snippet name="Opting into location" lang="php">
+use Native\Mobile\Facades\Camera;
+use Native\Mobile\PendingMediaPicker;
+
+Camera::getPhoto(['includeLocation' => true]);
+
+(new PendingMediaPicker(['includeLocation' => true]))->images()->start();
+</code-snippet>
+
+### Storage Locations
+
+- **Camera (Android):** `{noBackupFilesDir}/Camera/`
+- **Camera (iOS):** `~/Library/Application Support/Camera/`
+- **Gallery (Android):** `{noBackupFilesDir}/Gallery/`
+- **Gallery (iOS):** `~/Library/Application Support/Gallery/`
+
+These folders are readable by PHP, persistent and excluded from device backups. The plugin never deletes them, so copy files you want to keep into app storage in the event handler and `unlink()` the original.
+
+=== nativephp/mobile-secure-storage/core rules ===
+
+## nativephp/secure-storage
+
+Encrypted data persistence using iOS Keychain and Android Keystore.
+
+### PHP Usage (Livewire/Blade)
+
+<code-snippet name="Secure Storage Operations" lang="php">
+use Native\Mobile\Facades\SecureStorage;
+
+// Store encrypted data
+SecureStorage::set('api_token', 'abc123xyz');
+
+// Retrieve encrypted data
+$token = SecureStorage::get('api_token');
+
+// Delete stored data
+SecureStorage::delete('api_token');
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Secure Storage in JavaScript" lang="javascript">
+import { secureStorage } from '#nativephp';
+
+// Store encrypted data
+const result = await secureStorage.set('api_token', 'abc123xyz');
+
+// Retrieve encrypted data
+const result = await secureStorage.get('api_token');
+const token = result.value;
+
+// Delete stored data
+const result = await secureStorage.delete('api_token');
+</code-snippet>
+
+### Methods
+
+- `SecureStorage::set(string $key, string|null $value)` - Store encrypted data
+- `SecureStorage::get(string $key)` - Retrieve encrypted data (returns `string|null`)
+- `SecureStorage::delete(string $key)` - Remove stored data
+
+### Platform Implementation
+
+**iOS**: Uses iOS Keychain Services API with encryption tied to app bundle ID.
+
+**Android**: Uses Android Keystore system with hardware-backed encryption when available.
+
+### Recommended Storage
+
+API tokens, refresh tokens, encryption keys, authentication secrets, sensitive user preferences.
+
+### Not Recommended
+
+Large datasets, non-sensitive information, temporary data, cached content.
+
+</laravel-boost-guidelines>
+
+=== nativephp/mobile-biometrics/core rules ===
+
+## nativephp/biometrics
+
+Biometric authentication plugin for NativePHP Mobile (Face ID, Touch ID, Fingerprint).
+
+### PHP Usage (Livewire/Blade)
+
+Use the `Biometrics` facade:
+
+<code-snippet name="Using Biometrics Facade" lang="php">
+use Native\Mobile\Facades\Biometrics;
+
+// Prompt for biometric authentication
+Biometrics::prompt();
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Using Biometrics in JavaScript" lang="javascript">
+import { biometric } from '#nativephp';
+
+// Basic usage
+await biometric.prompt();
+
+// With identifier for tracking
+await biometric.prompt().id('secure-action-auth');
+</code-snippet>
+
+### Handling Biometric Events
+
+#### PHP
+
+<code-snippet name="Listening for Biometric Events in PHP" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Biometric\Completed;
+
+#[OnNative(Completed::class)]
+public function handleBiometric(bool $success)
+{
+    if ($success) {
+        $this->unlockSecureFeature();
+    } else {
+        $this->showErrorMessage();
+    }
+}
+</code-snippet>
+
+#### Vue
+
+<code-snippet name="Listening for Biometric Events in Vue" lang="javascript">
+import { biometric, on, off, Events } from '#nativephp';
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const handleBiometricComplete = (payload) => {
+    if (payload.success) {
+        isAuthenticated.value = true;
+    } else {
+        showErrorMessage();
+    }
+};
+
+onMounted(() => {
+    on(Events.Biometric.Completed, handleBiometricComplete);
+});
+
+onUnmounted(() => {
+    off(Events.Biometric.Completed, handleBiometricComplete);
+});
+</code-snippet>
+
+### Platform Support
+
+- **iOS**: Face ID, Touch ID
+- **Android**: Fingerprint, face unlock, other biometric methods
+- **Fallback**: System authentication (PIN, password, pattern)
+
+=== nativephp/mobile-camera/core rules ===
+
+## nativephp/camera
+
+Camera plugin for NativePHP Mobile providing photo capture, video recording, and gallery picker functionality.
+
+### PHP Usage (Livewire/Blade)
+
+<code-snippet name="Taking Photos" lang="php">
+use Native\Mobile\Facades\Camera;
+
+// Take a photo
+Camera::getPhoto();
+</code-snippet>
+
+<code-snippet name="Recording Videos" lang="php">
+use Native\Mobile\Facades\Camera;
+
+// Using fluent API
+Camera::recordVideo()
+    ->maxDuration(60)
+    ->id('my-video-123')
+    ->start();
+</code-snippet>
+
+<code-snippet name="Picking Media from Gallery" lang="php">
+use Native\Mobile\Facades\Camera;
+
+// Pick multiple images
+Camera::pickImages('images', true);
+
+// Pick any media type
+Camera::pickImages('all', true);
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Camera in JavaScript" lang="javascript">
+import { camera } from '#nativephp';
+
+// Take a photo with identifier
+await camera.getPhoto().id('profile-pic');
+
+// Record video with max duration
+await camera.recordVideo()
+    .maxDuration(30)
+    .id('my-video-123');
+
+// Pick multiple images from gallery
+await camera.pickImages()
+    .images()
+    .multiple()
+    .maxItems(5);
+</code-snippet>
+
+### Handling Camera Events
+
+#### PHP
+
+<code-snippet name="Photo Events" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Camera\PhotoTaken;
+
+#[OnNative(PhotoTaken::class)]
+public function handlePhotoTaken(string $path)
+{
+    $this->processPhoto($path);
+}
+</code-snippet>
+
+<code-snippet name="Video Events" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Camera\VideoRecorded;
+
+#[OnNative(VideoRecorded::class)]
+public function handleVideoRecorded(string $path, string $mimeType, ?string $id = null)
+{
+    $this->processVideo($path);
+}
+</code-snippet>
+
+<code-snippet name="Gallery Events" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Gallery\MediaSelected;
+
+#[OnNative(MediaSelected::class)]
+public function handleMediaSelected(array $media)
+{
+    foreach ($media as $file) {
+        $this->processMedia($file);
+    }
+}
+</code-snippet>
+
+### Events
+
+- `Native\Mobile\Events\Camera\PhotoTaken` - Photo captured (payload: `string $path`)
+- `Native\Mobile\Events\Camera\VideoRecorded` - Video recorded (payload: `string $path`, `string $mimeType`, `?string $id`)
+- `Native\Mobile\Events\Camera\VideoCancelled` - Recording cancelled
+- `Native\Mobile\Events\Gallery\MediaSelected` - Media selected (payload: `array $media`)
+
+### Capture Date and Location
+
+`PhotoTaken` and each file in `MediaSelected` may additionally carry `takenAt` (ISO-8601 UTC string), `latitude` and `longitude` (decimal degrees). Keys are omitted when unavailable. `takenAt` is read from EXIF and needs no permissions. Pass `includeLocation: true` to actively recover GPS coordinates; this prompts for location / photo library access (iOS) or `ACCESS_MEDIA_LOCATION` (Android). Default is `false`, so no new prompts are shown.
+
+<code-snippet name="Opting into location" lang="php">
+use Native\Mobile\Facades\Camera;
+use Native\Mobile\PendingMediaPicker;
+
+Camera::getPhoto(['includeLocation' => true]);
+
+(new PendingMediaPicker(['includeLocation' => true]))->images()->start();
+</code-snippet>
+
+### Storage Locations
+
+- **Camera (Android):** `{noBackupFilesDir}/Camera/`
+- **Camera (iOS):** `~/Library/Application Support/Camera/`
+- **Gallery (Android):** `{noBackupFilesDir}/Gallery/`
+- **Gallery (iOS):** `~/Library/Application Support/Gallery/`
+
+These folders are readable by PHP, persistent and excluded from device backups. The plugin never deletes them, so copy files you want to keep into app storage in the event handler and `unlink()` the original.
+
+=== nativephp/mobile-secure-storage/core rules ===
+
+## nativephp/secure-storage
+
+Encrypted data persistence using iOS Keychain and Android Keystore.
+
+### PHP Usage (Livewire/Blade)
+
+<code-snippet name="Secure Storage Operations" lang="php">
+use Native\Mobile\Facades\SecureStorage;
+
+// Store encrypted data
+SecureStorage::set('api_token', 'abc123xyz');
+
+// Retrieve encrypted data
+$token = SecureStorage::get('api_token');
+
+// Delete stored data
+SecureStorage::delete('api_token');
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Secure Storage in JavaScript" lang="javascript">
+import { secureStorage } from '#nativephp';
+
+// Store encrypted data
+const result = await secureStorage.set('api_token', 'abc123xyz');
+
+// Retrieve encrypted data
+const result = await secureStorage.get('api_token');
+const token = result.value;
+
+// Delete stored data
+const result = await secureStorage.delete('api_token');
+</code-snippet>
+
+### Methods
+
+- `SecureStorage::set(string $key, string|null $value)` - Store encrypted data
+- `SecureStorage::get(string $key)` - Retrieve encrypted data (returns `string|null`)
+- `SecureStorage::delete(string $key)` - Remove stored data
+
+### Platform Implementation
+
+**iOS**: Uses iOS Keychain Services API with encryption tied to app bundle ID.
+
+**Android**: Uses Android Keystore system with hardware-backed encryption when available.
+
+### Recommended Storage
+
+API tokens, refresh tokens, encryption keys, authentication secrets, sensitive user preferences.
+
+### Not Recommended
+
+Large datasets, non-sensitive information, temporary data, cached content.
+
+</laravel-boost-guidelines>
+
+=== nativephp/mobile-biometrics/core rules ===
+
+## nativephp/biometrics
+
+Biometric authentication plugin for NativePHP Mobile (Face ID, Touch ID, Fingerprint).
+
+### PHP Usage (Livewire/Blade)
+
+Use the `Biometrics` facade:
+
+<code-snippet name="Using Biometrics Facade" lang="php">
+use Native\Mobile\Facades\Biometrics;
+
+// Prompt for biometric authentication
+Biometrics::prompt();
+</code-snippet>
+
+### JavaScript Usage (Vue/React/Inertia)
+
+<code-snippet name="Using Biometrics in JavaScript" lang="javascript">
+import { biometric } from '#nativephp';
+
+// Basic usage
+await biometric.prompt();
+
+// With identifier for tracking
+await biometric.prompt().id('secure-action-auth');
+</code-snippet>
+
+### Handling Biometric Events
+
+#### PHP
+
+<code-snippet name="Listening for Biometric Events in PHP" lang="php">
+use Native\Mobile\Attributes\OnNative;
+use Native\Mobile\Events\Biometric\Completed;
+
+#[OnNative(Completed::class)]
+public function handleBiometric(bool $success)
+{
+    if ($success) {
+        $this->unlockSecureFeature();
+    } else {
+        $this->showErrorMessage();
+    }
+}
+</code-snippet>
+
+#### Vue
+
+<code-snippet name="Listening for Biometric Events in Vue" lang="javascript">
+import { biometric, on, off, Events } from '#nativephp';
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const handleBiometricComplete = (payload) => {
+    if (payload.success) {
+        isAuthenticated.value = true;
+    } else {
+        showErrorMessage();
+    }
+};
+
+onMounted(() => {
+    on(Events.Biometric.Completed, handleBiometricComplete);
+});
+
+onUnmounted(() => {
+    off(Events.Biometric.Completed, handleBiometricComplete);
+});
+</code-snippet>
+
+### Platform Support
+
+- **iOS**: Face ID, Touch ID
+- **Android**: Fingerprint, face unlock, other biometric methods
+- **Fallback**: System authentication (PIN, password, pattern)
+
 </laravel-boost-guidelines>
 
 === nativephp/mobile-biometrics rules ===
