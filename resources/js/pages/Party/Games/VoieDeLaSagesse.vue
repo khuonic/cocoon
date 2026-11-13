@@ -251,20 +251,8 @@ function showResult(): void {
             v-for="(step, index) in visibleSteps"
             :id="`step-${index}`"
             :key="step.key"
-            class="flex scroll-mt-32 flex-col"
+            class="flex scroll-mt-32 flex-col pt-6"
         >
-            <div
-                class="flex flex-col items-center gap-2.5 py-4"
-                aria-hidden="true"
-            >
-                <div
-                    v-for="dot in 3"
-                    :key="dot"
-                    class="size-2"
-                    style="background: var(--px-gold)"
-                />
-            </div>
-
             <p
                 v-if="isNewChapter(index)"
                 class="font-pixel m-0 px-4 pb-3 text-[10px]"

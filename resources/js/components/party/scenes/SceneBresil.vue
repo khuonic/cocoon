@@ -61,16 +61,15 @@ defineProps<{ action: boolean }>();
             <p
                 class="font-pixel px-pop absolute m-0"
                 style="
-                    left: 96px;
-                    top: 12px;
+                    left: 8px;
+                    bottom: 7px;
                     font-size: 7px;
-                    line-height: 1.6;
                     background: #1b1b2f;
                     color: #f2b134;
                     padding: 5px;
                 "
             >
-                DIRECTION<br />LA POCHE
+                DIRECTION LA POCHE
             </p>
         </template>
         <p

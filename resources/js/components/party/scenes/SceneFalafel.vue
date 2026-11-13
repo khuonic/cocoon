@@ -36,7 +36,7 @@ defineProps<{ action: boolean }>();
         <div
             v-if="action"
             class="px-walk-in absolute"
-            style="left: 64px; bottom: 90px"
+            style="left: 46px; bottom: 72px"
         >
             <PixelSprite name="falafel_main" :px="4" />
         </div>
@@ -48,7 +48,7 @@ defineProps<{ action: boolean }>();
             class="font-pixel px-pop absolute m-0"
             style="right: 8px; top: 52px; font-size: 9px; color: #c8553d"
         >
-            AÏE !
+            HUMMM
         </p>
         <!-- Comptoir -->
         <div

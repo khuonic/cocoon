@@ -113,7 +113,7 @@ class VoieDeLaSagesse implements QuizGame
                 'scene' => 'falafel',
                 'question' => 'Votre patron vous tend un falafel, quelle est votre réaction ?',
                 'choices' => [
-                    'a' => 'Vous gobez le falafel et ses doigts avec',
+                    'a' => 'Vous gobez le falafel et ses doigts avec.',
                     'b' => 'Vous déclinez, les pois chiches ça fait péter',
                     'c' => 'Vous le saisissez, l\'emballez dans du PQ et le mettez dans votre poche',
                 ],

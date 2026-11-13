@@ -229,11 +229,64 @@
     animation: px-blink 1s steps(1) infinite;
 }
 
+/* Gouttes qui giclent : direction via --dx / --dy sur chaque goutte. */
+@keyframes px-squirt {
+    0% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--dx, -12px), var(--dy, -16px));
+        opacity: 0;
+    }
+}
+
+.px-squirt {
+    animation: px-squirt 800ms steps(5) infinite;
+}
+
+/* Voiture qui arrive de la gauche puis s'arrête net. */
+@keyframes px-drive-in {
+    0% {
+        transform: translateX(-120px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.px-drive-in {
+    animation: px-drive-in 700ms steps(7) both;
+}
+
+/* Voiture percutée : secousse puis reste décalée. */
+@keyframes px-knock {
+    0% {
+        transform: translateX(0) rotate(0);
+    }
+    30% {
+        transform: translateX(10px) rotate(6deg);
+    }
+    60% {
+        transform: translateX(5px) rotate(-2deg);
+    }
+    100% {
+        transform: translateX(8px) rotate(3deg);
+    }
+}
+
+.px-knock {
+    animation: px-knock 450ms steps(4) 700ms both;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .px-walk-in,
     .px-bounce,
     .px-pop,
-    .px-blink {
+    .px-blink,
+    .px-squirt,
+    .px-drive-in,
+    .px-knock {
         animation: none;
     }
 }

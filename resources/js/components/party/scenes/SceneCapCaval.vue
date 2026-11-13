@@ -41,7 +41,7 @@ defineProps<{ action: boolean }>();
         />
         <p
             class="font-pixel absolute inset-x-0 m-0 text-center"
-            style="top: 46px; font-size: 8px; color: #f7a8b8"
+            style="top: 8px; font-size: 8px; color: #f7a8b8"
         >
             CAP CAVAL
         </p>

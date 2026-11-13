@@ -82,15 +82,20 @@ defineProps<{ action: boolean }>();
                 class="absolute inset-x-0 bottom-0"
                 style="height: 40px; background: #555b6e"
             />
-            <div class="absolute" style="right: -24px; bottom: 32px">
+            <!-- La voiture garée encaisse le choc -->
+            <div
+                class="px-knock absolute"
+                style="left: 124px; bottom: 32px; transform-origin: bottom left"
+            >
                 <PixelSprite name="voiture_garee" :px="4" />
             </div>
-            <div class="px-walk-in absolute" style="left: 8px; bottom: 32px">
+            <!-- La voiture des parents arrive lancée -->
+            <div class="px-drive-in absolute" style="left: 44px; bottom: 32px">
                 <PixelSprite name="voiture" :px="4" />
             </div>
             <div
                 class="px-pop absolute"
-                style="left: 78px; bottom: 54px; animation-delay: 400ms"
+                style="left: 110px; bottom: 54px; animation-delay: 700ms"
             >
                 <PixelSprite name="boum" :px="4" />
             </div>
@@ -98,12 +103,12 @@ defineProps<{ action: boolean }>();
                 class="font-pixel px-pop absolute m-0"
                 style="
                     left: 8px;
-                    top: 12px;
+                    bottom: 6px;
                     font-size: 8px;
                     background: #1b1b2f;
                     color: #f2b134;
                     padding: 5px;
-                    animation-delay: 700ms;
+                    animation-delay: 1200ms;
                 "
             >
                 « C'ÉTAIT PAS MOI »
