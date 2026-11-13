@@ -19,40 +19,126 @@ defineProps<{
     verdict: string;
     recap: { key: string; context: string; answer: string; correct: boolean }[];
 }>();
+
+const festiveColors = ['#E4572E', '#2A9D8F', '#F2B134', '#8ECAE6', '#F7A8B8'];
+
+/** Ampoules de la guirlande, réparties sur la largeur et qui clignotent en décalé. */
+const bulbs = Array.from({ length: 8 }, (_, index) => ({
+    left: `${3 + index * 12.5}%`,
+    color: festiveColors[index % 4],
+    delay: `${(index % 3) * 330}ms`,
+}));
+
+/** Confettis qui tombent en boucle, positions et vitesses variées. */
+const confetti = Array.from({ length: 14 }, (_, index) => ({
+    left: `${(index * 37) % 100}%`,
+    color: festiveColors[index % festiveColors.length],
+    delay: `${(index * 410) % 3000}ms`,
+    duration: `${2600 + ((index * 530) % 1800)}ms`,
+}));
 </script>
 
 <template>
     <PartyLayout title="Résultat">
         <div
-            class="relative h-[300px] overflow-hidden"
-            style="background: var(--px-gold)"
+            class="relative h-[340px] overflow-hidden"
+            style="background: #2e2e4a"
         >
-            <div
-                class="absolute top-0 left-6 h-[250px] w-7"
-                style="background: var(--px-gold-dark)"
-            />
-            <div
-                class="absolute top-0 right-6 h-[250px] w-7"
-                style="background: var(--px-gold-dark)"
-            />
             <p
-                class="font-pixel absolute inset-x-0 top-6 m-0 text-center text-[15px]"
-                style="color: var(--px-ink)"
+                class="font-pixel absolute inset-x-0 top-3 m-0 text-center text-[10px]"
+                style="color: var(--px-muted)"
             >
                 FIN DU VOYAGE
             </p>
+
+            <!-- Guirlande -->
             <div
-                class="absolute inset-x-0 bottom-0 h-14"
-                style="
-                    background: var(--px-plum);
-                    border-top: 8px solid #4a3b55;
-                "
+                class="absolute inset-x-0 top-[38px] h-1"
+                style="background: #4a4e69"
+                aria-hidden="true"
             />
             <div
-                class="px-walk-in absolute bottom-14 left-1/2 -translate-x-1/2"
+                v-for="(bulb, index) in bulbs"
+                :key="`bulb-${index}`"
+                class="px-blink absolute top-[42px] h-3 w-2.5"
+                :style="{
+                    left: bulb.left,
+                    background: bulb.color,
+                    animationDelay: bulb.delay,
+                }"
+                aria-hidden="true"
+            />
+
+            <p
+                class="font-pixel px-border absolute top-[72px] left-1/2 m-0 -translate-x-1/2 px-3.5 py-2.5 text-sm whitespace-nowrap"
+                style="background: var(--px-plum); color: var(--px-gold)"
+            >
+                JOYEUX 35 ANS !
+            </p>
+
+            <!-- Ballons -->
+            <div class="absolute top-[120px] left-[18px]">
+                <PixelSprite name="ballon_rouge" :px="5" decorative />
+            </div>
+            <div class="absolute top-[140px] left-[58px]">
+                <PixelSprite name="ballon_bleu" :px="4" decorative />
+            </div>
+            <div class="absolute top-[112px] right-5">
+                <PixelSprite name="ballon_bleu" :px="5" decorative />
+            </div>
+
+            <!-- Confettis -->
+            <div
+                v-for="(confetto, index) in confetti"
+                :key="`confetto-${index}`"
+                class="px-confetti absolute -top-2 size-1.5"
+                :style="{
+                    left: confetto.left,
+                    background: confetto.color,
+                    animationDelay: confetto.delay,
+                    animationDuration: confetto.duration,
+                }"
+                aria-hidden="true"
+            />
+
+            <!-- Parquet, table et gâteau -->
+            <div
+                class="absolute inset-x-0 bottom-0 h-[50px]"
+                style="background: #8b5a3c; border-top: 8px solid #6b4433"
+            />
+            <div
+                class="absolute right-[22px] bottom-[50px] h-[34px] w-[76px]"
+                style="
+                    background: var(--px-paper);
+                    border-top: 6px solid #e3d7b6;
+                "
+            />
+            <div class="absolute right-[30px] bottom-[84px]">
+                <PixelSprite name="gateau" :px="5" decorative />
+            </div>
+
+            <!-- Antoine et sa pinte -->
+            <div
+                class="px-walk-in absolute bottom-[50px] left-1/2"
+                style="margin-left: -76px"
             >
                 <PixelSprite name="sage" :px="7" />
             </div>
+            <p
+                class="font-pixel px-pop absolute bottom-[196px] left-1/2 m-0 ml-1 px-2.5 py-2 text-[11px]"
+                style="
+                    background: var(--px-cream);
+                    color: var(--px-ink);
+                    animation-delay: 600ms;
+                    box-shadow:
+                        0 -3px 0 #1b1b2f,
+                        0 3px 0 #1b1b2f,
+                        -3px 0 0 #1b1b2f,
+                        3px 0 0 #1b1b2f;
+                "
+            >
+                SANTÉ !
+            </p>
         </div>
 
         <div class="flex flex-col gap-6 px-4 pt-6 pb-10">

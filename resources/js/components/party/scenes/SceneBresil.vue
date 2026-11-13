@@ -3,6 +3,13 @@ import PixelSprite from '../PixelSprite.vue';
 import SceneStage from './SceneStage.vue';
 
 defineProps<{ action: boolean }>();
+
+/** Mouches qui tournent autour du caca (durées et décalages différents pour un vol désordonné). */
+const flies = [
+    { left: '82px', bottom: '88px', duration: '1100ms', delay: '0ms' },
+    { left: '96px', bottom: '92px', duration: '1400ms', delay: '-500ms' },
+    { left: '104px', bottom: '76px', duration: '1250ms', delay: '-900ms' },
+];
 </script>
 
 <template>
@@ -58,6 +65,21 @@ defineProps<{ action: boolean }>();
             <div class="px-pop absolute" style="left: 78px; bottom: 66px">
                 <PixelSprite name="caca_pq" :px="4" />
             </div>
+            <!-- Les mouches -->
+            <div
+                v-for="fly in flies"
+                :key="fly.left"
+                class="px-fly absolute"
+                :style="{
+                    left: fly.left,
+                    bottom: fly.bottom,
+                    width: '2px',
+                    height: '2px',
+                    background: '#1b1b2f',
+                    animationDuration: fly.duration,
+                    animationDelay: fly.delay,
+                }"
+            />
             <p
                 class="font-pixel px-pop absolute m-0"
                 style="
