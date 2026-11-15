@@ -45,7 +45,8 @@ return [
     ],
 
     /*
-    | Disque privé des photos du memory (s3 en prod, local en dev). Jamais public.
+    | Disque privé des photos du memory. Jamais public.
+    | Sur Laravel Cloud, le bucket attaché est le disque « private » ; en dev : « local ».
     */
 
     'memory_photos_disk' => env('PARTY_PHOTOS_DISK', 'local'),

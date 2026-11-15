@@ -82,7 +82,7 @@ class CasseBrique extends BaseGame
             $won => 'Tous les niveaux pulvérisés. Antoine t’offre une pinte.',
             $level >= 4 => "Niveau {$level} atteint, le Cap Caval est fier de toi.",
             $level >= 2 => "Niveau {$level}. La ventouse n'a pas suffi.",
-            default => 'Premier niveau… la raquette était peut-être trop petite ?',
+            default => 'Premier niveau… la barre était peut-être trop petite ?',
         };
     }
 }

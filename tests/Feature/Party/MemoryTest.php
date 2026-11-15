@@ -190,3 +190,17 @@ test('the memory page shows the player records per variant and the photo count',
             ->where('photoCount', 1)
         );
 });
+
+test('the memory stays playable when the photo disk is misconfigured', function () {
+    config(['party.memory_photos_disk' => 'disque-inexistant']);
+    $player = Player::factory()->create();
+
+    asPartyGuest($player)
+        ->get(route('party.games.show', 'memory'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('photoCount', 0));
+
+    asPartyGuest($player)
+        ->postJson(route('party.runs.store', 'memory'), ['variant' => '12-pixel'])
+        ->assertCreated();
+});

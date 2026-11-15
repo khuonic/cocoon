@@ -212,7 +212,7 @@ onUnmounted(() => {
             </h1>
             <p class="m-0 text-xl leading-snug">
                 {{ levels.length }} niveaux, un par anecdote. Glisse ton pouce
-                pour bouger la raquette, attrape les bonus, garde tes pintes.
+                pour bouger la barre, attrape les bonus, garde tes pintes.
             </p>
             <p class="m-0 text-[17px]" style="color: var(--px-muted)">
                 <template v-if="best">
@@ -310,7 +310,7 @@ onUnmounted(() => {
                     ref="canvas"
                     class="block"
                     style="touch-action: none; user-select: none"
-                    aria-label="Terrain du casse-brique : glisse le doigt pour bouger la raquette, touche pour lancer la balle"
+                    aria-label="Terrain du casse-brique : glisse le doigt pour bouger la barre, touche pour lancer la balle"
                     role="img"
                 />
 

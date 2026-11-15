@@ -15,7 +15,7 @@ export const bonuses: Record<
     V: {
         sprite: 'ventouse',
         title: 'VENTOUSE',
-        text: 'La balle colle à la raquette (3 fois), touche pour la relancer.',
+        text: 'La balle colle à la barre (3 fois), touche pour la relancer.',
         isMalus: false,
     },
     F: {
@@ -27,7 +27,7 @@ export const bonuses: Record<
     P: {
         sprite: 'pinte',
         title: 'PINTE',
-        text: 'Raquette XL pendant 15 secondes.',
+        text: 'Barre XL pendant 15 secondes.',
         isMalus: false,
     },
     S: {
@@ -39,7 +39,7 @@ export const bonuses: Record<
     C: {
         sprite: 'caca_pq',
         title: 'CACA (MALUS)',
-        text: 'Raquette mini et mouches qui gênent la vue pendant 10 secondes.',
+        text: 'Barre mini et mouches qui gênent la vue pendant 10 secondes.',
         isMalus: true,
     },
 };
