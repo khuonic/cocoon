@@ -15,12 +15,14 @@ import {
     type HudState,
 } from '@/components/party/breakout/engine';
 import { levels } from '@/components/party/breakout/levels';
+import { SoundPlayer } from '@/components/party/breakout/sounds';
 import {
     formatDuration,
     PartyApiError,
     partyPost,
 } from '@/components/party/party-api';
 import PixelSprite from '@/components/party/PixelSprite.vue';
+import SoundToggle from '@/components/party/SoundToggle.vue';
 import type { GameMeta, PartySharedProps } from '@/components/party/types';
 import PartyLayout from '@/layouts/PartyLayout.vue';
 import { leaderboard } from '@/routes/party';
@@ -60,6 +62,12 @@ const canvas = useTemplateRef<HTMLCanvasElement>('canvas');
 const stage = useTemplateRef<HTMLElement>('stage');
 const { width: stageWidth, height: stageHeight } = useElementSize(stage);
 let engine: BreakoutEngine | null = null;
+const sounds = new SoundPlayer();
+const isMuted = ref(sounds.isMuted);
+
+function toggleSound(): void {
+    isMuted.value = sounds.toggleMute();
+}
 let toastTimer = 0;
 
 watch([stageWidth, stageHeight], ([width, height]) => {
@@ -75,6 +83,8 @@ function showToast(text: string): void {
 }
 
 async function start(): Promise<void> {
+    // Débloque le son pendant le tap sur JOUER (exigence des navigateurs mobiles).
+    sounds.unlock();
     error.value = null;
 
     try {
@@ -98,6 +108,7 @@ async function start(): Promise<void> {
         onHud: (state) => (hud.value = state),
         onToast: showToast,
         onEnd: sendScore,
+        onSound: (name) => sounds.play(name),
     });
     engine.resize(stageWidth.value || 360, stageHeight.value || 560);
     engine.start();
@@ -187,6 +198,7 @@ function stopEngine(): void {
 
 onUnmounted(() => {
     stopEngine();
+    sounds.destroy();
     window.clearTimeout(toastTimer);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
@@ -281,6 +293,7 @@ onUnmounted(() => {
                             decorative
                         />
                     </div>
+                    <SoundToggle :muted="isMuted" @toggle="toggleSound" />
                     <button
                         type="button"
                         class="font-pixel size-9 border-0 text-[13px]"
@@ -380,6 +393,10 @@ onUnmounted(() => {
                 <span class="px-dialog-tag">{{
                     phase === 'intro' ? 'LES BONUS' : 'PAUSE · LES BONUS'
                 }}</span>
+                <p class="m-0 text-[17px] leading-tight">
+                    Des objets se cachent au hasard dans les briques : casse-les
+                    pour les découvrir, puis attrape-les avec la barre.
+                </p>
                 <div
                     v-for="bonus in bonusList"
                     :key="bonus.title"

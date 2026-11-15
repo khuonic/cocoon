@@ -1,6 +1,10 @@
 import { spriteCanvas } from '../sprite-canvas';
 import type { SpriteName } from '../sprites';
 import { levels } from './levels';
+import type { SoundName } from './sounds';
+
+/** Couleur d'une brique dure après le premier coup. */
+const HARD_BRICK_DAMAGED_COLOR = '#5B587A';
 
 /** Monde logique fixe, agrandi à l'écran : la physique est identique sur tous les téléphones. */
 export const WORLD_WIDTH = 360;
@@ -55,6 +59,7 @@ export type EngineEvents = {
     onHud: (state: HudState) => void;
     onToast: (text: string) => void;
     onEnd: (result: { score: number; level: number; won: boolean }) => void;
+    onSound: (name: SoundName) => void;
 };
 
 type Brick = {
@@ -326,6 +331,7 @@ export class BreakoutEngine {
         ball.vx = speed * Math.sin(angle);
         ball.vy = -speed * Math.cos(angle);
         ball.y = PADDLE_Y - BALL;
+        this.events.onSound('bounce');
 
         if (this.stickyCatches > 0) {
             this.stickyCatches--;
@@ -337,8 +343,11 @@ export class BreakoutEngine {
     private hitBrick(brick: Brick): void {
         brick.hp--;
         if (brick.hp > 0) {
+            this.events.onSound('hardBrick');
             return;
         }
+
+        this.events.onSound('brick');
 
         this.bricks = this.bricks.filter((candidate) => candidate !== brick);
         this.score +=
@@ -419,6 +428,7 @@ export class BreakoutEngine {
         }
 
         this.events.onToast(`${bonuses[kind].title} !`);
+        this.events.onSound(bonuses[kind].isMalus ? 'malus' : 'bonus');
     }
 
     private splitBalls(): void {
@@ -483,6 +493,7 @@ export class BreakoutEngine {
 
         if (launched) {
             this.message = null;
+            this.events.onSound('launch');
         }
     }
 
@@ -498,6 +509,7 @@ export class BreakoutEngine {
         this.spawnStuckBall();
         this.message = 'TOUCHE POUR LANCER';
         this.events.onToast('UNE VIE EN MOINS');
+        this.events.onSound('lifeLost');
         this.emitHud();
     }
 
@@ -510,6 +522,7 @@ export class BreakoutEngine {
         }
 
         this.loadLevel(this.levelIndex + 1);
+        this.events.onSound('levelClear');
         this.events.onToast(
             `NIVEAU ${this.levelIndex + 1} : ${levels[this.levelIndex].name}`,
         );
@@ -525,21 +538,38 @@ export class BreakoutEngine {
                     return;
                 }
 
-                const isBonus = char in bonuses;
                 this.bricks.push({
                     x: LEFT + column * (BRICK_W + GAP),
                     y: TOP + rowIndex * (BRICK_H + GAP),
                     hp: char === '#' ? 2 : 1,
-                    color: BRICK_COLORS[char] ?? '#FFF8E7',
-                    bonus: isBonus ? (char as BonusKind) : null,
+                    color: BRICK_COLORS[char] ?? HARD_BRICK_DAMAGED_COLOR,
+                    bonus: null,
                 });
             });
         });
 
+        this.hideBonuses(levels[index].bonusCount);
         this.resetEffects();
         this.spawnStuckBall();
         this.message = 'TOUCHE POUR LANCER';
         this.emitHud();
+    }
+
+    /**
+     * Cache des bonus au hasard dans les briques du niveau, sans indice visuel.
+     * Le malus (caca) sort un peu moins souvent que les bonus.
+     */
+    private hideBonuses(count: number): void {
+        const pool: BonusKind[] = ['V', 'V', 'F', 'F', 'P', 'P', 'S', 'S', 'C'];
+        const candidates = [...this.bricks];
+
+        for (let index = 0; index < count && candidates.length > 0; index++) {
+            const [brick] = candidates.splice(
+                Math.floor(Math.random() * candidates.length),
+                1,
+            );
+            brick.bonus = pool[Math.floor(Math.random() * pool.length)];
+        }
     }
 
     private resetEffects(): void {
@@ -568,6 +598,7 @@ export class BreakoutEngine {
     private end(won: boolean): void {
         this.isRunning = false;
         this.message = won ? 'TOUT EST CASSÉ !' : 'PLUS DE PINTES…';
+        this.events.onSound(won ? 'win' : 'gameOver');
         this.render();
         this.events.onEnd({
             score: this.score,
@@ -696,30 +727,18 @@ export class BreakoutEngine {
     private drawBrick(brick: Brick): void {
         const context = this.context;
 
-        if (brick.bonus) {
-            context.fillStyle = bonuses[brick.bonus].isMalus
-                ? '#E4572E'
-                : '#FFF8E7';
-        } else if (brick.hp >= 2) {
+        // Les bonus sont cachés : une brique bonus ressemble à toutes les autres.
+        if (brick.hp >= 2) {
             context.fillStyle = '#8D89A6';
         } else {
-            context.fillStyle =
-                brick.color === '#FFF8E7' ? '#5B587A' : brick.color;
+            context.fillStyle = brick.color;
         }
         context.fillRect(brick.x, brick.y, BRICK_W, BRICK_H);
 
         context.fillStyle = 'rgba(0, 0, 0, 0.25)';
         context.fillRect(brick.x, brick.y + BRICK_H - 3, BRICK_W, 3);
 
-        if (brick.bonus) {
-            this.drawIcon(
-                bonuses[brick.bonus].sprite,
-                brick.x + BRICK_W / 2,
-                brick.y + BRICK_H / 2 - 1,
-                BRICK_H - 4,
-                BRICK_W - 8,
-            );
-        } else if (brick.hp >= 2) {
+        if (brick.hp >= 2) {
             context.fillStyle = '#5B587A';
             context.fillRect(brick.x + 6, brick.y + 4, 4, 4);
             context.fillRect(brick.x + BRICK_W - 10, brick.y + 4, 4, 4);

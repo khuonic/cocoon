@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onUnmounted, ref } from 'vue';
+import { useBackgroundMusic } from '@/components/party/background-music';
 import { memoryFaces } from '@/components/party/memory-faces';
 import {
     formatDuration,
@@ -8,6 +9,7 @@ import {
     partyPost,
 } from '@/components/party/party-api';
 import PixelSprite from '@/components/party/PixelSprite.vue';
+import SoundToggle from '@/components/party/SoundToggle.vue';
 import type { GameMeta, PartySharedProps } from '@/components/party/types';
 import PartyLayout from '@/layouts/PartyLayout.vue';
 import { leaderboard } from '@/routes/party';
@@ -73,6 +75,15 @@ function pick(size: string, style: string): void {
     }
 }
 
+/* Musique de fond optionnelle : public/sounds/memory/fond.mp3 (silence tant qu'il est absent). */
+const {
+    isAvailable: hasMusic,
+    isMuted: isMusicMuted,
+    start: startMusic,
+    stop: stopMusic,
+    toggleMute: toggleMusic,
+} = useBackgroundMusic('/sounds/memory/fond.mp3', 'party_memory_music_muted');
+
 /* Partie en cours */
 const phase = ref<'setup' | 'playing' | 'sending'>('setup');
 const runUuid = ref<string | null>(null);
@@ -103,6 +114,8 @@ function photoUrl(id: number): string {
 }
 
 async function start(): Promise<void> {
+    // Lancée pendant le tap sur JOUER (exigence des navigateurs mobiles).
+    startMusic();
     error.value = null;
 
     try {
@@ -131,6 +144,7 @@ async function start(): Promise<void> {
         phase.value = 'playing';
         window.scrollTo({ top: 0 });
     } catch (exception) {
+        stopMusic();
         error.value =
             exception instanceof PartyApiError
                 ? exception.message
@@ -189,6 +203,7 @@ async function finish(): Promise<void> {
     }
 
     phase.value = 'sending';
+    stopMusic();
 
     try {
         await partyPost(finishRoute(runUuid.value).url, { flips });
@@ -203,6 +218,7 @@ async function finish(): Promise<void> {
 }
 
 function abandon(): void {
+    stopMusic();
     phase.value = 'setup';
     runUuid.value = null;
     cards.value = [];
@@ -405,10 +421,10 @@ function cardLabel(card: Card): string {
         <!-- Partie -->
         <template v-else>
             <div
-                class="sticky top-[68px] z-10 grid grid-cols-3 px-4 py-2.5 text-center"
+                class="sticky top-[68px] z-10 flex items-center gap-2 px-4 py-2.5 text-center"
                 style="background: var(--px-ink); border-top: 2px solid #2e2e4a"
             >
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-1 flex-col gap-1.5">
                     <span class="text-sm" style="color: var(--px-muted)"
                         >Temps</span
                     >
@@ -416,13 +432,13 @@ function cardLabel(card: Card): string {
                         formatDuration(elapsed)
                     }}</span>
                 </div>
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-1 flex-col gap-1.5">
                     <span class="text-sm" style="color: var(--px-muted)"
                         >Coups</span
                     >
                     <span class="font-pixel text-[13px]">{{ moves }}</span>
                 </div>
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-1 flex-col gap-1.5">
                     <span class="text-sm" style="color: var(--px-muted)"
                         >Paires</span
                     >
@@ -432,6 +448,11 @@ function cardLabel(card: Card): string {
                         >{{ matchedPairs }}/{{ totalPairs }}</span
                     >
                 </div>
+                <SoundToggle
+                    v-if="hasMusic"
+                    :muted="isMusicMuted"
+                    @toggle="toggleMusic"
+                />
             </div>
 
             <div class="grid grid-cols-4 gap-2.5 p-4">
