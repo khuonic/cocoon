@@ -195,7 +195,7 @@ Accueil | Budget | Calendrier | Notes | Plus
   - Login : logo agrandi (size-36), suppression texte superflu
 - **Mise en prod** : Laravel Cloud déployé, APK signé, push sync implémenté (SyncLog → Cloud), biométrie opérationnelle
 - **Mini-site « La Fête » (/fete)** : mini-jeux pour l'anniversaire d'Antoine (voir section dédiée)
-- **265 tests passants**
+- **283 tests passants**
 
 ## Mini-site « La Fête » (/fete)
 
@@ -204,9 +204,13 @@ Mini-site web invités, **isolé de Cocoon** (pas d'auth Fortify, pas de Syncabl
 - **Activation** : `PARTY_ENABLED=true` uniquement sur Cloud (middleware `EnsurePartyEnabled` → 404 sinon, + `X-Robots-Tag: noindex`). Ne jamais le mettre dans le `.env` qui part dans l'APK.
 - **Accès** : `EnsurePartyAccess` — `?k=PARTY_ACCESS_KEY` (QR code) ou mot de passe `PARTY_PASSWORD` sur `/fete/entrer` → cookie chiffré `party_access` (30 j, révoqué si clé/mot de passe change)
 - **Joueur** : `EnsurePartyPlayer` — cookie `party_player` (uuid, 1 an) → `App\Models\Party\Player` (pseudo unique insensible à la casse)
-- **Jeux** : `config('party.games')` → `App\Party\GameRegistry` (singleton). Contrats `App\Party\Contracts\PartyGame` / `QuizGame`. Contenu en dur dans la classe du jeu (ex: `App\Party\Games\VoieDeLaSagesse::steps()`)
-- **Parties** : `App\Models\Party\GameRun` (score + `duration_ms` génériques). `QuizRunService` valide côté serveur (étape en cours, 1 réponse/étape, chrono serveur). Réponses en JSON (`partyPost` dans `components/party/party-api.ts`)
-- **Classement** : `Leaderboard` — meilleure partie terminée par joueur, tri score desc puis durée asc
+- **Jeux** : `config('party.games')` → `App\Party\GameRegistry` (singleton, binding `{game}` dans `AppServiceProvider` pour survivre au `route:cache`). Contrat `App\Party\Contracts\PartyGame` (+ `QuizGame`), base `App\Party\Games\BaseGame`. 3 jeux :
+  - `VoieDeLaSagesse` (quiz, contenu dans `steps()`, réponses via `QuizRunService`)
+  - `Memory` (variantes taille 12/16/20 × style pixel/photos → 6 classements ; paquet mélangé serveur dans `data.deck`, `MemoryRunService` rejoue les coups reçus + temps mini par coup)
+  - `CasseBrique` (canvas `components/party/breakout/engine.ts` + `levels.ts`, 6 niveaux ; `CasseBriqueRunService` vérifie la plausibilité points/seconde)
+- **Parties** : `App\Models\Party\GameRun` (`variant`, `score`, `moves`, `duration_ms`, `data` génériques). `GameRunService` start/finish (chrono serveur). Endpoints JSON : `runs.store`, `runs.answer` (quiz), `runs.finish` (memory/casse-brique) via `partyPost`
+- **Classement** : `Leaderboard` — meilleure partie terminée par joueur et par variante, tri selon `App\Party\Ranking` (Points : score desc puis durée ; Speed : durée puis coups) via scope `rankedBy`
+- **Photos memory** : disque privé `PARTY_PHOTOS_DISK` (s3 en prod), `party/memory/{id}.jpg`, servies par `PartyMemoryPhotoController` derrière l'accès fête. Import : `php artisan party:memory-photos <dossier> --disk=s3` (carré, 400 px, JPEG ré-encodé = EXIF/GPS supprimés)
 - **Fermeture** : après `party.closes_at` (30/01/2027) → lecture seule (403 sur start/answer)
 - **Front** : vue racine `party.blade.php`, `layouts/PartyLayout.vue`, pages `pages/Party/*`, styles `resources/css/party.css` (Press Start 2P + Pixelify Sans)
 - **Pixel art** : sprites en grilles de caractères dans `components/party/sprites.ts` (rendus en SVG par `PixelSprite.vue`), décors par étape dans `components/party/scenes/` (repère 180×150 agrandi par `SceneStage.vue`, prop `action` = image bonne réponse)

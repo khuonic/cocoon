@@ -2,19 +2,50 @@
 import { Link } from '@inertiajs/vue3';
 import { formatDuration } from '@/components/party/party-api';
 import PixelSprite from '@/components/party/PixelSprite.vue';
+import type { SpriteName } from '@/components/party/sprites';
 import PartyLayout from '@/layouts/PartyLayout.vue';
 import { leaderboard } from '@/routes/party';
 import { show as showGame } from '@/routes/party/games';
 
-defineProps<{
-    games: {
-        slug: string;
-        title: string;
-        description: string;
-        max_score: number;
-        best: { score: number; duration_ms: number } | null;
-    }[];
-}>();
+type HomeGame = {
+    slug: string;
+    title: string;
+    description: string;
+    ranking: 'points' | 'speed';
+    max_score: number;
+    played: boolean;
+    best: { score: number; duration_ms: number } | null;
+};
+
+defineProps<{ games: HomeGame[] }>();
+
+/** Vignette de chaque jeu sur l'accueil. */
+const covers: Record<
+    string,
+    { sprite: SpriteName; px: number; background: string }
+> = {
+    'voie-de-la-sagesse': {
+        sprite: 'sage',
+        px: 4,
+        background: 'var(--px-gold)',
+    },
+    memory: { sprite: 'pinte', px: 7, background: 'var(--px-plum)' },
+    'casse-brique': { sprite: 'ventouse', px: 6, background: 'var(--px-teal)' },
+};
+
+function cover(slug: string) {
+    return covers[slug] ?? covers['voie-de-la-sagesse'];
+}
+
+function recordLabel(game: HomeGame): string | null {
+    if (game.best) {
+        return game.max_score > 0
+            ? `Ton record : ${game.best.score}/${game.max_score} · ${formatDuration(game.best.duration_ms)}`
+            : `Ton record : ${game.best.score} pts`;
+    }
+
+    return game.played ? 'Tes records sont dans le jeu' : null;
+}
 </script>
 
 <template>
@@ -43,10 +74,17 @@ defineProps<{
                 style="background: var(--px-paper); color: var(--px-ink)"
             >
                 <div
-                    class="flex w-[76px] flex-none items-end justify-center pb-1.5"
-                    style="background: var(--px-gold); min-height: 112px"
+                    class="flex w-[76px] flex-none items-center justify-center"
+                    :style="{
+                        background: cover(game.slug).background,
+                        minHeight: '112px',
+                    }"
                 >
-                    <PixelSprite name="sage" :px="4" decorative />
+                    <PixelSprite
+                        :name="cover(game.slug).sprite"
+                        :px="cover(game.slug).px"
+                        decorative
+                    />
                 </div>
                 <div class="flex min-w-0 flex-col gap-2">
                     <span class="font-pixel text-xs leading-normal">{{
@@ -56,49 +94,20 @@ defineProps<{
                         game.description
                     }}</span>
                     <span
-                        v-if="game.best"
+                        v-if="recordLabel(game)"
                         class="text-base"
                         style="color: #4a3b55"
                     >
-                        Ton record : {{ game.best.score }}/{{
-                            game.max_score
-                        }}
-                        · {{ formatDuration(game.best.duration_ms) }}
+                        {{ recordLabel(game) }}
                     </span>
                     <span
                         class="font-pixel self-start px-3 py-2.5 text-[11px]"
                         style="background: var(--px-gold)"
                     >
-                        {{ game.best ? 'REJOUER ▶' : 'JOUER ▶' }}
+                        {{ game.played ? 'REJOUER ▶' : 'JOUER ▶' }}
                     </span>
                 </div>
             </Link>
-
-            <div
-                class="flex gap-4 p-4"
-                style="
-                    background: #2e2e4a;
-                    color: var(--px-muted);
-                    box-shadow:
-                        0 -4px 0 #4a4e69,
-                        0 4px 0 #4a4e69,
-                        -4px 0 0 #4a4e69,
-                        4px 0 0 #4a4e69;
-                "
-            >
-                <div
-                    class="font-pixel flex size-[76px] flex-none items-center justify-center text-2xl"
-                    style="background: #3a3a5c; color: #8d89a6"
-                >
-                    ?
-                </div>
-                <div class="flex flex-col gap-2">
-                    <span class="font-pixel text-xs leading-normal"
-                        >Prochain jeu</span
-                    >
-                    <span class="text-[17px]">Bientôt débloqué…</span>
-                </div>
-            </div>
 
             <Link :href="leaderboard()" class="px-btn px-btn-cream"
                 >CLASSEMENT</Link

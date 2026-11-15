@@ -2,6 +2,10 @@
 
 namespace App\Party\Contracts;
 
+use App\Models\Party\GameRun;
+use App\Models\Party\Player;
+use App\Party\Ranking;
+
 interface PartyGame
 {
     public function slug(): string;
@@ -15,10 +19,36 @@ interface PartyGame
      */
     public function component(): string;
 
-    public function maxScore(): int;
+    public function ranking(): Ranking;
 
     /**
-     * Message de fin selon le score obtenu.
+     * Score maximum d'une partie (0 si le score n'est pas borné).
      */
-    public function verdictFor(int $score): string;
+    public function maxScore(?string $variant = null): int;
+
+    /**
+     * Axes de variantes, chacun avec ses options. La variante d'une partie est la
+     * combinaison des valeurs dans l'ordre des axes, séparées par un tiret (ex: "16-pixel").
+     *
+     * @return list<array{key: string, label: string, options: array<string, string>}>
+     */
+    public function variantAxes(): array;
+
+    public function defaultVariant(): ?string;
+
+    public function isValidVariant(?string $variant): bool;
+
+    public function variantLabel(?string $variant): ?string;
+
+    /**
+     * Props spécifiques à la page de jeu.
+     *
+     * @return array<string, mixed>
+     */
+    public function pageProps(Player $player): array;
+
+    /**
+     * Message de fin selon la partie jouée.
+     */
+    public function verdictFor(GameRun $run): string;
 }

@@ -3,10 +3,8 @@
 namespace App\Services\Party;
 
 use App\Models\Party\GameRun;
-use App\Models\Party\Player;
 use App\Party\Contracts\QuizGame;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -14,18 +12,6 @@ use Illuminate\Validation\ValidationException;
  */
 class QuizRunService
 {
-    public function start(Player $player, QuizGame $game): GameRun
-    {
-        return $player->runs()->create([
-            'uuid' => (string) Str::uuid(),
-            'game_slug' => $game->slug(),
-            'answers' => [],
-            'score' => 0,
-            'max_score' => $game->maxScore(),
-            'started_at' => now(),
-        ]);
-    }
-
     /**
      * @return array{correct: bool, answer: string, reveal: string, finished: bool, score: int}
      *

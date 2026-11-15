@@ -21,12 +21,22 @@ class PartyLeaderboardController extends Controller
         $games = $registry->all();
         $selected = $registry->find((string) $request->query('game')) ?? reset($games);
 
+        $variant = $request->query('variant');
+        if ($selected && ! $selected->isValidVariant(is_string($variant) ? $variant : null)) {
+            $variant = $selected->defaultVariant();
+        }
+
         return Inertia::render('Party/Leaderboard', [
             'games' => collect($games)
                 ->map(fn (PartyGame $game) => ['slug' => $game->slug(), 'title' => $game->title()])
                 ->values(),
-            'selectedGame' => $selected?->slug(),
-            'entries' => $selected ? $leaderboard->forGame($selected->slug()) : [],
+            'selectedGame' => $selected ? [
+                'slug' => $selected->slug(),
+                'ranking' => $selected->ranking()->value,
+                'variant_axes' => $selected->variantAxes(),
+            ] : null,
+            'selectedVariant' => $variant,
+            'entries' => $selected ? $leaderboard->forGame($selected, $variant) : [],
             'currentPlayerId' => $player->id,
         ]);
     }

@@ -18,24 +18,20 @@ class PartyHomeController extends Controller
         /** @var Player $player */
         $player = $request->attributes->get(Player::class);
 
-        $bestRuns = $player->runs()
-            ->finished()
-            ->orderByDesc('score')
-            ->orderBy('duration_ms')
-            ->get()
-            ->unique('game_slug')
-            ->keyBy('game_slug');
-
         $games = collect($registry->all())
-            ->map(function (PartyGame $game) use ($bestRuns) {
+            ->map(function (PartyGame $game) use ($player) {
                 /** @var GameRun|null $best */
-                $best = $bestRuns->get($game->slug());
+                $best = $game->variantAxes() === []
+                    ? $player->runs()->finished()->where('game_slug', $game->slug())->rankedBy($game->ranking())->first()
+                    : null;
 
                 return [
                     'slug' => $game->slug(),
                     'title' => $game->title(),
                     'description' => $game->description(),
+                    'ranking' => $game->ranking()->value,
                     'max_score' => $game->maxScore(),
+                    'played' => $player->runs()->finished()->where('game_slug', $game->slug())->exists(),
                     'best' => $best ? [
                         'score' => $best->score,
                         'duration_ms' => $best->duration_ms,

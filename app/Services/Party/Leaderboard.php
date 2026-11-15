@@ -3,20 +3,21 @@
 namespace App\Services\Party;
 
 use App\Models\Party\GameRun;
+use App\Party\Contracts\PartyGame;
 use Illuminate\Support\Collection;
 
 /**
- * Classement d'un jeu : meilleure partie terminée de chaque joueur,
- * triée par score décroissant puis durée croissante.
+ * Classement d'un jeu (et d'une variante) : meilleure partie terminée de chaque joueur,
+ * triée selon le classement propre au jeu (points ou rapidité).
  */
 class Leaderboard
 {
     /**
-     * @return Collection<int, array{rank: int, player_id: int, pseudo: string, run_uuid: string, score: int, max_score: int, duration_ms: int}>
+     * @return Collection<int, array{rank: int, player_id: int, pseudo: string, run_uuid: string, score: int, max_score: int, duration_ms: int, moves: int|null}>
      */
-    public function forGame(string $gameSlug): Collection
+    public function forGame(PartyGame $game, ?string $variant = null): Collection
     {
-        return $this->bestRuns($gameSlug)
+        return $this->bestRuns($game, $variant)
             ->values()
             ->map(fn (GameRun $run, int $index) => [
                 'rank' => $index + 1,
@@ -26,18 +27,18 @@ class Leaderboard
                 'score' => $run->score,
                 'max_score' => $run->max_score,
                 'duration_ms' => (int) $run->duration_ms,
+                'moves' => $run->moves,
             ]);
     }
 
     /**
      * Rang qu'obtiendrait cette partie face aux meilleures parties des autres joueurs.
      */
-    public function rankOf(GameRun $run): int
+    public function rankOf(GameRun $run, PartyGame $game): int
     {
-        $betterPlayers = $this->bestRuns($run->game_slug)
+        $betterPlayers = $this->bestRuns($game, $run->variant)
             ->reject(fn (GameRun $best) => $best->party_player_id === $run->party_player_id)
-            ->filter(fn (GameRun $best) => $best->score > $run->score
-                || ($best->score === $run->score && $best->duration_ms < $run->duration_ms))
+            ->filter(fn (GameRun $best) => $best->beats($run, $game->ranking()))
             ->count();
 
         return $betterPlayers + 1;
@@ -46,15 +47,18 @@ class Leaderboard
     /**
      * @return Collection<int, GameRun>
      */
-    private function bestRuns(string $gameSlug): Collection
+    private function bestRuns(PartyGame $game, ?string $variant): Collection
     {
         return GameRun::query()
             ->with('player')
             ->finished()
-            ->where('game_slug', $gameSlug)
-            ->orderByDesc('score')
-            ->orderBy('duration_ms')
-            ->orderBy('finished_at')
+            ->where('game_slug', $game->slug())
+            ->when(
+                $variant === null,
+                fn ($query) => $query->whereNull('variant'),
+                fn ($query) => $query->where('variant', $variant),
+            )
+            ->rankedBy($game->ranking())
             ->get()
             ->unique('party_player_id');
     }

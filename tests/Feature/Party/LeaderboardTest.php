@@ -22,7 +22,7 @@ test('the leaderboard keeps the best finished run of each player, ties broken by
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Party/Leaderboard')
-            ->where('selectedGame', 'voie-de-la-sagesse')
+            ->where('selectedGame.slug', 'voie-de-la-sagesse')
             ->has('entries', 3)
             ->where('entries.0.pseudo', 'Lola')
             ->where('entries.1.pseudo', 'Kev')

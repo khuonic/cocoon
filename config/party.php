@@ -1,5 +1,7 @@
 <?php
 
+use App\Party\Games\CasseBrique;
+use App\Party\Games\Memory;
 use App\Party\Games\VoieDeLaSagesse;
 
 return [
@@ -38,6 +40,14 @@ return [
 
     'games' => [
         VoieDeLaSagesse::class,
+        Memory::class,
+        CasseBrique::class,
     ],
+
+    /*
+    | Disque privé des photos du memory (s3 en prod, local en dev). Jamais public.
+    */
+
+    'memory_photos_disk' => env('PARTY_PHOTOS_DISK', 'local'),
 
 ];

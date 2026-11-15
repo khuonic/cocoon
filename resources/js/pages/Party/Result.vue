@@ -1,24 +1,46 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { formatDuration } from '@/components/party/party-api';
 import PixelSprite from '@/components/party/PixelSprite.vue';
 import PartyLayout from '@/layouts/PartyLayout.vue';
 import { leaderboard } from '@/routes/party';
 import { show as showGame } from '@/routes/party/games';
 
-defineProps<{
-    game: { slug: string; title: string };
+const props = defineProps<{
+    game: { slug: string; title: string; ranking: 'points' | 'speed' };
     run: {
         uuid: string;
         score: number;
         max_score: number;
         duration_ms: number;
+        moves: number | null;
+        variant: string | null;
+        variant_label: string | null;
     };
     rank: number;
     totalPlayers: number;
     verdict: string;
     recap: { key: string; context: string; answer: string; correct: boolean }[];
 }>();
+
+/** Première case : le score pour les jeux à points, les coups pour les jeux de rapidité. */
+const firstStat = computed(() =>
+    props.game.ranking === 'speed'
+        ? { label: 'Coups', value: String(props.run.moves ?? '–') }
+        : {
+              label: 'Score',
+              value:
+                  props.run.max_score > 0
+                      ? `${props.run.score}/${props.run.max_score}`
+                      : String(props.run.score),
+          },
+);
+
+const leaderboardQuery = computed(() => ({
+    game: props.game.slug,
+    ...(props.run.variant ? { variant: props.run.variant } : {}),
+}));
 
 const festiveColors = ['#E4572E', '#2A9D8F', '#F2B134', '#8ECAE6', '#F7A8B8'];
 
@@ -142,18 +164,27 @@ const confetti = Array.from({ length: 14 }, (_, index) => ({
         </div>
 
         <div class="flex flex-col gap-6 px-4 pt-6 pb-10">
+            <p
+                class="font-pixel m-0 text-center text-[10px] leading-relaxed"
+                style="color: var(--px-muted)"
+            >
+                {{ game.title.toUpperCase() }}
+                <template v-if="run.variant_label">
+                    · {{ run.variant_label.toUpperCase() }}</template
+                >
+            </p>
             <div class="grid grid-cols-3 gap-2.5 text-center">
                 <div
                     class="flex flex-col gap-2.5 px-1 py-3.5"
                     style="background: var(--px-ink)"
                 >
-                    <span class="text-[15px]" style="color: var(--px-muted)"
-                        >Score</span
-                    >
+                    <span class="text-[15px]" style="color: var(--px-muted)">{{
+                        firstStat.label
+                    }}</span>
                     <span
                         class="font-pixel text-lg"
                         style="color: var(--px-gold)"
-                        >{{ run.score }}/{{ run.max_score }}</span
+                        >{{ firstStat.value }}</span
                     >
                 </div>
                 <div
@@ -190,7 +221,10 @@ const confetti = Array.from({ length: 14 }, (_, index) => ({
                 <p class="m-0 text-xl leading-snug">{{ verdict }}</p>
             </div>
 
-            <ol class="m-0 flex list-none flex-col gap-2 p-0">
+            <ol
+                v-if="recap.length"
+                class="m-0 flex list-none flex-col gap-2 p-0"
+            >
                 <li
                     v-for="step in recap"
                     :key="step.key"
@@ -227,7 +261,7 @@ const confetti = Array.from({ length: 14 }, (_, index) => ({
                     >REJOUER</Link
                 >
                 <Link
-                    :href="leaderboard({ query: { game: game.slug } })"
+                    :href="leaderboard({ query: leaderboardQuery })"
                     class="px-btn px-btn-cream"
                     >CLASSEMENT</Link
                 >

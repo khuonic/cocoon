@@ -4,6 +4,7 @@ use App\Http\Controllers\Party\PartyAccessController;
 use App\Http\Controllers\Party\PartyGameController;
 use App\Http\Controllers\Party\PartyHomeController;
 use App\Http\Controllers\Party\PartyLeaderboardController;
+use App\Http\Controllers\Party\PartyMemoryPhotoController;
 use App\Http\Controllers\Party\PartyPlayerController;
 use App\Http\Controllers\Party\PartyRunController;
 use App\Http\Middleware\EnsurePartyAccess;
@@ -40,10 +41,14 @@ Route::middleware(EnsurePartyEnabled::class)
                 Route::get('classement', PartyLeaderboardController::class)->name('leaderboard');
                 Route::get('jeux/{game}', [PartyGameController::class, 'show'])->name('games.show');
                 Route::get('parties/{run:uuid}', [PartyRunController::class, 'show'])->name('runs.show');
+                Route::get('memory/photos/{photo}', PartyMemoryPhotoController::class)
+                    ->whereNumber('photo')
+                    ->name('memory.photo');
 
                 Route::middleware('throttle:party')->group(function () {
                     Route::post('jeux/{game}/parties', [PartyRunController::class, 'store'])->name('runs.store');
                     Route::post('parties/{run:uuid}/reponses', [PartyRunController::class, 'answer'])->name('runs.answer');
+                    Route::post('parties/{run:uuid}/fin', [PartyRunController::class, 'finish'])->name('runs.finish');
                 });
             });
         });

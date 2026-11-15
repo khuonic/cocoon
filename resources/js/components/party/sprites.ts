@@ -205,6 +205,29 @@ export const sprites = {
             '...bbbb.bbbb....',
         ],
     },
+    pinte: {
+        label: 'Une pinte',
+        palette: { y: '#E9A23B', Y: '#C47F1A' },
+        rows: [
+            '.www..',
+            'wwwww.',
+            'yyyyy.',
+            'yyyyyk',
+            'yyyyyk',
+            'yyyyyk',
+            'yyyyy.',
+            'YYYYY.',
+        ],
+    },
+    falafel: {
+        label: 'Un falafel',
+        palette: { f: '#A0702A', F: '#7A5520' },
+        rows: ['..ff..', '.ffff.', 'ffFfff', '.ffff.', '..ff..'],
+    },
+    lunettes: {
+        label: 'Lunettes thug life',
+        rows: ['kkkkkkkkkkkk', '.kwkkk.kwkkk', '..kkk...kkk.'],
+    },
     ballon_rouge: {
         label: 'Ballon',
         palette: { q: '#E4572E' },

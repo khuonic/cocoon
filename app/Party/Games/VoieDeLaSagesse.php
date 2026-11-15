@@ -2,7 +2,10 @@
 
 namespace App\Party\Games;
 
+use App\Models\Party\GameRun;
+use App\Models\Party\Player;
 use App\Party\Contracts\QuizGame;
+use App\Party\Ranking;
 
 /**
  * « La voie de la sagesse » : retracer la vie d'Antoine, étape par étape.
@@ -10,7 +13,7 @@ use App\Party\Contracts\QuizGame;
  * Pour modifier le contenu : éditer steps(). `scene` correspond au décor côté front
  * (resources/js/components/party/scenes), `answer` à la clé du bon choix.
  */
-class VoieDeLaSagesse implements QuizGame
+class VoieDeLaSagesse extends BaseGame implements QuizGame
 {
     public function slug(): string
     {
@@ -32,13 +35,32 @@ class VoieDeLaSagesse implements QuizGame
         return 'Party/Games/VoieDeLaSagesse';
     }
 
-    public function maxScore(): int
+    public function ranking(): Ranking
+    {
+        return Ranking::Points;
+    }
+
+    public function maxScore(?string $variant = null): int
     {
         return count($this->steps());
     }
 
-    public function verdictFor(int $score): string
+    /**
+     * Étapes envoyées au navigateur : jamais la bonne réponse ni la révélation.
+     */
+    public function pageProps(Player $player): array
     {
+        return [
+            'steps' => collect($this->steps())
+                ->map(fn (array $step) => collect($step)->except(['answer', 'reveal'])->all())
+                ->values(),
+        ];
+    }
+
+    public function verdictFor(GameRun $run): string
+    {
+        $score = $run->score;
+
         return match (true) {
             $score >= $this->maxScore() => 'Sans faute. Tu connais Antoine mieux que sa propre mère.',
             $score >= 4 => 'Pas mal du tout ! Tu as dû partager quelques verres avec lui.',
