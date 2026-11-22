@@ -203,6 +203,7 @@ Mini-site web invités, **isolé de Cocoon** (pas d'auth Fortify, pas de Syncabl
 
 - **Activation** : `PARTY_ENABLED=true` uniquement sur Cloud (middleware `EnsurePartyEnabled` → 404 sinon, + `X-Robots-Tag: noindex`). Ne jamais le mettre dans le `.env` qui part dans l'APK.
 - **Accès** : `EnsurePartyAccess
+- 
 - ` — `?k=PARTY_ACCESS_KEY` (QR code) ou mot de passe `PARTY_PASSWORD` sur `/fete/entrer` → cookie chiffré `party_access` (30 j, révoqué si clé/mot de passe change)
 - **Joueur** : `EnsurePartyPlayer` — cookie `party_player` (uuid, 1 an) → `App\Models\Party\Player` (pseudo unique insensible à la casse)
 - **Jeux** : `config('party.games')` → `App\Party\GameRegistry` (singleton, binding `{game}` dans `AppServiceProvider` pour survivre au `route:cache`). Contrat `App\Party\Contracts\PartyGame` (+ `QuizGame`), base `App\Party\Games\BaseGame`. 3 jeux :
