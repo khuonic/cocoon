@@ -22,6 +22,11 @@ interface PartyGame
     public function ranking(): Ranking;
 
     /**
+     * Jeu à terminer au moins une fois avant de pouvoir jouer à celui-ci (null si aucun).
+     */
+    public function requiredGameSlug(): ?string;
+
+    /**
      * Score maximum d'une partie (0 si le score n'est pas borné).
      */
     public function maxScore(?string $variant = null): int;

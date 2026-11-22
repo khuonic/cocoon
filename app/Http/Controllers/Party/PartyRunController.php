@@ -28,6 +28,7 @@ class PartyRunController extends Controller
     {
         $this->ensureOpen();
         $player = $this->player($request);
+        abort_unless($player->canPlay($game), 403, 'Termine d’abord La voie de la sagesse.');
 
         if ($game instanceof Memory) {
             $run = $memory->start($player, $game, $request->input('variant'));

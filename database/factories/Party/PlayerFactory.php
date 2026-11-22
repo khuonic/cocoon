@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Party;
 
+use App\Models\Party\GameRun;
 use App\Models\Party\Player;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -22,5 +23,13 @@ class PlayerFactory extends Factory
             'uuid' => (string) Str::uuid(),
             'pseudo' => fake()->unique()->lexify('Invite ????'),
         ];
+    }
+
+    /**
+     * Joueur ayant déjà terminé La voie de la sagesse (débloque les autres jeux).
+     */
+    public function sage(): static
+    {
+        return $this->has(GameRun::factory()->finished(), 'runs');
     }
 }

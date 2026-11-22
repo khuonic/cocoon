@@ -5,6 +5,7 @@ import { computed, onUnmounted, ref } from 'vue';
 import type { PartySharedProps } from '@/components/party/types';
 import { home, leaderboard } from '@/routes/party';
 import { edit as editPseudo } from '@/routes/party/player';
+import { show as showSecret } from '@/routes/party/secret';
 
 defineProps<{ title?: string }>();
 
@@ -76,6 +77,9 @@ onUnmounted(stopListening);
             <Link :href="home()" class="px-btn px-btn-cream">LES JEUX</Link>
             <Link :href="leaderboard()" class="px-btn px-btn-cream"
                 >CLASSEMENT</Link
+            >
+            <Link :href="showSecret()" class="px-btn px-btn-gold"
+                >LE SECRET D'ANTOINE ★</Link
             >
             <Link :href="editPseudo()" class="px-btn px-btn-cream"
                 >CHANGER DE PSEUDO</Link

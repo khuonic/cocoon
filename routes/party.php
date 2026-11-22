@@ -7,6 +7,7 @@ use App\Http\Controllers\Party\PartyLeaderboardController;
 use App\Http\Controllers\Party\PartyMemoryPhotoController;
 use App\Http\Controllers\Party\PartyPlayerController;
 use App\Http\Controllers\Party\PartyRunController;
+use App\Http\Controllers\Party\PartySecretController;
 use App\Http\Middleware\EnsurePartyAccess;
 use App\Http\Middleware\EnsurePartyEnabled;
 use App\Http\Middleware\EnsurePartyPlayer;
@@ -35,6 +36,10 @@ Route::middleware(EnsurePartyEnabled::class)
             Route::post('pseudo', [PartyPlayerController::class, 'store'])
                 ->middleware('throttle:party')
                 ->name('player.store');
+
+            // Vocal d'Antoine pour le jeu papier : tout invité y a accès, sans pseudo ni partie jouée.
+            Route::get('secret', [PartySecretController::class, 'show'])->name('secret.show');
+            Route::get('secret/vocal', [PartySecretController::class, 'voice'])->name('secret.voice');
 
             Route::middleware(EnsurePartyPlayer::class)->group(function () {
                 Route::get('/', PartyHomeController::class)->name('home');

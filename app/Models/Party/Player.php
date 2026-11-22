@@ -2,6 +2,7 @@
 
 namespace App\Models\Party;
 
+use App\Party\Contracts\PartyGame;
 use Carbon\CarbonImmutable;
 use Database\Factories\Party\PlayerFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +36,21 @@ class Player extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(GameRun::class, 'party_player_id');
+    }
+
+    public function hasFinished(string $gameSlug): bool
+    {
+        return $this->runs()->finished()->where('game_slug', $gameSlug)->exists();
+    }
+
+    /**
+     * Un jeu peut exiger d'en avoir terminé un autre au moins une fois.
+     */
+    public function canPlay(PartyGame $game): bool
+    {
+        $requiredSlug = $game->requiredGameSlug();
+
+        return $requiredSlug === null || $this->hasFinished($requiredSlug);
     }
 
     public static function pseudoIsTaken(string $pseudo, ?int $ignoreId = null): bool

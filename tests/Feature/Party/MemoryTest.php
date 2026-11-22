@@ -45,13 +45,13 @@ function startMemory(Player $player, string $variant = '16-pixel'): GameRun
 }
 
 test('a memory run starts with a server shuffled deck of pairs', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
 
     $response = asPartyGuest($player)
         ->postJson(route('party.runs.store', 'memory'), ['variant' => '16-pixel'])
         ->assertCreated();
 
-    $run = GameRun::sole();
+    $run = GameRun::query()->where('game_slug', 'memory')->sole();
     $deck = $response->json('deck');
 
     expect($deck)->toHaveCount(16)
@@ -62,17 +62,17 @@ test('a memory run starts with a server shuffled deck of pairs', function () {
 });
 
 test('an unknown memory variant is rejected', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
 
     asPartyGuest($player)
         ->postJson(route('party.runs.store', 'memory'), ['variant' => '14-pixel'])
         ->assertJsonValidationErrors(['variant' => "Cette version du memory n'existe pas."]);
 
-    expect(GameRun::count())->toBe(0);
+    expect(GameRun::query()->where('game_slug', 'memory')->count())->toBe(0);
 });
 
 test('photo memory needs enough photos for the chosen size', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     foreach (range(1, 6) as $id) {
         Storage::disk('local')->put("party/memory/{$id}.jpg", 'jpeg');
     }
@@ -89,7 +89,7 @@ test('photo memory needs enough photos for the chosen size', function () {
 });
 
 test('a solved memory is finished with server duration and move count', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     $run = startMemory($player);
     $this->travel(40)->seconds();
 
@@ -105,7 +105,7 @@ test('a solved memory is finished with server duration and move count', function
 });
 
 test('flips that do not solve the grid are rejected', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     $run = startMemory($player);
     $this->travel(40)->seconds();
 
@@ -119,7 +119,7 @@ test('flips that do not solve the grid are rejected', function () {
 });
 
 test('a memory solved faster than humanly possible is rejected', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     $run = startMemory($player);
 
     asPartyGuest($player)
@@ -128,16 +128,16 @@ test('a memory solved faster than humanly possible is rejected', function () {
 });
 
 test('a player cannot finish another player memory', function () {
-    $run = startMemory(Player::factory()->create());
+    $run = startMemory(Player::factory()->sage()->create());
     $this->travel(40)->seconds();
 
-    asPartyGuest(Player::factory()->create())
+    asPartyGuest(Player::factory()->sage()->create())
         ->postJson(route('party.runs.finish', $run), ['flips' => solveDeck($run->data['deck'])])
         ->assertForbidden();
 });
 
 test('memory leaderboards are split by variant and ranked by speed then moves', function () {
-    $viewer = Player::factory()->create();
+    $viewer = Player::factory()->sage()->create();
     $fast = Player::factory()->create(['pseudo' => 'Rapide']);
     $careful = Player::factory()->create(['pseudo' => 'Soigneux']);
     $sloppy = Player::factory()->create(['pseudo' => 'Brouillon']);
@@ -169,7 +169,7 @@ test('memory leaderboards are split by variant and ranked by speed then moves', 
 });
 
 test('the memory page shows the player records per variant and the photo count', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     Storage::disk('local')->put('party/memory/1.jpg', 'jpeg');
     GameRun::factory()->for($player)->create([
         'game_slug' => 'memory',
@@ -193,7 +193,7 @@ test('the memory page shows the player records per variant and the photo count',
 
 test('the memory stays playable when the photo disk is misconfigured', function () {
     config(['party.memory_photos_disk' => 'disque-inexistant']);
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
 
     asPartyGuest($player)
         ->get(route('party.games.show', 'memory'))

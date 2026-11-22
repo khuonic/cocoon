@@ -13,7 +13,7 @@ function startCasseBrique(Player $player): GameRun
 }
 
 test('a breakout score is saved with the level reached', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     $run = startCasseBrique($player);
     $this->travel(60)->seconds();
 
@@ -30,7 +30,7 @@ test('a breakout score is saved with the level reached', function () {
 });
 
 test('an impossible breakout score for the time played is rejected', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     $run = startCasseBrique($player);
     $this->travel(10)->seconds();
 
@@ -42,7 +42,7 @@ test('an impossible breakout score for the time played is rejected', function ()
 });
 
 test('a breakout run cannot be finished twice', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     $run = startCasseBrique($player);
     $this->travel(60)->seconds();
 
@@ -56,7 +56,7 @@ test('a breakout run cannot be finished twice', function () {
 });
 
 test('the breakout leaderboard ranks by points', function () {
-    $viewer = Player::factory()->create();
+    $viewer = Player::factory()->sage()->create();
     $low = Player::factory()->create(['pseudo' => 'Petit']);
     $high = Player::factory()->create(['pseudo' => 'Gros']);
 
@@ -73,7 +73,7 @@ test('the breakout leaderboard ranks by points', function () {
 });
 
 test('the breakout page shows the player best score', function () {
-    $player = Player::factory()->create();
+    $player = Player::factory()->sage()->create();
     GameRun::factory()->for($player)->finished(score: 800, durationMs: 70_000)->create(['game_slug' => 'casse-brique', 'max_score' => 0]);
 
     asPartyGuest($player)
@@ -83,4 +83,18 @@ test('the breakout page shows the player best score', function () {
             ->component('Party/Games/CasseBrique')
             ->where('best.score', 800)
         );
+});
+
+test('a breakout score boosted by bonuses is accepted up to the ceiling', function () {
+    $player = Player::factory()->sage()->create();
+    $run = startCasseBrique($player);
+    $this->travel(5)->minutes();
+
+    asPartyGuest($player)
+        ->postJson(route('party.runs.finish', $run), ['score' => 18_001, 'level' => 6, 'won' => true])
+        ->assertJsonValidationErrors(['score' => 'Ce score est trop beau pour être vrai.']);
+
+    asPartyGuest($player)
+        ->postJson(route('party.runs.finish', $run), ['score' => 18_000, 'level' => 6, 'won' => true])
+        ->assertOk();
 });

@@ -1,10 +1,14 @@
 import { spriteCanvas } from '../sprite-canvas';
 import type { SpriteName } from '../sprites';
+import { renderBackground, shade } from './backgrounds';
 import { levels } from './levels';
 import type { SoundName } from './sounds';
 
-/** Couleur d'une brique dure après le premier coup. */
-const HARD_BRICK_DAMAGED_COLOR = '#5B587A';
+/** Couleur métal des briques dures. */
+const HARD_BRICK_COLOR = '#8D89A6';
+
+/** Points d'un bonus attrapé (ou retirés par le caca), multipliés par le numéro du niveau. */
+export const BONUS_POINTS_PER_LEVEL = 20;
 
 /** Monde logique fixe, agrandi à l'écran : la physique est identique sur tous les téléphones. */
 export const WORLD_WIDTH = 360;
@@ -19,31 +23,31 @@ export const bonuses: Record<
     V: {
         sprite: 'ventouse',
         title: 'VENTOUSE',
-        text: 'La balle colle à la barre (3 fois), touche pour la relancer.',
+        text: 'La balle colle à la barre (3 fois), touche pour la relancer. +20 pts × niveau.',
         isMalus: false,
     },
     F: {
         sprite: 'falafel',
         title: 'FALAFEL',
-        text: 'Trois balles en jeu.',
+        text: 'Trois balles en jeu. +20 pts × niveau.',
         isMalus: false,
     },
     P: {
         sprite: 'pinte',
         title: 'PINTE',
-        text: 'Barre XL pendant 15 secondes.',
+        text: 'Barre XL pendant 15 secondes. +20 pts × niveau.',
         isMalus: false,
     },
     S: {
         sprite: 'scooter',
         title: 'SCOOTER',
-        text: 'Balle turbo pendant 10 secondes : points doublés, mais ça va vite.',
+        text: 'Balle turbo pendant 10 secondes : points doublés, mais ça va vite. +20 pts × niveau.',
         isMalus: false,
     },
     C: {
         sprite: 'caca_pq',
         title: 'CACA (MALUS)',
-        text: 'Barre mini et mouches qui gênent la vue pendant 10 secondes.',
+        text: 'Barre mini et mouches qui gênent la vue pendant 10 secondes. −20 pts × niveau.',
         isMalus: true,
     },
 };
@@ -66,8 +70,25 @@ type Brick = {
     x: number;
     y: number;
     hp: number;
+    maxHp: number;
     color: string;
     bonus: BonusKind | null;
+};
+/** Éclat de brique ou texte de points flottant, qui disparaît au bout de `life` secondes. */
+type Particle = {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+    color: string;
+};
+type Floater = {
+    x: number;
+    y: number;
+    life: number;
+    text: string;
+    color: string;
 };
 type Ball = {
     x: number;
@@ -110,6 +131,9 @@ export class BreakoutEngine {
     private balls: Ball[] = [];
     private items: Item[] = [];
     private flies: Fly[] = [];
+    private particles: Particle[] = [];
+    private floaters: Floater[] = [];
+    private background: HTMLCanvasElement | null = null;
 
     private paddleX = WORLD_WIDTH / 2;
     private paddleWidth = PADDLE_WIDTHS.normal;
@@ -230,6 +254,7 @@ export class BreakoutEngine {
 
         this.updateItems(dt);
         this.updateFlies(dt);
+        this.updateEffects(dt);
 
         if (this.bricks.length === 0) {
             this.clearLevel();
@@ -350,6 +375,7 @@ export class BreakoutEngine {
         this.events.onSound('brick');
 
         this.bricks = this.bricks.filter((candidate) => candidate !== brick);
+        this.shatter(brick);
         this.score +=
             (10 + 5 * this.levelIndex) * (this.turboTimer > 0 ? 2 : 1);
 
@@ -382,6 +408,38 @@ export class BreakoutEngine {
             }
 
             return item.y < WORLD_HEIGHT;
+        });
+    }
+
+    /** Éclats projetés à la casse d'une brique. */
+    private shatter(brick: Brick): void {
+        for (let index = 0; index < 6; index++) {
+            this.particles.push({
+                x: brick.x + 4 + Math.random() * (BRICK_W - 8),
+                y: brick.y + 4 + Math.random() * (BRICK_H - 8),
+                vx: (Math.random() - 0.5) * 160,
+                vy: -40 - Math.random() * 80,
+                life: 0.45 + Math.random() * 0.25,
+                color: brick.color,
+            });
+        }
+    }
+
+    private updateEffects(dt: number): void {
+        this.particles = this.particles.filter((particle) => {
+            particle.vy += 600 * dt;
+            particle.x += particle.vx * dt;
+            particle.y += particle.vy * dt;
+            particle.life -= dt;
+
+            return particle.life > 0;
+        });
+
+        this.floaters = this.floaters.filter((floater) => {
+            floater.y -= 34 * dt;
+            floater.life -= dt;
+
+            return floater.life > 0;
         });
     }
 
@@ -427,8 +485,21 @@ export class BreakoutEngine {
                 break;
         }
 
-        this.events.onToast(`${bonuses[kind].title} !`);
-        this.events.onSound(bonuses[kind].isMalus ? 'malus' : 'bonus');
+        const isMalus = bonuses[kind].isMalus;
+        const points = BONUS_POINTS_PER_LEVEL * (this.levelIndex + 1);
+        this.score = Math.max(0, this.score + (isMalus ? -points : points));
+        const label = `${isMalus ? '−' : '+'}${points}`;
+
+        this.floaters.push({
+            x: this.paddleX,
+            y: PADDLE_Y - 14,
+            life: 1,
+            text: label,
+            color: isMalus ? '#E4572E' : '#F2B134',
+        });
+        this.events.onToast(`${bonuses[kind].title} ! ${label}`);
+        this.events.onSound(isMalus ? 'malus' : 'bonus');
+        this.emitHud();
     }
 
     private splitBalls(): void {
@@ -538,15 +609,22 @@ export class BreakoutEngine {
                     return;
                 }
 
+                const hp = char === '#' ? 2 : 1;
                 this.bricks.push({
                     x: LEFT + column * (BRICK_W + GAP),
                     y: TOP + rowIndex * (BRICK_H + GAP),
-                    hp: char === '#' ? 2 : 1,
-                    color: BRICK_COLORS[char] ?? HARD_BRICK_DAMAGED_COLOR,
+                    hp,
+                    maxHp: hp,
+                    color: BRICK_COLORS[char] ?? HARD_BRICK_COLOR,
                     bonus: null,
                 });
             });
         });
+
+        this.background = renderBackground(
+            levels[index].decor,
+            levels[index].background,
+        );
 
         this.hideBonuses(levels[index].bonusCount);
         this.resetEffects();
@@ -575,6 +653,7 @@ export class BreakoutEngine {
     private resetEffects(): void {
         this.items = [];
         this.flies = [];
+        this.particles = [];
         this.sizeTimer = 0;
         this.turboTimer = 0;
         this.cacaTimer = 0;
@@ -668,12 +747,29 @@ export class BreakoutEngine {
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
         context.imageSmoothingEnabled = false;
 
-        context.fillStyle = levels[this.levelIndex]?.background ?? '#22223B';
-        context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        if (this.background) {
+            context.drawImage(this.background, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        } else {
+            context.fillStyle =
+                levels[this.levelIndex]?.background ?? '#22223B';
+            context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        }
 
         for (const brick of this.bricks) {
             this.drawBrick(brick);
         }
+
+        for (const particle of this.particles) {
+            context.globalAlpha = Math.min(1, particle.life / 0.3);
+            context.fillStyle = particle.color;
+            context.fillRect(
+                Math.round(particle.x),
+                Math.round(particle.y),
+                3,
+                3,
+            );
+        }
+        context.globalAlpha = 1;
 
         for (const item of this.items) {
             context.fillStyle = '#F2B134';
@@ -708,8 +804,7 @@ export class BreakoutEngine {
                     BALL,
                 );
             }
-            context.fillStyle = '#FFF8E7';
-            context.fillRect(ball.x, ball.y, BALL, BALL);
+            this.drawBall(ball);
         }
 
         context.fillStyle = '#1B1B2F';
@@ -719,51 +814,143 @@ export class BreakoutEngine {
             context.fillRect(fly.x + 4, fly.y - 2, 2, 2);
         }
 
+        this.drawFloaters();
+
         if (this.message) {
             this.drawMessage(this.message);
         }
     }
 
+    private drawBall(ball: Ball): void {
+        const context = this.context;
+        const x = Math.round(ball.x);
+        const y = Math.round(ball.y);
+
+        // Ombre portée, puis balle aux coins arrondis avec reflet.
+        context.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        context.fillRect(x + 1, y + BALL, BALL - 2, 1);
+        context.fillStyle = '#FFF8E7';
+        context.fillRect(x + 1, y, BALL - 2, BALL);
+        context.fillRect(x, y + 1, BALL, BALL - 2);
+        context.fillStyle = '#D8CFB4';
+        context.fillRect(x + BALL - 3, y + BALL - 3, 2, 2);
+        context.fillStyle = '#FFFFFF';
+        context.fillRect(x + 1, y + 1, 2, 2);
+    }
+
+    private drawFloaters(): void {
+        const context = this.context;
+        context.font = "8px 'Press Start 2P', monospace";
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+
+        for (const floater of this.floaters) {
+            context.globalAlpha = Math.min(1, floater.life / 0.4);
+            context.fillStyle = '#1B1B2F';
+            context.fillText(floater.text, floater.x + 1, floater.y + 1);
+            context.fillStyle = floater.color;
+            context.fillText(floater.text, floater.x, floater.y);
+        }
+        context.globalAlpha = 1;
+    }
+
     private drawBrick(brick: Brick): void {
         const context = this.context;
+        const { x, y } = brick;
+        const isHard = brick.maxHp >= 2;
+        const isCracked = isHard && brick.hp < brick.maxHp;
+        const base = isCracked ? shade(brick.color, -0.15) : brick.color;
 
         // Les bonus sont cachés : une brique bonus ressemble à toutes les autres.
-        if (brick.hp >= 2) {
-            context.fillStyle = '#8D89A6';
-        } else {
-            context.fillStyle = brick.color;
+        // Contour sombre, biseau éclairé en haut à gauche, ombre en bas à droite, reflet.
+        context.fillStyle = shade(brick.color, -0.6);
+        context.fillRect(x, y, BRICK_W, BRICK_H);
+        context.fillStyle = base;
+        context.fillRect(x + 1, y + 1, BRICK_W - 2, BRICK_H - 2);
+        context.fillStyle = shade(base, 0.35);
+        context.fillRect(x + 1, y + 1, BRICK_W - 2, 2);
+        context.fillRect(x + 1, y + 1, 2, BRICK_H - 2);
+        context.fillStyle = shade(base, -0.3);
+        context.fillRect(x + 1, y + BRICK_H - 3, BRICK_W - 2, 2);
+        context.fillRect(x + BRICK_W - 3, y + 1, 2, BRICK_H - 2);
+        context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        context.fillRect(x + 4, y + 4, 4, 2);
+
+        if (!isHard) {
+            return;
         }
-        context.fillRect(brick.x, brick.y, BRICK_W, BRICK_H);
 
-        context.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        context.fillRect(brick.x, brick.y + BRICK_H - 3, BRICK_W, 3);
+        // Brique en métal : rivets, puis fissure après le premier coup.
+        context.fillStyle = shade(brick.color, -0.45);
+        for (const [rivetX, rivetY] of [
+            [x + 5, y + 7],
+            [x + BRICK_W - 7, y + 7],
+        ]) {
+            context.fillRect(rivetX, rivetY, 2, 2);
+        }
 
-        if (brick.hp >= 2) {
-            context.fillStyle = '#5B587A';
-            context.fillRect(brick.x + 6, brick.y + 4, 4, 4);
-            context.fillRect(brick.x + BRICK_W - 10, brick.y + 4, 4, 4);
+        if (isCracked) {
+            context.fillStyle = '#1B1B2F';
+            for (const [crackX, crackY, width] of [
+                [17, 2, 2],
+                [18, 4, 2],
+                [20, 6, 2],
+                [19, 8, 2],
+                [21, 10, 3],
+                [23, 12, 2],
+                [14, 6, 4],
+            ]) {
+                context.fillRect(x + crackX, y + crackY, width, 2);
+            }
         }
     }
 
     private drawPaddle(): void {
         const context = this.context;
-        const left = this.paddleX - this.paddleWidth / 2;
+        const width = this.paddleWidth;
+        const left = Math.round(this.paddleX - width / 2);
+        const y = PADDLE_Y;
 
+        const color =
+            this.cacaTimer > 0
+                ? '#9C6B30'
+                : width > PADDLE_WIDTHS.normal
+                  ? '#F7C948'
+                  : '#F2B134';
+
+        // Contour aux coins arrondis en escalier de pixels.
         context.fillStyle = '#1B1B2F';
-        context.fillRect(
-            left - 2,
-            PADDLE_Y - 2,
-            this.paddleWidth + 4,
-            PADDLE_H + 4,
-        );
-        context.fillStyle = this.cacaTimer > 0 ? '#C47F1A' : '#F2B134';
-        context.fillRect(left, PADDLE_Y, this.paddleWidth, PADDLE_H);
-        context.fillStyle = '#D99A1E';
-        context.fillRect(left, PADDLE_Y + PADDLE_H - 3, this.paddleWidth, 3);
+        context.fillRect(left + 1, y - 2, width - 2, PADDLE_H + 4);
+        context.fillRect(left - 2, y + 1, width + 4, PADDLE_H - 2);
+        context.fillRect(left - 1, y - 1, width + 2, PADDLE_H + 2);
+
+        context.fillStyle = color;
+        context.fillRect(left + 1, y, width - 2, PADDLE_H);
+        context.fillRect(left, y + 1, width, PADDLE_H - 2);
+
+        // Embouts plus sombres, reflet en haut, ombre en bas.
+        context.fillStyle = shade(color, -0.3);
+        context.fillRect(left, y + 1, 5, PADDLE_H - 2);
+        context.fillRect(left + width - 5, y + 1, 5, PADDLE_H - 2);
+        context.fillStyle = shade(color, 0.45);
+        context.fillRect(left + 7, y + 1, width - 14, 2);
+        context.fillStyle = shade(color, -0.2);
+        context.fillRect(left + 5, y + PADDLE_H - 3, width - 10, 2);
+
+        // Mousse de bière sur la barre XL.
+        if (width > PADDLE_WIDTHS.normal && this.cacaTimer <= 0) {
+            context.fillStyle = '#FFF8E7';
+            for (let foamX = left + 6; foamX < left + width - 8; foamX += 6) {
+                context.fillRect(foamX, y - 1, 4, 2);
+            }
+        }
 
         if (this.stickyCatches > 0) {
+            context.fillStyle = '#7A2E22';
+            context.fillRect(this.paddleX - 7, y - 4, 14, 3);
             context.fillStyle = '#C8553D';
-            context.fillRect(this.paddleX - 6, PADDLE_Y - 4, 12, 4);
+            context.fillRect(this.paddleX - 6, y - 4, 12, 2);
+            context.fillRect(this.paddleX - 2, y - 7, 4, 3);
         }
     }
 

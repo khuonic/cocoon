@@ -15,9 +15,11 @@ use App\Party\Ranking;
  */
 class VoieDeLaSagesse extends BaseGame implements QuizGame
 {
+    public const SLUG = 'voie-de-la-sagesse';
+
     public function slug(): string
     {
-        return 'voie-de-la-sagesse';
+        return self::SLUG;
     }
 
     public function title(): string

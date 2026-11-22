@@ -10,6 +10,11 @@ use App\Party\Contracts\PartyGame;
  */
 abstract class BaseGame implements PartyGame
 {
+    public function requiredGameSlug(): ?string
+    {
+        return null;
+    }
+
     public function variantAxes(): array
     {
         return [];

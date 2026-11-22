@@ -14,6 +14,8 @@ type HomeGame = {
     ranking: 'points' | 'speed';
     max_score: number;
     played: boolean;
+    locked: boolean;
+    required_title: string | null;
     best: { score: number; duration_ms: number } | null;
 };
 
@@ -66,18 +68,26 @@ function recordLabel(game: HomeGame): string | null {
         </div>
 
         <div class="flex flex-col gap-6 px-5 pt-6 pb-10">
-            <Link
+            <component
+                :is="game.locked ? 'div' : Link"
                 v-for="game in games"
                 :key="game.slug"
-                :href="showGame(game.slug)"
+                :href="game.locked ? undefined : showGame(game.slug)"
                 class="px-border flex gap-4 p-4 no-underline"
-                style="background: var(--px-paper); color: var(--px-ink)"
+                :style="{
+                    background: game.locked ? '#d8cfb4' : 'var(--px-paper)',
+                    color: 'var(--px-ink)',
+                }"
+                :aria-disabled="game.locked || undefined"
             >
                 <div
-                    class="flex w-[76px] flex-none items-center justify-center"
+                    class="relative flex w-[76px] flex-none items-center justify-center"
                     :style="{
                         background: cover(game.slug).background,
                         minHeight: '112px',
+                        filter: game.locked
+                            ? 'grayscale(1) brightness(0.6)'
+                            : undefined,
                     }"
                 >
                     <PixelSprite
@@ -85,6 +95,12 @@ function recordLabel(game: HomeGame): string | null {
                         :px="cover(game.slug).px"
                         decorative
                     />
+                    <span
+                        v-if="game.locked"
+                        class="absolute inset-0 flex items-center justify-center text-3xl"
+                        aria-hidden="true"
+                        >🔒</span
+                    >
                 </div>
                 <div class="flex min-w-0 flex-col gap-2">
                     <span class="font-pixel text-xs leading-normal">{{
@@ -101,13 +117,26 @@ function recordLabel(game: HomeGame): string | null {
                         {{ recordLabel(game) }}
                     </span>
                     <span
+                        v-if="game.locked"
+                        class="font-pixel self-start px-3 py-2.5 text-[9px] leading-relaxed"
+                        style="
+                            background: var(--px-ink);
+                            color: var(--px-paper);
+                        "
+                    >
+                        🔒 TERMINE D'ABORD<br />{{
+                            (game.required_title ?? '').toUpperCase()
+                        }}
+                    </span>
+                    <span
+                        v-else
                         class="font-pixel self-start px-3 py-2.5 text-[11px]"
                         style="background: var(--px-gold)"
                     >
                         {{ game.played ? 'REJOUER ▶' : 'JOUER ▶' }}
                     </span>
                 </div>
-            </Link>
+            </component>
 
             <Link :href="leaderboard()" class="px-btn px-btn-cream"
                 >CLASSEMENT</Link

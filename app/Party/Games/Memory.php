@@ -43,6 +43,11 @@ class Memory extends BaseGame
         return Ranking::Speed;
     }
 
+    public function requiredGameSlug(): string
+    {
+        return VoieDeLaSagesse::SLUG;
+    }
+
     public function variantAxes(): array
     {
         return [

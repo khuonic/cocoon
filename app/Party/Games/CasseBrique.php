@@ -17,12 +17,13 @@ class CasseBrique extends BaseGame
 
     /**
      * Au-delà, le score est jugé impossible pour la durée jouée.
-     * Barème front : brique = 10 + 5 × (niveau - 1), ×2 en turbo, +100 × niveau par niveau terminé
-     * (≈ 11 500 points au maximum, impossible en moins de 90 s environ).
+     * Barème front : brique = 10 + 5 × (niveau - 1), ×2 en turbo, +100 × niveau par niveau terminé,
+     * bonus attrapé +20 × niveau, caca −20 × niveau
+     * (≈ 11 500 points de briques + ≈ 3 000 de bonus au maximum, impossible en moins de 90 s environ).
      */
     public const MAX_POINTS_PER_SECOND = 150;
 
-    public const MAX_SCORE = 15_000;
+    public const MAX_SCORE = 18_000;
 
     public function slug(): string
     {
@@ -47,6 +48,11 @@ class CasseBrique extends BaseGame
     public function ranking(): Ranking
     {
         return Ranking::Points;
+    }
+
+    public function requiredGameSlug(): string
+    {
+        return VoieDeLaSagesse::SLUG;
     }
 
     public function maxScore(?string $variant = null): int

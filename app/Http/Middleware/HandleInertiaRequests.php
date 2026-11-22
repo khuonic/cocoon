@@ -78,8 +78,7 @@ class HandleInertiaRequests extends Middleware
             'party' => [
                 'title' => config('party.title'),
                 'isClosed' => PartyEvent::isClosed(),
-                'player' => ($player = EnsurePartyPlayer::resolve($request)) ? ['pseudo' => $player->pseudo] : null,
-            ],
+                'player' => ($player = EnsurePartyPlayer::resolve($request)) ? ['pseudo' => $player->pseudo] : null,            ],
         ];
     }
 
