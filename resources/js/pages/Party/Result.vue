@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
+import { playFirstPlaceSound } from '@/components/party/first-place-sound';
 import { formatDuration } from '@/components/party/party-api';
 import PixelSprite from '@/components/party/PixelSprite.vue';
 import PartyLayout from '@/layouts/PartyLayout.vue';
@@ -36,6 +37,12 @@ const firstStat = computed(() =>
                       : String(props.run.score),
           },
 );
+
+onMounted(() => {
+    if (props.rank === 1) {
+        playFirstPlaceSound(props.run.uuid);
+    }
+});
 
 const leaderboardQuery = computed(() => ({
     game: props.game.slug,
