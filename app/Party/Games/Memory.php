@@ -25,7 +25,7 @@ class Memory extends BaseGame
 
     public function title(): string
     {
-        return "Le memory d'Antoine";
+        return 'Trou de mémoire';
     }
 
     public function description(): string

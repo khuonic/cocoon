@@ -91,10 +91,10 @@ test('a breakout score boosted by bonuses is accepted up to the ceiling', functi
     $this->travel(5)->minutes();
 
     asPartyGuest($player)
-        ->postJson(route('party.runs.finish', $run), ['score' => 18_001, 'level' => 6, 'won' => true])
+        ->postJson(route('party.runs.finish', $run), ['score' => 20_001, 'level' => 6, 'won' => true])
         ->assertJsonValidationErrors(['score' => 'Ce score est trop beau pour être vrai.']);
 
     asPartyGuest($player)
-        ->postJson(route('party.runs.finish', $run), ['score' => 18_000, 'level' => 6, 'won' => true])
+        ->postJson(route('party.runs.finish', $run), ['score' => 20_000, 'level' => 6, 'won' => true])
         ->assertOk();
 });

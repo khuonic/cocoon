@@ -220,7 +220,7 @@ onUnmounted(() => {
                 class="font-pixel m-0 text-lg leading-relaxed"
                 style="color: var(--px-gold)"
             >
-                Le casse-brique<br />d'Antoine
+                Le Grand<br />Débouchage
             </h1>
             <p class="m-0 text-xl leading-snug">
                 {{ levels.length }} niveaux, un par anecdote. Glisse ton pouce

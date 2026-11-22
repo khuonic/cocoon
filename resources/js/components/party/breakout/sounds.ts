@@ -12,6 +12,7 @@ export type SoundName =
     | 'hardBrick'
     | 'bonus'
     | 'malus'
+    | 'shot'
     | 'lifeLost'
     | 'levelClear'
     | 'win'
@@ -26,6 +27,7 @@ export const soundFiles: Record<SoundName, string> = {
     hardBrick: 'brique-dure.mp3',
     bonus: 'bonus.mp3',
     malus: 'malus.mp3',
+    shot: 'tir.mp3',
     lifeLost: 'vie-perdue.mp3',
     levelClear: 'niveau.mp3',
     win: 'victoire.mp3',
@@ -48,6 +50,10 @@ const fallbackNotes: Record<SoundName, Note[]> = {
     malus: [
         { frequency: 300, duration: 0.1, type: 'sawtooth' },
         { frequency: 160, duration: 0.18, type: 'sawtooth' },
+    ],
+    shot: [
+        { frequency: 1200, duration: 0.03, type: 'triangle' },
+        { frequency: 700, duration: 0.03, type: 'triangle' },
     ],
     lifeLost: [
         { frequency: 494, duration: 0.1 },

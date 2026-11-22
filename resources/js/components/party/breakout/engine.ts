@@ -14,7 +14,7 @@ export const BONUS_POINTS_PER_LEVEL = 20;
 export const WORLD_WIDTH = 360;
 export const WORLD_HEIGHT = 560;
 
-type BonusKind = 'V' | 'F' | 'P' | 'S' | 'C';
+type BonusKind = 'V' | 'F' | 'P' | 'S' | 'N' | 'C';
 
 export const bonuses: Record<
     BonusKind,
@@ -42,6 +42,12 @@ export const bonuses: Record<
         sprite: 'scooter',
         title: 'SCOOTER',
         text: 'Balle turbo pendant 10 secondes : points doublés, mais ça va vite. +20 pts × niveau.',
+        isMalus: false,
+    },
+    N: {
+        sprite: 'crotte_nez',
+        title: 'CROTTE DE NEZ',
+        text: 'La barre tire des crottes de nez par deux pendant 8 secondes. Plus rare. +20 pts × niveau.',
         isMalus: false,
     },
     C: {
@@ -99,6 +105,8 @@ type Ball = {
     offset: number;
 };
 type Item = { x: number; y: number; kind: BonusKind };
+/** Crotte de nez tirée par la barre, qui monte jusqu'à toucher une brique. */
+type Shot = { x: number; y: number };
 type Fly = { x: number; y: number; vx: number; vy: number };
 
 const BRICK_COLORS: Record<string, string> = {
@@ -119,6 +127,11 @@ const PADDLE_H = 10;
 const PADDLE_WIDTHS = { normal: 64, wide: 100, mini: 40 };
 const BALL = 7;
 const ITEM_SIZE = 18;
+const SHOT_SIZE = 7;
+const SHOT_SPEED = 420;
+/** Bonus crotte de nez : durée et cadence de tir (une paire par salve). */
+const SHOOTER_DURATION = 8;
+const SHOOTER_FIRE_INTERVAL = 0.45;
 const STEP = 1 / 120;
 const MAX_BOUNCE_ANGLE = Math.PI / 3;
 
@@ -133,6 +146,7 @@ export class BreakoutEngine {
     private flies: Fly[] = [];
     private particles: Particle[] = [];
     private floaters: Floater[] = [];
+    private shots: Shot[] = [];
     private background: HTMLCanvasElement | null = null;
 
     private paddleX = WORLD_WIDTH / 2;
@@ -140,6 +154,8 @@ export class BreakoutEngine {
     private sizeTimer = 0;
     private turboTimer = 0;
     private cacaTimer = 0;
+    private shooterTimer = 0;
+    private fireCooldown = 0;
     private stickyCatches = 0;
     private keyboardDirection = 0;
 
@@ -253,6 +269,7 @@ export class BreakoutEngine {
         }
 
         this.updateItems(dt);
+        this.updateShots(dt);
         this.updateFlies(dt);
         this.updateEffects(dt);
 
@@ -270,6 +287,7 @@ export class BreakoutEngine {
         }
 
         this.turboTimer = Math.max(0, this.turboTimer - dt);
+        this.shooterTimer = Math.max(0, this.shooterTimer - dt);
 
         if (this.cacaTimer > 0) {
             this.cacaTimer -= dt;
@@ -411,6 +429,47 @@ export class BreakoutEngine {
         });
     }
 
+    /**
+     * Bonus crotte de nez : la barre tire seule une paire de crottes depuis ses deux bouts
+     * à intervalle régulier ; chaque crotte touche la première brique sur son chemin.
+     */
+    private updateShots(dt: number): void {
+        if (this.shooterTimer > 0) {
+            this.fireCooldown -= dt;
+            if (this.fireCooldown <= 0) {
+                this.fireCooldown = SHOOTER_FIRE_INTERVAL;
+                const left = this.paddleX - this.paddleWidth / 2;
+                for (const x of [
+                    left + 3,
+                    left + this.paddleWidth - 3 - SHOT_SIZE,
+                ]) {
+                    this.shots.push({ x, y: PADDLE_Y - SHOT_SIZE });
+                }
+                this.events.onSound('shot');
+            }
+        }
+
+        this.shots = this.shots.filter((shot) => {
+            shot.y -= SHOT_SPEED * dt;
+
+            const brick = this.bricks.find(
+                (candidate) =>
+                    shot.x < candidate.x + BRICK_W &&
+                    shot.x + SHOT_SIZE > candidate.x &&
+                    shot.y < candidate.y + BRICK_H &&
+                    shot.y + SHOT_SIZE > candidate.y,
+            );
+
+            if (brick) {
+                this.hitBrick(brick);
+
+                return false;
+            }
+
+            return shot.y + SHOT_SIZE > 0;
+        });
+    }
+
     /** Éclats projetés à la casse d'une brique. */
     private shatter(brick: Brick): void {
         for (let index = 0; index < 6; index++) {
@@ -471,6 +530,10 @@ export class BreakoutEngine {
                 break;
             case 'S':
                 this.turboTimer = 10;
+                break;
+            case 'N':
+                this.shooterTimer = SHOOTER_DURATION;
+                this.fireCooldown = 0;
                 break;
             case 'C':
                 this.setPaddleWidth(PADDLE_WIDTHS.mini);
@@ -635,10 +698,21 @@ export class BreakoutEngine {
 
     /**
      * Cache des bonus au hasard dans les briques du niveau, sans indice visuel.
-     * Le malus (caca) sort un peu moins souvent que les bonus.
+     * Le malus (caca) et la crotte de nez sortent deux fois moins souvent que les autres bonus.
      */
     private hideBonuses(count: number): void {
-        const pool: BonusKind[] = ['V', 'V', 'F', 'F', 'P', 'P', 'S', 'S', 'C'];
+        const pool: BonusKind[] = [
+            'V',
+            'V',
+            'F',
+            'F',
+            'P',
+            'P',
+            'S',
+            'S',
+            'N',
+            'C',
+        ];
         const candidates = [...this.bricks];
 
         for (let index = 0; index < count && candidates.length > 0; index++) {
@@ -654,9 +728,12 @@ export class BreakoutEngine {
         this.items = [];
         this.flies = [];
         this.particles = [];
+        this.shots = [];
         this.sizeTimer = 0;
         this.turboTimer = 0;
         this.cacaTimer = 0;
+        this.shooterTimer = 0;
+        this.fireCooldown = 0;
         this.stickyCatches = 0;
         this.setPaddleWidth(PADDLE_WIDTHS.normal);
     }
@@ -790,6 +867,10 @@ export class BreakoutEngine {
                 14,
                 14,
             );
+        }
+
+        for (const shot of this.shots) {
+            this.drawShot(shot);
         }
 
         this.drawPaddle();
@@ -952,6 +1033,40 @@ export class BreakoutEngine {
             context.fillRect(this.paddleX - 6, y - 4, 12, 2);
             context.fillRect(this.paddleX - 2, y - 7, 4, 3);
         }
+
+        // Bonus crotte de nez : une petite narine verte à chaque bout, d'où partent les tirs.
+        if (this.shooterTimer > 0) {
+            for (const noseX of [left + 1, left + width - 11]) {
+                context.fillStyle = '#1B1B2F';
+                context.fillRect(noseX, y - 6, 10, 6);
+                context.fillStyle = '#8DB33A';
+                context.fillRect(noseX + 2, y - 5, 6, 4);
+                context.fillStyle = '#E4F2B8';
+                context.fillRect(noseX + 3, y - 4, 2, 1);
+            }
+        }
+    }
+
+    /** Crotte de nez en vol : boulette verte avec un reflet et une petite traînée. */
+    private drawShot(shot: Shot): void {
+        const context = this.context;
+        const x = Math.round(shot.x);
+        const y = Math.round(shot.y);
+
+        // Traînée, contour sombre arrondi, boulette verte, ombre et reflet.
+        context.fillStyle = 'rgba(141, 179, 58, 0.4)';
+        context.fillRect(x + 2, y + SHOT_SIZE, SHOT_SIZE - 4, 6);
+        context.fillStyle = '#1B1B2F';
+        context.fillRect(x + 1, y - 1, SHOT_SIZE - 2, SHOT_SIZE + 2);
+        context.fillRect(x - 1, y + 1, SHOT_SIZE + 2, SHOT_SIZE - 2);
+        context.fillRect(x, y, SHOT_SIZE, SHOT_SIZE);
+        context.fillStyle = '#8DB33A';
+        context.fillRect(x + 1, y, SHOT_SIZE - 2, SHOT_SIZE);
+        context.fillRect(x, y + 1, SHOT_SIZE, SHOT_SIZE - 2);
+        context.fillStyle = '#5E7F1F';
+        context.fillRect(x + 2, y + SHOT_SIZE - 2, SHOT_SIZE - 3, 2);
+        context.fillStyle = '#E4F2B8';
+        context.fillRect(x + 2, y + 1, 2, 2);
     }
 
     private drawIcon(

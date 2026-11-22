@@ -285,7 +285,7 @@ function cardLabel(card: Card): string {
                     class="font-pixel m-0 text-lg leading-relaxed"
                     style="color: var(--px-gold)"
                 >
-                    Memory<br />d'Antoine
+                    Trou de<br />mémoire
                 </h1>
                 <p class="m-0 text-lg leading-snug">
                     Retrouve toutes les paires le plus vite possible.

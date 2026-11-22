@@ -327,6 +327,11 @@ export const sprites = {
             'qqqq',
         ],
     },
+    crotte_nez: {
+        label: 'Une crotte de nez',
+        palette: { n: '#8DB33A', N: '#5E7F1F', l: '#E4F2B8' },
+        rows: ['..NN..', '.NnnN.', 'Nnlnnn', 'Nnnnnn', '.NnnN.', '..NN..'],
+    },
     caca_pq: {
         label: 'Le caca sur du papier toilette',
         palette: { d: '#7A4A26' },
