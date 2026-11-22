@@ -33,7 +33,7 @@ test('an unknown memory photo returns not found', function () {
     asPartyGuest($player)->get(route('party.memory.photo', 3))->assertNotFound();
 });
 
-test('the import command squares, resizes and numbers the photos', function () {
+test('the import command crops to portrait 3:4, resizes and numbers the photos', function () {
     $directory = storage_path('framework/testing/memory-import');
     File::ensureDirectoryExists($directory);
     $portrait = UploadedFile::fake()->image('b-portrait.jpg', 600, 900);
@@ -45,7 +45,7 @@ test('the import command squares, resizes and numbers the photos', function () {
 
     $first = getimagesizefromstring(Storage::disk('local')->get('party/memory/1.jpg'));
     expect(Storage::disk('local')->files('party/memory'))->toBe(['party/memory/1.jpg', 'party/memory/2.jpg'])
-        ->and([$first[0], $first[1], $first['mime']])->toBe([200, 200, 'image/jpeg']);
+        ->and([$first[0], $first[1], $first['mime']])->toBe([150, 200, 'image/jpeg']);
 
     File::deleteDirectory($directory);
 });

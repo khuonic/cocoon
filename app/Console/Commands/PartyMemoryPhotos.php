@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 /**
- * Importe les photos du memory : recadrage carré, redimensionnement, ré-encodage JPEG
+ * Importe les photos du memory : recadrage portrait 3:4 (format des cartes), redimensionnement, ré-encodage JPEG
  * (ce qui supprime toutes les métadonnées EXIF, dont la position GPS), puis envoi sur le disque privé.
  */
 class PartyMemoryPhotos extends Command
@@ -18,7 +18,7 @@ class PartyMemoryPhotos extends Command
      */
     protected $signature = 'party:memory-photos
         {directory : Dossier local contenant les photos (jpg, jpeg, png, webp), triées par nom}
-        {--size=400 : Taille du carré en pixels}
+        {--size=400 : Hauteur de la photo en pixels (largeur = 3/4)}
         {--disk= : Disque cible (par défaut config party.memory_photos_disk, ex: s3)}';
 
     /**
@@ -27,6 +27,9 @@ class PartyMemoryPhotos extends Command
     protected $description = 'Prépare et envoie les photos du memory sur le disque privé (remplace les précédentes)';
 
     public const MAX_PHOTOS = 10;
+
+    /** Rapport largeur / hauteur des photos, proche de celui des cartes sur téléphone. */
+    public const ASPECT_RATIO = 3 / 4;
 
     public function handle(MemoryPhotos $photos): int
     {
@@ -72,7 +75,7 @@ class PartyMemoryPhotos extends Command
         return self::SUCCESS;
     }
 
-    private function prepare(string $path, int $size): string
+    private function prepare(string $path, int $height): string
     {
         $image = imagecreatefromstring((string) file_get_contents($path));
 
@@ -82,26 +85,30 @@ class PartyMemoryPhotos extends Command
 
         $image = $this->applyExifOrientation($image, $path);
 
-        $width = imagesx($image);
-        $height = imagesy($image);
-        $side = min($width, $height);
+        $sourceWidth = imagesx($image);
+        $sourceHeight = imagesy($image);
 
-        $square = imagecreatetruecolor($size, $size);
+        // Plus grand rectangle 3:4 centré dans la photo d'origine.
+        $cropWidth = (int) min($sourceWidth, round($sourceHeight * self::ASPECT_RATIO));
+        $cropHeight = (int) min($sourceHeight, round($cropWidth / self::ASPECT_RATIO));
+        $width = (int) round($height * self::ASPECT_RATIO);
+
+        $portrait = imagecreatetruecolor($width, $height);
         imagecopyresampled(
-            $square,
+            $portrait,
             $image,
             0,
             0,
-            intdiv($width - $side, 2),
-            intdiv($height - $side, 2),
-            $size,
-            $size,
-            $side,
-            $side,
+            intdiv($sourceWidth - $cropWidth, 2),
+            intdiv($sourceHeight - $cropHeight, 2),
+            $width,
+            $height,
+            $cropWidth,
+            $cropHeight,
         );
 
         ob_start();
-        imagejpeg($square, null, 82);
+        imagejpeg($portrait, null, 82);
 
         return (string) ob_get_clean();
     }

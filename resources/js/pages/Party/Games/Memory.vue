@@ -35,11 +35,14 @@ const isClosed = computed(
 );
 
 const sizes = ['12', '16', '20'] as const;
-const gridLabels: Record<string, string> = {
-    '12': '4 × 3',
-    '16': '4 × 4',
-    '20': '4 × 5',
+/** Grille de jeu par taille : 12 cartes en 3 colonnes pour des cartes plus larges. */
+const grids: Record<string, { columns: number; rows: number }> = {
+    '12': { columns: 3, rows: 4 },
+    '16': { columns: 4, rows: 4 },
+    '20': { columns: 4, rows: 5 },
 };
+/** Hauteur maximale d'une rangée, pour garder des cartes raisonnables sur grand écran. */
+const MAX_ROW_HEIGHT = 170;
 const CHOICE_KEY = 'party_memory_choice';
 
 /* Derniers choix retenus (confort uniquement : la page marche sans). */
@@ -99,7 +102,19 @@ const matchedPairs = computed(
     () => cards.value.filter((card) => card.isMatched).length / 2,
 );
 const totalPairs = computed(() => cards.value.length / 2);
-const cardHeight = computed(() => (cards.value.length > 16 ? 72 : 82));
+const grid = computed(() => grids[String(cards.value.length)] ?? grids['16']);
+const gridStyle = computed(() => ({
+    gridTemplateColumns: `repeat(${grid.value.columns}, minmax(0, 1fr))`,
+    gridTemplateRows: `repeat(${grid.value.rows}, minmax(0, 1fr))`,
+    maxHeight: `${grid.value.rows * MAX_ROW_HEIGHT}px`,
+}));
+
+/** Les cartes sont plus larges en 3 colonnes : on agrandit les dessins d'autant. */
+function facePx(card: Card): number {
+    const base = memoryFaces[card.face]?.px ?? 4;
+
+    return grid.value.columns === 3 ? Math.round(base * 1.4) : base;
+}
 
 const startedAt = ref<number | null>(null);
 const now = ref(Date.now());
@@ -296,7 +311,10 @@ function cardLabel(card: Card): string {
                         @click="pick(size, choice.style)"
                     >
                         <span class="font-pixel text-lg">{{ size }}</span>
-                        <span class="text-[15px]">{{ gridLabels[size] }}</span>
+                        <span class="text-[15px]"
+                            >{{ grids[size].columns }} ×
+                            {{ grids[size].rows }}</span
+                        >
                     </button>
                 </div>
             </section>
@@ -418,10 +436,10 @@ function cardLabel(card: Card): string {
             </div>
         </template>
 
-        <!-- Partie -->
-        <template v-else>
+        <!-- Partie : la grille occupe toute la hauteur restante, sans scroll -->
+        <div v-else class="flex flex-col" style="height: calc(100dvh - 68px)">
             <div
-                class="sticky top-[68px] z-10 flex items-center gap-2 px-4 py-2.5 text-center"
+                class="flex flex-none items-center gap-2 px-4 py-2.5 text-center"
                 style="background: var(--px-ink); border-top: 2px solid #2e2e4a"
             >
                 <div class="flex flex-1 flex-col gap-1.5">
@@ -455,14 +473,16 @@ function cardLabel(card: Card): string {
                 />
             </div>
 
-            <div class="grid grid-cols-4 gap-2.5 p-4">
+            <div
+                class="grid min-h-0 w-full flex-1 gap-2.5 self-center px-3 py-3"
+                :style="gridStyle"
+            >
                 <button
                     v-for="card in cards"
                     :key="card.position"
                     type="button"
-                    class="flex items-center justify-center overflow-hidden border-0 p-0"
+                    class="relative flex min-h-0 items-center justify-center overflow-hidden border-0 p-0"
                     :style="{
-                        height: `${cardHeight}px`,
                         boxShadow:
                             '0 -3px 0 #1b1b2f, 0 3px 0 #1b1b2f, -3px 0 0 #1b1b2f, 3px 0 0 #1b1b2f',
                         ...cardStyle(card),
@@ -473,7 +493,7 @@ function cardLabel(card: Card): string {
                 >
                     <span
                         v-if="!isFaceUp(card)"
-                        class="flex size-[58px] items-center justify-center"
+                        class="absolute inset-2 flex items-center justify-center"
                         style="box-shadow: inset 0 0 0 4px var(--px-gold)"
                         aria-hidden="true"
                     >
@@ -498,7 +518,7 @@ function cardLabel(card: Card): string {
                         v-else
                         class="px-pop"
                         :name="memoryFaces[card.face]?.sprite ?? 'pinte'"
-                        :px="memoryFaces[card.face]?.px ?? 4"
+                        :px="facePx(card)"
                         decorative
                     />
                 </button>
@@ -506,7 +526,7 @@ function cardLabel(card: Card): string {
 
             <p
                 v-if="phase === 'sending'"
-                class="font-pixel m-0 px-4 text-center text-xs"
+                class="font-pixel m-0 flex-none px-4 py-3 text-center text-xs"
                 style="color: var(--px-gold)"
                 role="status"
             >
@@ -515,12 +535,12 @@ function cardLabel(card: Card): string {
             <button
                 v-else
                 type="button"
-                class="mx-4 mt-auto mb-6 border-0 bg-transparent p-3 text-[17px] underline"
+                class="flex-none border-0 bg-transparent p-2 text-[15px] underline"
                 style="color: var(--px-muted)"
                 @click="abandon"
             >
                 Abandonner
             </button>
-        </template>
+        </div>
     </PartyLayout>
 </template>

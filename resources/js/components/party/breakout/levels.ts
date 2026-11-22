@@ -40,7 +40,7 @@ export const levels: BreakoutLevel[] = [
     {
         name: 'LE BRÉSIL',
         decor: 'bresil',
-        background: '#1F4A45',
+        background: '#36405A',
         bonusCount: 6,
         rows: [
             '..3333..',

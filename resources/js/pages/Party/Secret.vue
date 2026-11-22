@@ -58,10 +58,7 @@ onUnmounted(() => {
         <div
             class="flex flex-col items-center gap-6 px-5 pt-10 pb-10 text-center"
         >
-            <div class="flex items-end gap-4" aria-hidden="true">
-                <PixelSprite name="adulte" :px="5" decorative />
-                <PixelSprite name="pinte" :px="6" decorative />
-            </div>
+            <PixelSprite name="sage" :px="5" decorative />
             <h1
                 class="font-pixel m-0 text-base leading-relaxed"
                 style="color: var(--px-gold)"
@@ -80,7 +77,7 @@ onUnmounted(() => {
                     :disabled="isLoading"
                     @click="listen"
                 >
-                    {{ isLoading ? 'CHARGEMENT…' : 'ÉCOUTER ▶' }}
+                    {{ isLoading ? 'CHARGEMENT…' : 'LANCER LE VOCAL ▶' }}
                 </button>
                 <audio
                     v-if="audioUrl"

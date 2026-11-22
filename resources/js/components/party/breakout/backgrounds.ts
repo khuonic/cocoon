@@ -160,6 +160,30 @@ function heart(context: Context, x: number, y: number, size: number): void {
     });
 }
 
+/** Dessine une petite grille de caractères ('.' = vide), chaque case faisant `size` pixels. */
+function pixelArt(
+    context: Context,
+    rows: string[],
+    x: number,
+    y: number,
+    size: number,
+    palette: Record<string, string>,
+): void {
+    rows.forEach((row, rowIndex) => {
+        [...row].forEach((char, column) => {
+            if (palette[char]) {
+                context.fillStyle = palette[char];
+                context.fillRect(
+                    x + column * size,
+                    y + rowIndex * size,
+                    size,
+                    size,
+                );
+            }
+        });
+    });
+}
+
 /* ---------- Décors ---------- */
 
 const decorPainters: Record<
@@ -247,100 +271,188 @@ const decorPainters: Record<
         }
     },
 
-    /** Ciel étoilé, lune, falaise et vagues. */
+    /** Discothèque : boule à facettes, faisceaux colorés, cabine du DJ, enceintes et piste lumineuse. */
     capCaval(context, baseColor, random) {
-        stars(context, random, 70, 400);
+        const beamColors = [
+            'rgba(247, 168, 184, 0.13)',
+            'rgba(42, 157, 143, 0.13)',
+            'rgba(242, 177, 52, 0.12)',
+            'rgba(179, 156, 208, 0.14)',
+        ];
 
-        context.fillStyle = 'rgba(255, 248, 231, 0.7)';
-        disc(context, 286, 270, 18);
-        context.fillStyle = 'rgba(201, 195, 176, 0.5)';
-        context.fillRect(278, 262, 5, 5);
-        context.fillRect(290, 276, 4, 4);
-
-        // Falaise
-        context.fillStyle = shade(baseColor, -0.55);
-        const cliff = [380, 372, 360, 352, 348, 350, 358, 372, 390, 404];
-        cliff.forEach((top, index) => {
-            context.fillRect(index * 10, top, 10, HEIGHT - top);
-        });
-
-        // Mer
-        context.fillStyle = '#1D3557';
-        context.fillRect(100, 410, WIDTH - 100, HEIGHT - 410);
-        context.fillStyle = 'rgba(142, 202, 230, 0.3)';
-        for (let y = 420; y < HEIGHT; y += 16) {
-            const offset = ((y / 16) % 2) * 12;
-            for (let waveX = 104 + offset; waveX < WIDTH; waveX += 26) {
-                context.fillRect(waveX, y, 10, 2);
-                context.fillRect(waveX + 2, y - 2, 6, 2);
-            }
-        }
-        context.fillStyle = 'rgba(255, 248, 231, 0.25)';
-        for (let y = 414; y < 500; y += 6) {
-            context.fillRect(278 + ((y * 7) % 10), y, 14, 2);
-        }
-    },
-
-    /** Coucher de soleil, mer et palmiers. */
-    bresil(context, baseColor) {
-        context.fillStyle = 'rgba(242, 177, 52, 0.25)';
-        context.fillRect(0, 330, WIDTH, 90);
-        context.fillStyle = 'rgba(228, 87, 46, 0.25)';
-        context.fillRect(0, 380, WIDTH, 40);
-
-        context.fillStyle = '#F2B134';
-        disc(context, 180, 420, 40);
-        context.fillStyle = 'rgba(228, 87, 46, 0.6)';
-        for (let y = 396; y < 420; y += 7) {
-            context.fillRect(138, y, 84, 2);
-        }
-
-        context.fillStyle = shade(baseColor, -0.35);
-        context.fillRect(0, 420, WIDTH, HEIGHT - 420);
-        context.fillStyle = 'rgba(242, 177, 52, 0.45)';
-        for (let y = 426; y < 520; y += 8) {
-            const width = 60 - (y - 426) / 2;
-            context.fillRect(180 - width / 2 + ((y * 3) % 8), y, width, 2);
-        }
-
-        // Plage
-        context.fillStyle = '#E3D7B6';
-        context.fillRect(0, 526, WIDTH, HEIGHT - 526);
-        context.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        context.fillRect(0, 526, WIDTH, 2);
-
-        // Palmiers
-        for (const [trunkX, lean] of [
-            [30, 1],
-            [326, -1],
-        ] as const) {
-            context.fillStyle = '#3D2C2E';
-            for (let segment = 0; segment < 12; segment++) {
+        // Faisceaux qui partent de la boule vers la piste
+        [-150, -70, 20, 110, 170].forEach((spread, index) => {
+            context.fillStyle = beamColors[index % beamColors.length];
+            for (let y = 216; y < 500; y += 2) {
+                const progress = (y - 216) / 284;
+                const center = 180 + spread * progress;
+                const half = 3 + progress * 16;
                 context.fillRect(
-                    trunkX + lean * Math.floor(segment * segment * 0.12),
-                    526 - segment * 12,
-                    8,
-                    11,
+                    Math.round(center - half),
+                    y,
+                    Math.round(half * 2),
+                    2,
                 );
             }
-            const topX = trunkX + lean * 17 + 4;
-            context.fillStyle = '#1F4A45';
-            for (const [dx, dy] of [
-                [-34, 6],
-                [-22, -4],
-                [-8, -8],
-                [8, -8],
-                [22, -4],
-                [34, 6],
-            ]) {
-                const steps = 6;
-                for (let step = 0; step < steps; step++) {
-                    context.fillRect(
-                        topX + (dx * step) / steps - 3,
-                        386 + (dy * step) / steps + (step * step) / 3,
-                        7,
-                        5,
-                    );
+        });
+
+        // Boule à facettes
+        context.fillStyle = 'rgba(201, 195, 176, 0.5)';
+        context.fillRect(179, 170, 2, 30);
+        for (let dy = -16; dy <= 16; dy += 4) {
+            const half = Math.floor(Math.sqrt(16 * 16 - dy * dy) / 4) * 4;
+            for (let dx = -half; dx < half; dx += 4) {
+                const isLight = ((dx + dy) / 4) % 2 === 0;
+                context.fillStyle = isLight ? '#E4E0F0' : '#8D89A6';
+                context.fillRect(180 + dx, 216 + dy, 4, 4);
+            }
+        }
+        context.fillStyle = '#FFFFFF';
+        context.fillRect(172, 206, 4, 4);
+
+        // Reflets de la boule sur les murs
+        for (let index = 0; index < 45; index++) {
+            context.fillStyle = `rgba(255, 248, 231, ${0.15 + random() * 0.35})`;
+            context.fillRect(
+                Math.floor(random() * WIDTH),
+                200 + Math.floor(random() * 220),
+                2,
+                2,
+            );
+        }
+
+        // Enceintes
+        for (const speakerX of [12, 306]) {
+            context.fillStyle = shade(baseColor, -0.5);
+            context.fillRect(speakerX, 340, 42, 92);
+            context.fillStyle = '#1B1B2F';
+            disc(context, speakerX + 21, 362, 10);
+            disc(context, speakerX + 21, 404, 15);
+            context.fillStyle = 'rgba(141, 137, 166, 0.6)';
+            disc(context, speakerX + 21, 362, 4);
+            disc(context, speakerX + 21, 404, 6);
+        }
+
+        // Cabine du DJ et platines
+        context.fillStyle = shade(baseColor, -0.45);
+        context.fillRect(120, 392, 120, 40);
+        context.fillStyle = 'rgba(247, 168, 184, 0.6)';
+        context.fillRect(120, 392, 120, 3);
+        context.fillStyle = '#1B1B2F';
+        disc(context, 150, 410, 9);
+        disc(context, 210, 410, 9);
+        context.fillStyle = 'rgba(228, 87, 46, 0.8)';
+        context.fillRect(149, 409, 2, 2);
+        context.fillRect(209, 409, 2, 2);
+        context.fillStyle = 'rgba(42, 157, 143, 0.8)';
+        for (let index = 0; index < 4; index++) {
+            context.fillRect(
+                172 + index * 5,
+                404 + (index % 2) * 3,
+                3,
+                8 - (index % 2) * 3,
+            );
+        }
+
+        // Piste lumineuse
+        const tileColors = ['#F7A8B8', '#2A9D8F', '#F2B134', '#B39CD0'];
+        for (let y = 440; y < HEIGHT; y += 20) {
+            for (let x = 0; x < WIDTH; x += 30) {
+                const colorIndex =
+                    (x / 30 + ((y - 440) / 20) * 3) % tileColors.length;
+                context.globalAlpha =
+                    0.18 + ((x / 30 + (y - 440) / 20) % 2) * 0.12;
+                context.fillStyle = tileColors[colorIndex];
+                context.fillRect(x + 1, y + 1, 28, 18);
+            }
+        }
+        context.globalAlpha = 1;
+    },
+
+    /** Les toilettes de l'anecdote brésilienne : faïence, drapeau, cuvette, papier et ventouse. */
+    bresil(context, baseColor) {
+        // Faïence murale
+        context.fillStyle = 'rgba(255, 248, 231, 0.07)';
+        context.fillRect(0, 200, WIDTH, 290);
+        context.fillStyle = 'rgba(0, 0, 0, 0.16)';
+        for (let y = 200; y < 490; y += 14) {
+            context.fillRect(0, y, WIDTH, 1);
+        }
+        for (let x = 0; x < WIDTH; x += 14) {
+            context.fillRect(x, 200, 1, 290);
+        }
+        context.fillStyle = 'rgba(42, 157, 143, 0.35)';
+        context.fillRect(0, 396, WIDTH, 6);
+
+        // Drapeau du Brésil
+        context.fillStyle = '#1B1B2F';
+        context.fillRect(28, 236, 76, 52);
+        context.fillStyle = '#3E8E41';
+        context.fillRect(30, 238, 72, 48);
+        context.fillStyle = '#F2B134';
+        for (let row = 0; row < 20; row++) {
+            const half = 30 - Math.abs(row - 10) * 3;
+            context.fillRect(66 - half, 252 + row, half * 2, 1);
+        }
+        context.fillStyle = '#3A5A8C';
+        disc(context, 66, 262, 8);
+        context.fillStyle = '#FFF8E7';
+        context.fillRect(59, 261, 14, 2);
+
+        // Dérouleur de papier toilette
+        context.fillStyle = '#8D89A6';
+        context.fillRect(212, 404, 22, 3);
+        context.fillStyle = '#FFF8E7';
+        context.fillRect(214, 407, 18, 14);
+        context.fillRect(222, 421, 10, 20);
+        context.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        context.fillRect(214, 418, 18, 3);
+
+        // Cuvette
+        const toilet = [
+            '....kkkkkkkkkkkk....',
+            '....kwwwwwwwwwwk....',
+            '....kwwwwwwwwwwk....',
+            '....kwwwwwwwwwwk....',
+            '....kkkkkkkkkkkk....',
+            '.kkkkkkkkkkkkkkkkkk.',
+            'kwwwwwwwwwwwwwwwwwwk',
+            'kwwbbbbbbbbbbbbbbwwk',
+            '.kwwbbbbbbbbbbbbwwk.',
+            '..kwwwwwwwwwwwwwwk..',
+            '...kwwwwwwwwwwwwk...',
+            '....kkwwwwwwwwkk....',
+            '......kwwwwwwk......',
+            '......kwwwwwwk......',
+            '.....kkkkkkkkkk.....',
+        ];
+        pixelArt(context, toilet, 262, 430, 4, {
+            k: '#1B1B2F',
+            w: '#E8E4D8',
+            b: '#8ECAE6',
+        });
+
+        // Ventouse posée contre le mur
+        const plunger = [
+            '...b...',
+            '...b...',
+            '...b...',
+            '...b...',
+            '...b...',
+            '...b...',
+            '.rrrrr.',
+            'rrrrrrr',
+        ];
+        pixelArt(context, plunger, 186, 458, 4, { b: '#8B5A2B', r: '#C8553D' });
+
+        // Sol carrelé
+        context.fillStyle = shade(baseColor, -0.4);
+        context.fillRect(0, 490, WIDTH, HEIGHT - 490);
+        for (let y = 490; y < HEIGHT; y += 14) {
+            for (let x = 0; x < WIDTH; x += 14) {
+                if ((x / 14 + (y - 490) / 14) % 2 === 0) {
+                    context.fillStyle = 'rgba(255, 248, 231, 0.12)';
+                    context.fillRect(x, y, 14, 14);
                 }
             }
         }
