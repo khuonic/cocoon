@@ -529,7 +529,6 @@ function cardLabel(card: Card): string {
                         :src="photoUrl(card.face)"
                         alt=""
                         class="absolute inset-0 size-full object-cover"
-                        :class="{ 'px-pop': isFaceUp(card) }"
                         :style="{
                             visibility: isFaceUp(card) ? 'visible' : 'hidden',
                             boxShadow: `inset 0 0 0 3px ${card.isMatched ? 'var(--px-teal)' : 'var(--px-gold)'}`,
@@ -551,7 +550,6 @@ function cardLabel(card: Card): string {
                     </span>
                     <PixelSprite
                         v-else-if="playedStyle !== 'photos'"
-                        class="px-pop"
                         :name="memoryFaces[card.face]?.sprite ?? 'pinte'"
                         :px="facePx(card)"
                         decorative
