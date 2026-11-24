@@ -47,7 +47,7 @@ export const bonuses: Record<
     N: {
         sprite: 'crotte_nez',
         title: 'CROTTE DE NEZ',
-        text: 'La barre tire des crottes de nez par deux pendant 8 secondes. Plus rare. +20 pts × niveau.',
+        text: 'La barre tire des crottes de nez par deux pendant 4 secondes. Plus rare. +20 pts × niveau.',
         isMalus: false,
     },
     C: {
@@ -130,7 +130,7 @@ const ITEM_SIZE = 18;
 const SHOT_SIZE = 7;
 const SHOT_SPEED = 420;
 /** Bonus crotte de nez : durée et cadence de tir (une paire par salve). */
-const SHOOTER_DURATION = 8;
+const SHOOTER_DURATION = 4;
 const SHOOTER_FIRE_INTERVAL = 0.45;
 const STEP = 1 / 120;
 const MAX_BOUNCE_ANGLE = Math.PI / 3;
