@@ -71,6 +71,9 @@ const record = computed(() => props.records[variant.value] ?? null);
 
 function pick(size: string, style: string): void {
     choice.value = { size, style };
+    if (style === 'photos') {
+        preloadPhotos();
+    }
     try {
         localStorage.setItem(CHOICE_KEY, JSON.stringify(choice.value));
     } catch {
@@ -128,24 +131,51 @@ function photoUrl(id: number): string {
     return photoRoute(id).url;
 }
 
+/*
+ * Photos téléchargées et décodées une seule fois, avant la création de la partie
+ * (le chrono serveur démarre à ce moment-là) : retourner une carte n'attend plus le réseau.
+ */
+let photosReady: Promise<void> | null = null;
+const preloadedPhotos: HTMLImageElement[] = [];
+
+function preloadPhotos(): Promise<void> {
+    photosReady ??= Promise.all(
+        Array.from({ length: props.photoCount }, (_, index) => {
+            const image = new Image();
+            image.src = photoUrl(index + 1);
+            preloadedPhotos.push(image);
+
+            // Une photo illisible ne doit pas bloquer la partie.
+            return image.decode().catch(() => undefined);
+        }),
+    ).then(() => undefined);
+
+    return photosReady;
+}
+
+if (choice.value.style === 'photos' && photosAvailable.value) {
+    preloadPhotos();
+}
+
+const isPreparing = ref(false);
+
 async function start(): Promise<void> {
     // Lancée pendant le tap sur JOUER (exigence des navigateurs mobiles).
     startMusic();
     error.value = null;
 
     try {
+        if (choice.value.style === 'photos') {
+            isPreparing.value = true;
+            await preloadPhotos();
+        }
+
         const response = await partyPost<{ run: string; deck: number[] }>(
             storeRun(props.game.slug).url,
             { variant: variant.value },
         );
 
         playedStyle.value = choice.value.style;
-        if (playedStyle.value === 'photos') {
-            new Set(response.deck).forEach(
-                (id) => (new Image().src = photoUrl(id)),
-            );
-        }
-
         runUuid.value = response.run;
         cards.value = response.deck.map((face, position) => ({
             position,
@@ -164,6 +194,8 @@ async function start(): Promise<void> {
             exception instanceof PartyApiError
                 ? exception.message
                 : 'Impossible de lancer la partie.';
+    } finally {
+        isPreparing.value = false;
     }
 }
 
@@ -419,10 +451,10 @@ function cardLabel(card: Card): string {
                 <button
                     type="button"
                     class="px-btn px-btn-gold"
-                    :disabled="!canPlay"
+                    :disabled="!canPlay || isPreparing"
                     @click="start"
                 >
-                    JOUER ▶
+                    {{ isPreparing ? 'CHARGEMENT…' : 'JOUER ▶' }}
                 </button>
                 <Link
                     :href="
@@ -491,6 +523,20 @@ function cardLabel(card: Card): string {
                     :disabled="phase !== 'playing'"
                     @click="flip(card)"
                 >
+                    <!-- Photo toujours présente (déjà décodée), seulement masquée face cachée. -->
+                    <img
+                        v-if="playedStyle === 'photos'"
+                        :src="photoUrl(card.face)"
+                        alt=""
+                        class="absolute inset-0 size-full object-cover"
+                        :class="{ 'px-pop': isFaceUp(card) }"
+                        :style="{
+                            visibility: isFaceUp(card) ? 'visible' : 'hidden',
+                            boxShadow: `inset 0 0 0 3px ${card.isMatched ? 'var(--px-teal)' : 'var(--px-gold)'}`,
+                            padding: '3px',
+                        }"
+                        draggable="false"
+                    />
                     <span
                         v-if="!isFaceUp(card)"
                         class="absolute inset-2 flex items-center justify-center"
@@ -503,19 +549,8 @@ function cardLabel(card: Card): string {
                             >35</span
                         >
                     </span>
-                    <img
-                        v-else-if="playedStyle === 'photos'"
-                        :src="photoUrl(card.face)"
-                        alt=""
-                        class="px-pop size-full object-cover"
-                        :style="{
-                            boxShadow: `inset 0 0 0 3px ${card.isMatched ? 'var(--px-teal)' : 'var(--px-gold)'}`,
-                            padding: '3px',
-                        }"
-                        draggable="false"
-                    />
                     <PixelSprite
-                        v-else
+                        v-else-if="playedStyle !== 'photos'"
                         class="px-pop"
                         :name="memoryFaces[card.face]?.sprite ?? 'pinte'"
                         :px="facePx(card)"
